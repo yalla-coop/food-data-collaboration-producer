@@ -16,8 +16,12 @@
     "@shopify/shopify-app-session-storage-sqlite": "^1.0.0",
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
+    "dotenv": "^16.0.3",
+    "nock": "^13.3.1",
     "serve-static": "^1.14.1",
-    "shopify-api-node": "^3.12.5"
+    "shopify-api-node": "^3.12.5",
+    "yup": "^1.2.0",
+    "yup-env": "^2.0.0"
   },
   "devDependencies": {
     "eslint": "^7.32.0 || ^8.2.0",
