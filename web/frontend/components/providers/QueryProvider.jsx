@@ -2,8 +2,8 @@ import {
   QueryClient,
   QueryClientProvider,
   QueryCache,
-  MutationCache,
-} from "react-query";
+  MutationCache
+} from 'react-query';
 
 /**
  * Sets up the QueryClientProvider from react-query.
@@ -12,8 +12,10 @@ import {
 export function QueryProvider({ children }) {
   const client = new QueryClient({
     queryCache: new QueryCache(),
-    mutationCache: new MutationCache(),
+    mutationCache: new MutationCache()
   });
 
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
+
+export default QueryProvider;

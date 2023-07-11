@@ -1,4 +1,4 @@
-import Shopify from '../../../repositories/shopify/index.js';
+import Shopify from '../../../fdc-repositories/shopify/index.js';
 
 const getProducts = async ({session}) => {
   const products = await Shopify.getProducts({session});
