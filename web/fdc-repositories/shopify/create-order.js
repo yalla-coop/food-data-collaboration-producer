@@ -49,9 +49,10 @@ const createOrder = async ({lineItems, shopName, orderData}) => {
 
   await order.saveAndUpdate();
 
-  order.session = null;
-
-  return order;
+  return {
+    ...order,
+    session: null
+  };
 };
 
 export default createOrder;

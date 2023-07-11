@@ -1,6 +1,6 @@
 // @ts-check
-import {join} from 'path';
-import {readFileSync} from 'fs';
+import { join } from 'path';
+import { readFileSync } from 'fs';
 import express from 'express';
 import serveStatic from 'serve-static';
 import apiRouters from './api-routers.js';
@@ -42,7 +42,7 @@ app.post(
   })
 );
 
-app.use(serveStatic(STATIC_PATH, {index: false}));
+app.use(serveStatic(STATIC_PATH, { index: false }));
 
 app.use((err, _req, res, _next) => {
   console.error(err);

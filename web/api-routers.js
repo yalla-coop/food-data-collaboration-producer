@@ -1,9 +1,10 @@
-import {Router} from 'express';
+import { Router } from 'express';
 
-import ProductsModules from './modules/products/index.js';
+import checkOnlineSession from './middleware/checkOnlineSession.js';
+import ProductsModules from './api-modules/products/index.js';
 
 const apiRouter = Router();
 
-apiRouter.use('/products', ProductsModules.Controllers);
+apiRouter.use('/products', checkOnlineSession, ProductsModules.Controllers);
 
 export default apiRouter;

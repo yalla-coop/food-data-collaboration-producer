@@ -1,9 +1,7 @@
-import {
-  Session
-} from '@shopify/shopify-api';
-import { storage } from '../storage.js'
-import shopify from "../shopify.js";
-import { shopifyClient } from './shopify-client.js';
+import {Session} from '@shopify/shopify-api';
+import {storage} from '../storage.js';
+import shopify from '../shopify.js';
+import {shopifyClient} from './shopify-client.js';
 
 const PRODUCTS_QUERY = `
 {
@@ -42,7 +40,7 @@ const PRODUCTS_QUERY = `
     }
   }
 }
-`
+`;
 
 const PRODUCT_METAFIELDS_MUTATION = `
 mutation metafieldsSet($metafields: [MetafieldsSetInput!]!) {
@@ -56,18 +54,16 @@ mutation metafieldsSet($metafields: [MetafieldsSetInput!]!) {
     }
   }
 }
-`
+`;
 
 export function applyProductEndpoints(app) {
-
-  console.log('applyProductEndpoints')
+  console.log('applyProductEndpoints');
 
   /*
     The URL for fetching the products this shop provides to 
   */
-  app.get("/api/products", async (req, res) => {
-    
-    console.log('/api/products GET')
+  app.get('/api/products', async (req, res) => {
+    console.log('/api/products GET');
     /*
     let session = new Session({
       id: 'test-session',
@@ -86,50 +82,49 @@ export function applyProductEndpoints(app) {
     const response = await shopifyClient.query({
       data: {
         query: PRODUCTS_QUERY,
-        variables: {
-        },
-      },
+        variables: {}
+      }
     });
 
-    let page = response.body?.data?.products
+    let page = response.body?.data?.products;
     //let products = page?.edges
-    console.log('page is', page.edges[0].node)
-    let products = page?.edges.map(p => {
-      console.log('p is', p)
-      const key = `product/${p.id}`
-      let product = storage.getItem(key)
+    console.log('page is', page.edges[0].node);
+    let products = page?.edges.map((p) => {
+      console.log('p is', p);
+      const key = `product/${p.id}`;
+      let product = storage.getItem(key);
       if (product) {
         for (const [key, value] of Object.entries(product)) {
-          p.node[key] = value
+          p.node[key] = value;
         }
       }
-      return p.node
-    })
+      return p.node;
+    });
 
     //let suppliedProducts = products.map(p => createSuppliedProduct(p.node))
 
-    res.setHeader('Content-Type', 'application/json')
-    res.send(products)
+    res.setHeader('Content-Type', 'application/json');
+    res.send(products);
   });
 
-  app.patch("/api/products/:uid", async (req, res) => {
-    console.log('PATCH /api/products', req.params.uid, req.body)
-    let status = 200
-    let error = null
+  app.patch('/api/products/:uid', async (req, res) => {
+    console.log('PATCH /api/products', req.params.uid, req.body);
+    let status = 200;
+    let error = null;
 
     try {
       // TODO make work for multiple users
-      const key = `product/${req.params.uid}`
-      const product = storage.getItem(key)
+      const key = `product/${req.params.uid}`;
+      const product = storage.getItem(key);
       for (const [key, value] of Object.entries(req.body)) {
-        product[key] = value
+        product[key] = value;
       }
-      storage.setItem(key, product)
+      storage.setItem(key, product);
     } catch (e) {
-      console.log(`Failed to update product ${req.params.uid}: ${e.message}`)
-      status = 500
-      error = e.message
+      console.log(`Failed to update product ${req.params.uid}: ${e.message}`);
+      status = 500;
+      error = e.message;
     }
-    res.status(status).send({ success: status === 200, error })
-  })
+    res.status(status).send({success: status === 200, error});
+  });
 }

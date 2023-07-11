@@ -1,4 +1,4 @@
-import Shopify from '../../../repositories/shopify/index.js';
+import Shopify from '../../../fdc-repositories/shopify/index.js';
 
 const createOrder = async ({order, shopName, accessToken}) => {
   const inventoryLevels = await Shopify.checkInventory({

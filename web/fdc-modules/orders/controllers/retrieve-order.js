@@ -1,6 +1,5 @@
 import OrderUseCases from '../use-cases/index.js';
-import {getOfflineAccessTokenByShopName} from '../../../repositories/shopify/get-offline-access-token-by-shop-name.js';
-import interceptRequestRecorder from '../../../utils/intercept-request-recorder.js';
+import {getOfflineAccessTokenByShopName} from '../../../fdc-repositories/shopify/get-offline-access-token-by-shop-name.js';
 import * as yup from 'yup';
 
 const orderSchema = yup
@@ -27,7 +26,6 @@ const orderSchema = yup
 
 const retrieveOrder = async (req, res, next) => {
   try {
-    interceptRequestRecorder();
     const {order, shopName} = req.fdc;
 
     await orderSchema.validate(order);
