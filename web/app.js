@@ -28,8 +28,7 @@ app.use('/api/*', shopify.validateAuthenticatedSession());
 
 app.use('/*', addSessionShopToReqParams);
 
-app.use(express.json());
-app.use('/api', apiRouters);
+app.use('/api', express.json(), apiRouters);
 
 app.use('/*', shopify.ensureInstalledOnShop(), async (_req, res, _next) => {
   return res
