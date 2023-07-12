@@ -1,10 +1,8 @@
-import {getOfflineSessionByShopName} from '../fdc-repositories/shopify/get-offline-session-by-shop-name.js';
+import { getOfflineSessionByShopName } from '../fdc-repositories/shopify/get-offline-session-by-shop-name.js';
 
 const checkOfflineSession = async (req, res, next) => {
   try {
-    const {shop: shopName} = req.query;
-
-    console.log('shopName', shopName);
+    const { shop: shopName } = req.query;
 
     if (!shopName) {
       res.status(400).json({
@@ -14,8 +12,6 @@ const checkOfflineSession = async (req, res, next) => {
     }
 
     const session = await getOfflineSessionByShopName(shopName);
-
-    console.log('session', session);
 
     if (!session) {
       res.status(400).json({
@@ -28,7 +24,6 @@ const checkOfflineSession = async (req, res, next) => {
 
     next();
   } catch (err) {
-    console.log('err', err);
     res.status(500).json({
       error: 'Error checking offline session'
     });

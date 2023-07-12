@@ -12,7 +12,6 @@ const checkOnlineSession = async (req, res, next) => {
 
     next();
   } catch (err) {
-    console.log('err', err);
     res.status(500).json({
       error: 'Error checking offline session'
     });
