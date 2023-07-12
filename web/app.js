@@ -30,24 +30,14 @@ app.use('/*', addSessionShopToReqParams);
 
 app.use('/api', express.json(), apiRouters);
 
-app.use(
-  '/*',
-  (req, res, next) => {
-    console.log('requests comes to /*');
-    console.log('req.url', req.url);
-    console.log('req.query', req.query);
-    console.log('req.params', req.params);
+app.use(serveStatic(STATIC_PATH, { index: false }));
 
-    return next();
-  },
-  shopify.ensureInstalledOnShop(),
-  async (_req, res, _next) => {
-    return res
-      .status(200)
-      .set('Content-Type', 'text/html')
-      .send(readFileSync(join(STATIC_PATH, 'index.html')));
-  }
-);
+app.use('/*', shopify.ensureInstalledOnShop(), async (_req, res, _next) => {
+  return res
+    .status(200)
+    .set('Content-Type', 'text/html')
+    .send(readFileSync(join(STATIC_PATH, 'index.html')));
+});
 
 app.post(
   shopify.config.webhooks.path,
@@ -55,8 +45,6 @@ app.post(
     webhookHandlers: GDPRWebhookHandlers
   })
 );
-
-app.use(serveStatic(STATIC_PATH, { index: false }));
 
 app.use((err, _req, res, _next) => {
   console.error(err);

@@ -6,7 +6,7 @@
   "scripts": {
     "debug": "node --inspect-brk index.js",
     "dev": "cross-env NODE_ENV=development nodemon index.js --ignore ./frontend",
-    "serve": "cross-env NODE_ENV=production node index.js"
+    "serve": "cross-env NODE_ENV=production SHOPIFY_API_SECRET=1a1194aa4a3cf3f37724763df8027992 SHOPIFY_API_KEY=600fd25646f8a548d45a86df9c2ce304 HOST=741c-158-140-96-15.ngrok-free.app node index.js"
   },
   "engines": {
     "node": ">=14.13.1"
