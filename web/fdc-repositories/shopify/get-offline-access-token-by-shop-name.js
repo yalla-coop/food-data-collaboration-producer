@@ -1,4 +1,4 @@
-import {DB} from '../../db.js';
+import { DB } from '../../db.js';
 import shopify from '../../shopify.js';
 
 export const getOfflineAccessTokenByShopName = async (shopName) => {
@@ -6,7 +6,11 @@ export const getOfflineAccessTokenByShopName = async (shopName) => {
 
   const session = await DB.read(id);
 
-  if (!session) return undefined;
+  if (!session) {
+    return undefined;
+  }
 
   return session.accessToken;
 };
+
+export default getOfflineAccessTokenByShopName;

@@ -2,7 +2,7 @@ import request from 'supertest';
 import nock from 'nock';
 import app from '../../../app.js';
 
-import {DB as DBTest} from '../../../db-test.js';
+import { DB as DBTest } from '../../../db-test.js';
 
 describe('retrieve-order', () => {
   beforeAll(async () => {
@@ -116,7 +116,12 @@ describe('retrieve-order', () => {
               tags: 'FDC order'
             },
             availableLineItems: [
-              {quantity: 1, variant_id: 789, inventory_item_id: 123, sku: '123'}
+              {
+                quantity: 1,
+                variant_id: 789,
+                inventory_item_id: 123,
+                sku: '123'
+              }
             ]
           }
         });
@@ -199,7 +204,12 @@ describe('retrieve-order', () => {
               tags: 'FDC order'
             },
             availableLineItems: [
-              {quantity: 1, variant_id: 789, inventory_item_id: 123, sku: '123'}
+              {
+                quantity: 1,
+                variant_id: 789,
+                inventory_item_id: 123,
+                sku: '123'
+              }
             ]
           }
         });
@@ -238,14 +248,14 @@ describe('retrieve-order', () => {
 });
 
 function nockShopifyInventoryLevel(shopName) {
-  return nock(`https://${shopName}:443`, {encodedQueryParams: true})
+  return nock(`https://${shopName}:443`, { encodedQueryParams: true })
     .get('/admin/api/2023-01/inventory_levels.json')
     .matchHeader('x-shopify-access-token', ['123'])
     .matchHeader('accept', ['*/*'])
     .matchHeader('accept-encoding', ['gzip,deflate'])
     .matchHeader('connection', ['close'])
     .matchHeader('host', `${shopName}`)
-    .query({inventory_item_ids: '123'})
+    .query({ inventory_item_ids: '123' })
     .reply(200, {
       inventory_levels: [
         {
@@ -317,7 +327,7 @@ function nockShopifyCustomerSearchForNotFoundCustomers({
     });
 }
 
-function nockShopifyCreateOrder({shopName, customerId}) {
+function nockShopifyCreateOrder({ shopName, customerId }) {
   return nock(`https://${shopName}:443`, {
     encodedQueryParams: true
   })
@@ -333,7 +343,7 @@ function nockShopifyCreateOrder({shopName, customerId}) {
         ],
         inventory_behaviour: 'decrement_obeying_policy',
         tags: 'FDC order',
-        customer: {id: customerId}
+        customer: { id: customerId }
       }
     })
     .matchHeader('x-shopify-access-token', ['123'])
@@ -359,7 +369,7 @@ function nockShopifyCreateOrder({shopName, customerId}) {
     });
 }
 
-function nockShopifyCreateCustomer({shopName, email, phone, customerId}) {
+function nockShopifyCreateCustomer({ shopName, email, phone, customerId }) {
   return nock(`https://${shopName}:443`, {
     encodedQueryParams: true
   })

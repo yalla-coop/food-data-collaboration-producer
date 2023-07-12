@@ -1,6 +1,6 @@
-import OrderUseCases from '../use-cases/index.js';
-import {getOfflineAccessTokenByShopName} from '../../../fdc-repositories/shopify/get-offline-access-token-by-shop-name.js';
 import * as yup from 'yup';
+import OrderUseCases from '../use-cases/index.js';
+import { getOfflineAccessTokenByShopName } from '../../../fdc-repositories/shopify/get-offline-access-token-by-shop-name.js';
 
 const orderSchema = yup
   .object({
@@ -26,7 +26,7 @@ const orderSchema = yup
 
 const retrieveOrder = async (req, res, next) => {
   try {
-    const {order, shopName} = req.fdc;
+    const { order, shopName } = req.fdc;
 
     await orderSchema.validate(order);
 
