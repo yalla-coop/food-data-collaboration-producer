@@ -1,3 +1,5 @@
+console.log('process.env', process.env);
+
 import app from './app.js';
 
 const port = process.env.BACKEND_PORT || process.env.PORT || '3000';

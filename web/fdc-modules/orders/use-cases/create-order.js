@@ -1,6 +1,6 @@
 import Shopify from '../../../fdc-repositories/shopify/index.js';
 
-const createOrder = async ({order, shopName, accessToken}) => {
+const createOrder = async ({ order, shopName, accessToken }) => {
   const inventoryLevels = await Shopify.checkInventory({
     lineItems: order.lineItems,
     accessToken,
@@ -20,8 +20,7 @@ const createOrder = async ({order, shopName, accessToken}) => {
 
   const availableLineItems = order.lineItems.filter((lineItem) => {
     const inventoryLevel = availableInventoryLevels.find(
-      (inventoryLevel) =>
-        inventoryLevel.inventory_item_id === lineItem.inventory_item_id
+      (p) => p.inventory_item_id === lineItem.inventory_item_id
     );
 
     return inventoryLevel;

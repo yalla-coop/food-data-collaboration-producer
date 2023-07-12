@@ -1,4 +1,4 @@
-import {Router} from 'express';
+import { Router } from 'express';
 
 import retrieveOrder from './retrieve-order.js';
 import convertFDCRequestFromJSON from '../../../middleware/convertFDCRequestFromJSON.js';
