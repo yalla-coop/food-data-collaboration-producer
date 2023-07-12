@@ -7,6 +7,7 @@ import apiRouters from './api-routers.js';
 import fdcRouters from './fdc-routers.js';
 import shopify from './shopify.js';
 import GDPRWebhookHandlers from './gdpr.js';
+import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
 
 const STATIC_PATH =
   process.env.NODE_ENV === 'production'
@@ -24,6 +25,8 @@ app.get(
 
 app.use('/fdc', express.json(), fdcRouters);
 app.use('/api/*', shopify.validateAuthenticatedSession());
+
+app.use('/*', addSessionShopToReqParams);
 
 app.use(express.json());
 app.use('/api', apiRouters);
