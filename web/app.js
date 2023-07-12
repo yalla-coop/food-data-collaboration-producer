@@ -30,12 +30,24 @@ app.use('/*', addSessionShopToReqParams);
 
 app.use('/api', express.json(), apiRouters);
 
-app.use('/*', shopify.ensureInstalledOnShop(), async (_req, res, _next) => {
-  return res
-    .status(200)
-    .set('Content-Type', 'text/html')
-    .send(readFileSync(join(STATIC_PATH, 'index.html')));
-});
+app.use(
+  '/*',
+  (req, res, next) => {
+    console.log('requests comes to /*');
+    console.log('req.url', req.url);
+    console.log('req.query', req.query);
+    console.log('req.params', req.params);
+
+    return next();
+  },
+  shopify.ensureInstalledOnShop(),
+  async (_req, res, _next) => {
+    return res
+      .status(200)
+      .set('Content-Type', 'text/html')
+      .send(readFileSync(join(STATIC_PATH, 'index.html')));
+  }
+);
 
 app.post(
   shopify.config.webhooks.path,
