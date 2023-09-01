@@ -1,5 +1,5 @@
-import {getShopifyApiNodeByShopNameAndAccessToken} from '../../shopify.js';
-import {getOfflineSessionByShopName} from './get-offline-session-by-shop-name.js';
+/* eslint-disable arrow-body-style */
+import { getOfflineSessionByShopName } from './get-offline-session-by-shop-name.js';
 import shopify from '../../shopify.js';
 // check the inventory of the line items in the cart
 // create the order
@@ -25,7 +25,7 @@ const createResponse = (lineItems, inventoryLevel) => {
   };
 };
 
-const checkInventory = async ({lineItems, shopName}) => {
+const checkInventory = async ({ lineItems, shopName }) => {
   const session = await getOfflineSessionByShopName(shopName);
 
   const inventoryItemIds = lineItems

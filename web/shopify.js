@@ -1,34 +1,18 @@
+/* eslint-disable indent */
 import '@shopify/shopify-api/adapters/node';
-import {} from '@shopify/shopify-api';
-import { BillingInterval, LATEST_API_VERSION } from '@shopify/shopify-api';
-import sqlite3 from 'sqlite3';
-
-import Shopify from 'shopify-api-node';
+import { LATEST_API_VERSION } from '@shopify/shopify-api';
+import * as dotenv from 'dotenv';
 import { shopifyApp } from '@shopify/shopify-app-express';
-import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
+import { PostgreSQLSessionStorage } from '@shopify/shopify-app-session-storage-postgresql';
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-01';
-import { config } from './config.js';
-import { DB } from './db.js';
+import config from './config.js';
 
-const DB_PATH =
-  process.env.NODE_ENV === 'test'
-    ? `${process.cwd()}/web/test-database.sqlite`
-    : `${process.cwd()}/database.sqlite`;
+dotenv.config();
+// First : change the SQLite db to PostgreSQL
+// and create a local one for development
+// and a test one for testing
 
-const database = new sqlite3.Database(DB_PATH);
-
-// Initialize SQLite DB
-DB.db = database;
-DB.init();
-
-export const getShopifyApiNodeByShopNameAndAccessToken = ({
-  shopName,
-  accessToken
-}) =>
-  Shopify({
-    shopName,
-    accessToken
-  });
+const DB_PATH = process.env.DATABASE_URL;
 
 const scopes = [
   'write_products',
@@ -69,7 +53,7 @@ const shopify = shopifyApp({
   webhooks: {
     path: '/api/webhooks'
   },
-  sessionStorage: new SQLiteSessionStorage(DB_PATH)
+  sessionStorage: new PostgreSQLSessionStorage(DB_PATH)
 });
 
 export default shopify;

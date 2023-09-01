@@ -17,7 +17,7 @@ export const DB = {
     this.db = this.db ?? new sqlite3.Database(DEFAULT_DB_FILE);
     this.ready = Promise.resolve();
   },
-  read: async function (id) {
+  async read(id) {
     await this.ready;
     const query = `
       SELECT * FROM ${this.shopifySessionsTable}
@@ -52,3 +52,5 @@ export const DB = {
     });
   }
 };
+
+export default DB;

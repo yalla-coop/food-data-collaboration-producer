@@ -1,19 +1,27 @@
+/* eslint-disable object-curly-newline */
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-undef */
 import request from 'supertest';
 import nock from 'nock';
 import app from '../../../app.js';
 
-import { DB as DBTest } from '../../../db-test.js';
+import { pool } from '../../../database/connect.js';
+import initTestData from '../../../database/initTestData.js';
+import insertSession from '../../../database/shopify_sessions/InsertSession.js';
 
 describe('retrieve-order', () => {
   beforeAll(async () => {
-    await DBTest.init();
-    await DBTest.deleteAll();
-    await DBTest.write({
+    await initTestData();
+    await insertSession({
       id: 'offline_installed-store.myshopify.com',
       shop: 'installed-store.myshopify.com',
       state: '123',
       accessToken: '123'
     });
+  });
+
+  afterAll(async () => {
+    await pool.end();
   });
 
   test('should return no access token when the store does not have a value in the sessions sqlite db', async () => {
@@ -237,7 +245,7 @@ describe('retrieve-order', () => {
           ]
         }
       })
-      .expect(400)
+      .expect(500)
       .expect('Content-Type', /json/)
 
       .expect({
@@ -392,8 +400,8 @@ function nockShopifyCreateCustomer({ shopName, email, phone, customerId }) {
     .reply(201, {
       customer: {
         id: customerId,
-        email: email,
-        phone: phone,
+        email,
+        phone,
         tags: 'FDC customer',
         first_name: 'hassan',
         last_name: 'elnajjar'

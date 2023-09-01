@@ -1,12 +1,16 @@
-import {DB} from '../../db.js';
+/* eslint-disable consistent-return */
+/* eslint-disable import/prefer-default-export */
+import getShopifySessionsData from '../../database/shopify_sessions/getShopifySessionsData.js';
 import shopify from '../../shopify.js';
 
 export const getOfflineSessionByShopName = async (shopName) => {
   const id = shopify.api.session.getOfflineId(shopName);
 
-  const session = await DB.read(id);
+  const session = await getShopifySessionsData(id);
 
-  if (!session) return undefined;
+  if (!session) {
+    return;
+  }
 
   return session;
 };

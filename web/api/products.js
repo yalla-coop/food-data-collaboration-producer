@@ -1,7 +1,7 @@
-import {Session} from '@shopify/shopify-api';
-import {storage} from '../storage.js';
+import { Session } from '@shopify/shopify-api';
+import { storage } from '../storage.js';
 import shopify from '../shopify.js';
-import {shopifyClient} from './shopify-client.js';
+import { shopifyClient } from './shopify-client.js';
 
 const PRODUCTS_QUERY = `
 {
@@ -125,6 +125,6 @@ export function applyProductEndpoints(app) {
       status = 500;
       error = e.message;
     }
-    res.status(status).send({success: status === 200, error});
+    res.status(status).send({ success: status === 200, error });
   });
 }

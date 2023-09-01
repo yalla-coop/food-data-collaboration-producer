@@ -1,13 +1,14 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
+import * as yup from 'yup';
 
 const envFile = process.env.NODE_ENV === 'test' ? 'web/.env.test' : '.env';
 
-dotenv.config({path: path.join(process.cwd(), envFile)});
+dotenv.config({ path: path.join(process.cwd(), envFile) });
 
-import * as yup from 'yup';
 const schema = yup.object().shape({
   SHOPIFY_API_KEY: yup.string(),
+  DATABASE_URL: yup.string(),
   SHOPIFY_API_SECRET_KEY: yup.string(),
   SHOPIFY_ACCESS_TOKEN: yup.string(),
   OIDC_CLIENT_ID: yup.string(),
@@ -18,7 +19,7 @@ const schema = yup.object().shape({
 const createConfig = () => {
   let envVars;
   try {
-    envVars = schema.validateSync(process.env, {stripUnknown: false});
+    envVars = schema.validateSync(process.env, { stripUnknown: false });
   } catch (error) {
     if (error) {
       throw new Error(`Config validation error: ${error.message}`);
@@ -26,6 +27,7 @@ const createConfig = () => {
   }
 
   return {
+    DATABASE_URL: envVars.DATABASE_URL,
     SHOPIFY_API_KEY: envVars.SHOPIFY_API_KEY,
     SHOPIFY_API_SECRET_KEY: envVars.SHOPIFY_API_SECRET_KEY,
     SHOPIFY_ACCESS_TOKEN: envVars.SHOPIFY_ACCESS_TOKEN,
@@ -35,4 +37,4 @@ const createConfig = () => {
   };
 };
 
-export const config = createConfig();
+export default createConfig();
