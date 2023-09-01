@@ -26,7 +26,10 @@ let __pool;
 if (env !== 'production' || connectionString.includes('localhost')) {
   __pool = new Pool({ connectionString });
 } else {
-  __pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+  __pool = new Pool({
+    connectionString,
+    ssl: { rejectUnauthorized: false, require: true }
+  });
 }
 
 const pool = __pool;
