@@ -245,7 +245,7 @@ describe('retrieve-order', () => {
           ]
         }
       })
-      .expect(500)
+      .expect(400)
       .expect('Content-Type', /json/)
 
       .expect({

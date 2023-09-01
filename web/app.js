@@ -13,6 +13,23 @@ import GDPRWebhookHandlers from './gdpr.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
 
 init();
+
+const errorMiddleware = (err, _req, res, _next) => {
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      // @ts-ignore
+      message: err.message
+    });
+  }
+
+  // @ts-ignore
+  return res.status(500).json({
+    message: err.message,
+    stack: err.stack
+  });
+};
+
 const STATIC_PATH =
   process.env.NODE_ENV === 'production'
     ? `${process.cwd()}/frontend/dist`
@@ -27,7 +44,7 @@ app.get(
   shopify.redirectToShopifyOrAppRoot()
 );
 
-app.use('/fdc', express.json(), fdcRouters);
+app.use('/fdc', express.json(), fdcRouters, errorMiddleware);
 app.use('/api/*', shopify.validateAuthenticatedSession());
 
 app.use('/*', addSessionShopToReqParams);
@@ -43,6 +60,8 @@ app.use('/*', shopify.ensureInstalledOnShop(), async (_req, res) =>
     .send(readFileSync(join(STATIC_PATH, 'index.html')))
 );
 
+app.use(errorMiddleware);
+
 app.post(
   shopify.config.webhooks.path,
   shopify.processWebhooks({
@@ -50,25 +69,6 @@ app.post(
   })
 );
 
-app.use((err, _req, res) => {
-  console.log('errrrrrrrr', err);
-  console.error(err, {
-    name: err.name
-  });
-
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      success: false,
-      // @ts-ignore
-      message: err.message
-    });
-  }
-
-  // @ts-ignore
-  return res.status(500).json({
-    message: err.message,
-    stack: err.stack
-  });
-});
+// add error handler
 
 export default app;
