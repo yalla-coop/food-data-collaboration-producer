@@ -4,14 +4,17 @@
 import request from 'supertest';
 import nock from 'nock';
 import app from '../../../app.js';
+import shopify from '../../../shopify.js';
 
 import { pool } from '../../../database/connect.js';
-import initTestData from '../../../database/initTestData.js';
 import insertSession from '../../../database/shopify_sessions/InsertSession.js';
 
-describe('retrieve-order suit', () => {
-  beforeAll(async () => {
-    await initTestData();
+describe('retrieve-order', () => {
+  beforeEach(async () => {
+    await shopify.config.sessionStorage.loadSession(
+      'offline_installed-store.myshopify.com'
+    );
+
     await insertSession({
       id: 'offline_installed-store.myshopify.com',
       shop: 'installed-store.myshopify.com',
@@ -23,157 +26,106 @@ describe('retrieve-order suit', () => {
   afterAll(async () => {
     await pool.end();
   });
-  describe('retrieve-order', () => {
-    test('should return no access token when the store does not have a value in the sessions sqlite db', async () => {
-      await request(app)
-        .post('/fdc/orders?shop=not-installed-store.myshopify.com')
-        .send({
-          order: {
-            keycloakLesCommunsID: 454,
-            orderStatus: 'open',
-            customerName: 'hassan elnajjar',
-            shippingAddress: 'address 1',
-            phoneNumber: '+15142546017',
-            emailAddress: 'hassan@example.com',
-            billingAddress: 'address 2',
-            lineItems: [
-              {
-                quantity: 1,
-                variant_id: 789,
-                inventory_item_id: 123,
-                sku: '123'
-              }
-            ]
-          }
-        })
-        .expect(500)
-        .expect('Content-Type', /json/)
-
-        .expect({
-          success: false,
-          message:
-            'No access token found for store not-installed-store.myshopify.com'
-        });
-    });
-
-    test('should return 200 when the store has a value in the sessions sqlite db - this test create an order for exiting customer', async () => {
-      const shopName = 'installed-store.myshopify.com';
-      const customerId = 54545184;
-      const email = 'test@exmaple.com';
-      const phone = '+15142546017';
-
-      nockShopifyInventoryLevel(shopName);
-      nockShopifyCustomerSearchForExitCustomer({
-        shopName,
-        email,
-        phone,
-        customerId
-      });
-      nockShopifyCreateOrder({
-        shopName,
-        customerId
-      });
-
-      await request(app)
-        .post(`/fdc/orders?shop=${shopName}`)
-        .send({
-          order: {
-            keycloakLesCommunsID: 454,
-            orderStatus: 'open',
-            customerName: 'hassan elnajjar',
-            shippingAddress: 'address 1',
-            phoneNumber: phone,
-            emailAddress: email,
-            billingAddress: 'address 2',
-            lineItems: [
-              {
-                quantity: 1,
-                variant_id: 789,
-                inventory_item_id: 123,
-                sku: '123'
-              }
-            ]
-          }
-        })
-        .expect(200)
-        .expect('Content-Type', /json/)
-
-        .expect((res) => {
-          expect(res.body).toEqual({
-            success: true,
-            message: 'Order retrieved successfully',
-            createdOrder: {
-              success: true,
-              message: 'Draft order created successfully',
-              order: {
-                customer: {
-                  id: 54545184
-                },
-                id: 123,
-                inventory_behaviour: 'decrement_obeying_policy',
-                line_items: [
-                  {
-                    id: 123,
-                    inventory_item_id: 123,
-                    quantity: 1,
-                    sku: '100',
-                    variant_id: 789
-                  }
-                ],
-                session: null,
-                tags: 'FDC order'
-              },
-              availableLineItems: [
-                {
-                  quantity: 1,
-                  variant_id: 789,
-                  inventory_item_id: 123,
-                  sku: '123'
-                }
-              ]
+  test('should return no access token when the store does not have a value in the sessions sqlite db', async () => {
+    await request(app)
+      .post('/fdc/orders?shop=not-installed-store.myshopify.com')
+      .send({
+        order: {
+          keycloakLesCommunsID: 454,
+          orderStatus: 'open',
+          customerName: 'hassan elnajjar',
+          shippingAddress: 'address 1',
+          phoneNumber: '+15142546017',
+          emailAddress: 'hassan@example.com',
+          billingAddress: 'address 2',
+          lineItems: [
+            {
+              quantity: 1,
+              variant_id: 789,
+              inventory_item_id: 123,
+              sku: '123'
             }
-          });
-        });
+          ]
+        }
+      })
+      .expect(500)
+      .expect('Content-Type', /json/)
+
+      .expect({
+        success: false,
+        message:
+          'No access token found for store not-installed-store.myshopify.com'
+      });
+  });
+
+  test('should return 200 when the store has a value in the sessions sqlite db - this test create an order for exiting customer', async () => {
+    const shopName = 'installed-store.myshopify.com';
+    const customerId = 54545184;
+    const email = 'test@exmaple.com';
+    const phone = '+15142546017';
+
+    nockShopifyInventoryLevel(shopName);
+    nockShopifyCustomerSearchForExitCustomer({
+      shopName,
+      email,
+      phone,
+      customerId
+    });
+    nockShopifyCreateOrder({
+      shopName,
+      customerId
     });
 
-    test('should return 200 when the store has a value in the sessions sqlite db - this test create an order for new customer', async () => {
-      const shopName = 'installed-store.myshopify.com';
-      const email = 'new@example.com';
-      const phone = '+15142546017';
-      const customerId = 123;
+    await request(app)
+      .post(`/fdc/orders?shop=${shopName}`)
+      .send({
+        order: {
+          keycloakLesCommunsID: 454,
+          orderStatus: 'open',
+          customerName: 'hassan elnajjar',
+          shippingAddress: 'address 1',
+          phoneNumber: phone,
+          emailAddress: email,
+          billingAddress: 'address 2',
+          lineItems: [
+            {
+              quantity: 1,
+              variant_id: 789,
+              inventory_item_id: 123,
+              sku: '123'
+            }
+          ]
+        }
+      })
+      .expect(200)
+      .expect('Content-Type', /json/)
 
-      nockShopifyInventoryLevel(shopName);
-
-      nockShopifyCustomerSearchForNotFoundCustomers({
-        shopName,
-        email,
-        phone
-      });
-
-      nockShopifyCreateCustomer({
-        shopName,
-        email,
-        phone,
-        customerId
-      });
-
-      nockShopifyCreateOrder({
-        shopName,
-        customerId
-      });
-
-      await request(app)
-        .post(`/fdc/orders?shop=${shopName}`)
-        .send({
-          order: {
-            keycloakLesCommunsID: 454,
-            orderStatus: 'open',
-            customerName: 'hassan elnajjar',
-            shippingAddress: 'address 1',
-            phoneNumber: phone,
-            emailAddress: email,
-            billingAddress: 'address 2',
-            lineItems: [
+      .expect((res) => {
+        expect(res.body).toEqual({
+          success: true,
+          message: 'Order retrieved successfully',
+          createdOrder: {
+            success: true,
+            message: 'Draft order created successfully',
+            order: {
+              customer: {
+                id: 54545184
+              },
+              id: 123,
+              inventory_behaviour: 'decrement_obeying_policy',
+              line_items: [
+                {
+                  id: 123,
+                  inventory_item_id: 123,
+                  quantity: 1,
+                  sku: '100',
+                  variant_id: 789
+                }
+              ],
+              session: null,
+              tags: 'FDC order'
+            },
+            availableLineItems: [
               {
                 quantity: 1,
                 variant_id: 789,
@@ -182,77 +134,126 @@ describe('retrieve-order suit', () => {
               }
             ]
           }
-        })
-        .expect(200)
-        .expect('Content-Type', /json/)
-
-        .expect((res) => {
-          expect(res.body).toEqual({
-            success: true,
-            message: 'Order retrieved successfully',
-            createdOrder: {
-              success: true,
-              message: 'Draft order created successfully',
-              order: {
-                customer: {
-                  id: 123
-                },
-                id: 123,
-                inventory_behaviour: 'decrement_obeying_policy',
-                line_items: [
-                  {
-                    id: 123,
-                    inventory_item_id: 123,
-                    quantity: 1,
-                    sku: '100',
-                    variant_id: 789
-                  }
-                ],
-                session: null,
-                tags: 'FDC order'
-              },
-              availableLineItems: [
-                {
-                  quantity: 1,
-                  variant_id: 789,
-                  inventory_item_id: 123,
-                  sku: '123'
-                }
-              ]
-            }
-          });
         });
+      });
+  });
+
+  test('should return 200 when the store has a value in the sessions sqlite db - this test create an order for new customer', async () => {
+    const shopName = 'installed-store.myshopify.com';
+    const email = 'new@example.com';
+    const phone = '+15142546017';
+    const customerId = 123;
+
+    nockShopifyInventoryLevel(shopName);
+
+    nockShopifyCustomerSearchForNotFoundCustomers({
+      shopName,
+      email,
+      phone
     });
 
-    test('should return 400 when the request body is invalid', async () => {
-      await request(app)
-        .post('/fdc/orders?shop=installed-store.myshopify.com')
-        .send({
-          order: {
-            keycloakLesCommunsID: 454,
-            orderStatus: 'open',
-            customerName: 'hassan elnajjar',
-            shippingAddress: 'address 1',
-            phoneNumber: '+15142546017',
-            emailAddress: 'hassan@example.com',
-            billingAddress: 'address 2',
-            lineItems: [
+    nockShopifyCreateCustomer({
+      shopName,
+      email,
+      phone,
+      customerId
+    });
+
+    nockShopifyCreateOrder({
+      shopName,
+      customerId
+    });
+
+    await request(app)
+      .post(`/fdc/orders?shop=${shopName}`)
+      .send({
+        order: {
+          keycloakLesCommunsID: 454,
+          orderStatus: 'open',
+          customerName: 'hassan elnajjar',
+          shippingAddress: 'address 1',
+          phoneNumber: phone,
+          emailAddress: email,
+          billingAddress: 'address 2',
+          lineItems: [
+            {
+              quantity: 1,
+              variant_id: 789,
+              inventory_item_id: 123,
+              sku: '123'
+            }
+          ]
+        }
+      })
+      .expect(200)
+      .expect('Content-Type', /json/)
+
+      .expect((res) => {
+        expect(res.body).toEqual({
+          success: true,
+          message: 'Order retrieved successfully',
+          createdOrder: {
+            success: true,
+            message: 'Draft order created successfully',
+            order: {
+              customer: {
+                id: 123
+              },
+              id: 123,
+              inventory_behaviour: 'decrement_obeying_policy',
+              line_items: [
+                {
+                  id: 123,
+                  inventory_item_id: 123,
+                  quantity: 1,
+                  sku: '100',
+                  variant_id: 789
+                }
+              ],
+              session: null,
+              tags: 'FDC order'
+            },
+            availableLineItems: [
               {
                 quantity: 1,
+                variant_id: 789,
                 inventory_item_id: 123,
                 sku: '123'
               }
             ]
           }
-        })
-        .expect(400)
-        .expect('Content-Type', /json/)
-
-        .expect({
-          success: false,
-          message: 'lineItems[0].variant_id is a required field'
         });
-    });
+      });
+  });
+
+  test('should return 400 when the request body is invalid', async () => {
+    await request(app)
+      .post('/fdc/orders?shop=installed-store.myshopify.com')
+      .send({
+        order: {
+          keycloakLesCommunsID: 454,
+          orderStatus: 'open',
+          customerName: 'hassan elnajjar',
+          shippingAddress: 'address 1',
+          phoneNumber: '+15142546017',
+          emailAddress: 'hassan@example.com',
+          billingAddress: 'address 2',
+          lineItems: [
+            {
+              quantity: 1,
+              inventory_item_id: 123,
+              sku: '123'
+            }
+          ]
+        }
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+
+      .expect({
+        success: false,
+        message: 'lineItems[0].variant_id is a required field'
+      });
   });
 });
 

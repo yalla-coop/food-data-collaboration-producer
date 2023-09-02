@@ -7,6 +7,7 @@ const insertSession = async ({ id, shop, state, accessToken }) => {
     (id, "accessToken", shop, state,"isOnline")
     VALUES
     ($1, $2, $3, $4,FALSE)
+    on conflict (id) DO NOTHING
     RETURNING *
     `;
 

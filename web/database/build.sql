@@ -1,5 +1,5 @@
 BEGIN;
-
+DROP TABLE IF EXISTS shopify_sessions;
 CREATE TABLE IF NOT EXISTS shopify_sessions (
   id TEXT PRIMARY KEY,
   shop TEXT NOT NULL,
@@ -10,5 +10,4 @@ CREATE TABLE IF NOT EXISTS shopify_sessions (
   scope TEXT,
   expires INTEGER
 );
-
 COMMIT;

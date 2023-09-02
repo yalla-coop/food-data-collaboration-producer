@@ -23,9 +23,10 @@ const isInsertOrUpdateRegex = new RegExp(/(UPDATE(.|\n)*SET)|(INSERT INTO)/i);
 // eslint-disable-next-line no-underscore-dangle
 let __pool;
 if (env !== 'production' || connectionString.includes('localhost')) {
-  __pool = new Pool({ connectionString });
+  __pool = new Pool({ max: 20, connectionString });
 } else {
   __pool = new Pool({
+    max: 20,
     connectionString,
     ssl: { rejectUnauthorized: false, require: true }
   });
@@ -99,13 +100,18 @@ const query = async (text, _params, client) => {
     params = sanitizeCSVInjection(_params);
   }
 
-  const res = await _pool.query(text, params);
+  try {
+    const res = await _pool.query(text, params);
 
-  if (res && res.rows) {
-    const rows = toCamelCase(toParentChild(res.rows));
-    res.rows = rows;
+    if (res && res.rows) {
+      const rows = toCamelCase(toParentChild(res.rows));
+      res.rows = rows;
+    }
+    return res;
+  } catch (e) {
+    console.log('Error from query fun', e, 'with query', text);
+    throw new Error(e);
   }
-  return res;
 };
 
 const readSqlFile = async (filePath) => {
