@@ -12,7 +12,9 @@ import shopify from './shopify.js';
 import GDPRWebhookHandlers from './gdpr.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
 
-init();
+if (process.env.NODE_ENV !== 'test') {
+  init();
+}
 
 const errorMiddleware = (err, _req, res, _next) => {
   if (err.name === 'ValidationError') {
