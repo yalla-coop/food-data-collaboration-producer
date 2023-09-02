@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-constructor */
 /* eslint-disable indent */
 import '@shopify/shopify-api/adapters/node';
 import { LATEST_API_VERSION } from '@shopify/shopify-api';
@@ -44,6 +45,22 @@ const apiObject =
         scopes
       };
 
+class Postgres extends PostgreSQLSessionStorage {
+  constructor(props) {
+    super(props);
+  }
+
+  storeSession(session) {
+    console.log('session', session);
+    return super.storeSession(session);
+  }
+
+  loadSession(id) {
+    console.log('id', id);
+    return super.loadSession(id);
+  }
+}
+
 const shopify = shopifyApp({
   api: apiObject,
   auth: {
@@ -53,7 +70,9 @@ const shopify = shopifyApp({
   webhooks: {
     path: '/api/webhooks'
   },
-  sessionStorage: new PostgreSQLSessionStorage(DB_PATH)
+  sessionStorage: new Postgres(DB_PATH, {
+    sessionTableName: 'shopify_sessions'
+  })
 });
 
 export default shopify;

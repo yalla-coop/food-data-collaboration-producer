@@ -13,7 +13,6 @@ const { Pool } = pg;
 
 const connectionString = config.DATABASE_URL;
 
-console.log('connectionString', connectionString);
 const env = process.env.NODE_ENV;
 // eslint-disable-next-line prefer-regex-literals
 const isInsertOrUpdateRegex = new RegExp(/(UPDATE(.|\n)*SET)|(INSERT INTO)/i);
