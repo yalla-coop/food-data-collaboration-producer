@@ -4,9 +4,9 @@ import { query } from '../connect.js';
 const insertSession = async ({ id, shop, state, accessToken }) => {
   const sql = `
     INSERT INTO shopify_sessions
-    (id, accessToken, shop, state,isOnline)
+    (id, "accessToken", shop, state,"isOnline")
     VALUES
-    ($1, $2, $3, $4,0)
+    ($1, $2, $3, $4,FALSE)
     RETURNING *
     `;
 
