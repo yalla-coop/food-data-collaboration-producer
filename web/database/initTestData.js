@@ -1,9 +1,25 @@
-import { join } from 'path';
-import { readSqlFile as readSQLFileAndQuery } from './connect.js';
+import { query } from './connect.js';
 import deleteAllShopifySessionsData from './shopify_sessions/deleteAllShopifySessionsData.js';
 
 const initTestData = async () => {
-  await readSQLFileAndQuery(join(process.cwd(), '/web/database/build.sql'));
+  console.log('initTestData');
+  await query(
+    `
+    BEGIN;
+
+CREATE TABLE IF NOT EXISTS shopify_sessions (
+  id TEXT PRIMARY KEY,
+  shop TEXT NOT NULL,
+  state TEXT NOT NULL,
+  "isOnline" BOOLEAN NOT NULL DEFAULT FALSE,
+  "accessToken" TEXT NOT NULL,
+  "onlineAccessInfo" TEXT,
+  scope TEXT,
+  expires INTEGER
+);
+
+COMMIT;`
+  );
   await deleteAllShopifySessionsData();
 };
 
