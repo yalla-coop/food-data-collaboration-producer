@@ -9,12 +9,30 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     env:
       SHOPIFY_ACCESS_TOKEN: 123
       SHOPIFY_API_KEY: 123
       SHOPIFY_API_SECRET: 123
       HOST: somehost
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+
     strategy:
       matrix:
         node-version: [18.x]
@@ -27,14 +45,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-      - name: Use POSTGRES
-        uses: docker://postgres:latest
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
       - run: yarn
       - run: cd web && yarn
       - run: yarn test
