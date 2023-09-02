@@ -50,7 +50,6 @@ const retrieveOrder = async (req, res, next) => {
       createdOrder
     });
   } catch (error) {
-    console.log('error', error);
     return next(error);
   }
 };

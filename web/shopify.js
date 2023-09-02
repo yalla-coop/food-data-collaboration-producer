@@ -45,22 +45,6 @@ const apiObject =
         scopes
       };
 
-class Postgres extends PostgreSQLSessionStorage {
-  constructor(props) {
-    super(props);
-  }
-
-  storeSession(session) {
-    console.log('session', session);
-    return super.storeSession(session);
-  }
-
-  loadSession(id) {
-    console.log('id', id);
-    return super.loadSession(id);
-  }
-}
-
 const shopify = shopifyApp({
   api: apiObject,
   auth: {
@@ -70,9 +54,7 @@ const shopify = shopifyApp({
   webhooks: {
     path: '/api/webhooks'
   },
-  sessionStorage: new Postgres(DB_PATH, {
-    sessionTableName: 'shopify_sessions'
-  })
+  sessionStorage: new PostgreSQLSessionStorage(DB_PATH)
 });
 
 export default shopify;

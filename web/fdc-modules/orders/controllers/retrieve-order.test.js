@@ -11,6 +11,9 @@ import insertSession from '../../../database/shopify_sessions/InsertSession.js';
 
 describe('retrieve-order', () => {
   beforeEach(async () => {
+    // I used this command here to create the POSTGRES_DB for testing
+    // the shopify file will create the POSTGRES_DB for testing when it not exist
+    // The best approach is to send an (auth) request to the shopify app to create the POSTGRES_DB
     await shopify.config.sessionStorage.loadSession(
       'offline_installed-store.myshopify.com'
     );

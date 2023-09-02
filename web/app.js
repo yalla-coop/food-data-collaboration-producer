@@ -4,17 +4,12 @@ import { join } from 'path';
 import { readFileSync } from 'fs';
 import express from 'express';
 import serveStatic from 'serve-static';
-import init from './database/init.js';
 
 import apiRouters from './api-routers.js';
 import fdcRouters from './fdc-routers.js';
 import shopify from './shopify.js';
 import GDPRWebhookHandlers from './gdpr.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
-
-if (process.env.NODE_ENV !== 'test') {
-  init();
-}
 
 const errorMiddleware = (err, _req, res, _next) => {
   if (err.name === 'ValidationError') {
