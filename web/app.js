@@ -4,7 +4,7 @@ import { join } from 'path';
 import { readFileSync } from 'fs';
 import express from 'express';
 import serveStatic from 'serve-static';
-
+import cors from 'cors';
 import apiRouters from './api-routers.js';
 import fdcRouters from './fdc-routers.js';
 import shopify from './shopify.js';
@@ -41,12 +41,17 @@ app.get(
   shopify.redirectToShopifyOrAppRoot()
 );
 
-app.use('/fdc', express.json(), fdcRouters, errorMiddleware);
+app.use('/fdc', cors(), express.json(), fdcRouters, errorMiddleware);
 app.use('/api/*', shopify.validateAuthenticatedSession());
 
 app.use('/*', addSessionShopToReqParams);
 
-app.use('/api', express.json(), apiRouters);
+app.use(
+  '/api',
+  express.json(),
+  express.urlencoded({ extended: true }),
+  apiRouters
+);
 
 app.use(serveStatic(STATIC_PATH, { index: false }));
 
@@ -65,7 +70,5 @@ app.post(
     webhookHandlers: GDPRWebhookHandlers
   })
 );
-
-// add error handler
 
 export default app;

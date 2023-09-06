@@ -1,3 +1,3 @@
 import getProducts from './get-products.js';
 
-export default {getProducts};
+export default { getProducts };

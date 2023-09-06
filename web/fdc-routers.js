@@ -1,4 +1,4 @@
-import {Router} from 'express';
+import { Router } from 'express';
 
 import OrdersModules from './fdc-modules/orders/index.js';
 import ProductsModules from './fdc-modules/products/index.js';

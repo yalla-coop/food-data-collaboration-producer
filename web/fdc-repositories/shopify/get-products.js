@@ -1,25 +1,40 @@
-import shopify from '../../shopify.js';
-import { GET_FDC_PRODUCTS_QUERY } from './queries/GET_FDC_PRODUCTS_QUERY.js';
+/* eslint-disable no-shadow */
+/* eslint-disable arrow-body-style */
+/* eslint-disable import/prefer-default-export */
+/* eslint-disable max-len */
+import { getFDCProductGraphQlQuery } from './queries/GET_FDC_PRODUCTS_QUERY.js';
 import getClient from './get-client.js';
 
 // get only products that have fdc inside tags
 // this query works only for the first 10 products, we should loop through all products and get the ones that have fdc inside tags
-export const getProducts = async ({ session }) => {
+export const getProducts = async ({
+  session,
+  nextPageCursor,
+  previousPageCursor
+}) => {
   const client = getClient(session);
 
   try {
     const products = await client.query({
-      data: GET_FDC_PRODUCTS_QUERY
+      data: getFDCProductGraphQlQuery({
+        nextPageCursor,
+        previousPageCursor
+      })
     });
 
-    return products.body.data.products.edges.map(({ node }) => {
-      return {
-        ...node,
-        variants: node.variants.edges.map(({ node }) => node)
-      };
-    });
+    return {
+      pageInfo: products.body.data.products.pageInfo,
+      list: products.body.data.products.edges.map(({ node }) => {
+        return {
+          ...node,
+          variants: {
+            hasNextPage: node.variants.pageInfo.hasNextPage,
+            list: node.variants.edges.map(({ node }) => node)
+          }
+        };
+      })
+    };
   } catch (e) {
-    console.error('eee', JSON.stringify(e, null, 2));
-    throw e;
+    throw new Error(e);
   }
 };

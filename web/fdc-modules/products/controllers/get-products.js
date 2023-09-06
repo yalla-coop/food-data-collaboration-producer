@@ -1,11 +1,14 @@
 import ProductUseCases from '../use-cases/index.js';
 
-const getProducts = async (req, res, next) => {
+const getProducts = async (req, res) => {
   try {
-    const {shopifySession} = req;
+    const { shopifySession } = req;
+    const { nextPageCursor, previousPageCursor } = req.query;
 
     const products = await ProductUseCases.getProducts({
-      session: shopifySession
+      session: shopifySession,
+      nextPageCursor,
+      previousPageCursor
     });
 
     return res.status(200).json({
