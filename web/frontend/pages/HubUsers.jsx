@@ -2,7 +2,7 @@ import { Checkbox } from '@shopify/polaris';
 import { useQueryClient } from 'react-query';
 import { useAppQuery, useAppMutation } from '../hooks';
 
-const HubUsers = () => {
+export default function HubUsers() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useAppQuery({
     url: '/api/hub-users'
@@ -21,6 +21,14 @@ const HubUsers = () => {
   }
 
   const users = data?.users;
+
+  if (!users || users.length === 0) {
+    return (
+      <div>
+        <p>No users found</p>
+      </div>
+    );
+  }
 
   return users.map((user) => (
     <div
@@ -58,6 +66,4 @@ const HubUsers = () => {
       <p>{user.userId}</p>
     </div>
   ));
-};
-
-export default HubUsers;
+}
