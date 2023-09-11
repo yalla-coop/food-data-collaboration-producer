@@ -21,7 +21,13 @@ export const useAppMutation = ({ reactQueryOptions }) => {
     () =>
       async ({ url, fetchInit = {} }) => {
         const response = await authenticatedFetch(url, fetchInit);
-        return response.json();
+        const responseJson = await response.json();
+
+        if (response.status >= 400) {
+          throw new Error(responseJson.error);
+        }
+
+        return responseJson;
       },
     []
   );

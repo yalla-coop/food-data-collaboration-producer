@@ -13,7 +13,7 @@ export default function HomePage() {
     url: '/api/products'
   });
 
-  const { mutateAsync, isLoading: updateProductIsLoading } = useAppMutation({
+  const { mutateAsync } = useAppMutation({
     reactQueryOptions: {
       onSettled: (updateProductData) => {
         setDisabledProductCheckbox((x) => ({

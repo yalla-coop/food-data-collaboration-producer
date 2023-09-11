@@ -46,12 +46,7 @@ app.use('/api/*', shopify.validateAuthenticatedSession());
 
 app.use('/*', addSessionShopToReqParams);
 
-app.use(
-  '/api',
-  express.json(),
-  express.urlencoded({ extended: true }),
-  apiRouters
-);
+app.use('/api', express.json(), apiRouters);
 
 app.use(serveStatic(STATIC_PATH, { index: false }));
 

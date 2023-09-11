@@ -10,9 +10,9 @@ const checkOnlineSession = async (req, res, next) => {
 
     req.shopifySession = session;
 
-    next();
+    return next();
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Error checking offline session'
     });
   }
