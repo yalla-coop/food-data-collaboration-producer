@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { join } from 'path';
 import { readFileSync } from 'fs';
+import dotenv from 'dotenv';
 import express from 'express';
 import serveStatic from 'serve-static';
 import cors from 'cors';
@@ -10,6 +11,9 @@ import fdcRouters from './fdc-modules/fdc-routers.js';
 import shopify from './shopify.js';
 import GDPRWebhookHandlers from './gdpr.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
+import subscribeToWebhook from './utils/subscribeToWebhook.js';
+
+dotenv.config();
 
 const errorMiddleware = (err, _req, res, _next) => {
   if (err.name === 'ValidationError') {
@@ -45,6 +49,19 @@ app.get(shopify.config.auth.path, shopify.auth.begin());
 app.get(
   shopify.config.auth.callbackPath,
   shopify.auth.callback(),
+  async (req, res, next) => {
+    try {
+      await subscribeToWebhook({
+        session: res.locals.shopify.session,
+        HOST: process.env.HOST,
+        topic: 'products/update',
+        shopify
+      });
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
   shopify.redirectToShopifyOrAppRoot()
 );
 
