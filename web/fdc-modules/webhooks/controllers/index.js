@@ -15,7 +15,7 @@ const subscribeToWebhook = async () => {
     );
 
     const session = sessions[0];
-    const address = `${HOST}/api/webhooks`;
+    const address = `${HOST}api/webhooks`;
     const topic = 'products/update';
     const webhook = new shopify.api.rest.Webhook({ session });
     webhook.address = address;
