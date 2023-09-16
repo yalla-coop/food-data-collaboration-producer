@@ -37,7 +37,7 @@ const productUpdateListener = async (product, webhookId, topic) => {
     await Promise.allSettled(promises);
 
     const insertWebhookQuery =
-      'INSERT INTO webhooks (id, topic, data) VALUES ($1, $2, $3,$4)';
+      'INSERT INTO webhooks (id, topic, data) VALUES ($1, $2, $3)';
 
     const insertWebhookValues = [webhookId, topic, product];
 
