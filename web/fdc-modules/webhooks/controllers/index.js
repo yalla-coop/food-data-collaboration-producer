@@ -1,7 +1,12 @@
 import { DeliveryMethod } from '@shopify/shopify-api';
+import dotenv from 'dotenv';
 import { Router } from 'express';
 import shopify from '../../../shopify.js';
 import { webhookHandler } from '../listeners/product-update.js';
+
+dotenv.config();
+
+const { HOST } = process.env;
 
 const subscribeToWebhook = async () => {
   try {
@@ -10,12 +15,8 @@ const subscribeToWebhook = async () => {
     );
 
     const session = sessions[0];
-
-    const address =
-      'https://food-data-collaboration-hub-82234d1e2fc5.herokuapp.com/api/webhooks';
-
+    const address = `${HOST}/api/webhooks`;
     const topic = 'products/update';
-
     const webhook = new shopify.api.rest.Webhook({ session });
     webhook.address = address;
     webhook.topic = topic;
@@ -29,22 +30,15 @@ const subscribeToWebhook = async () => {
 
 subscribeToWebhook();
 
-shopify.api.webhooks
-  .addHandlers({
-    PRODUCTS_UPDATE: [
-      {
-        deliveryMethod: DeliveryMethod.Http,
-        callbackUrl: '/api/webhooks',
-        callback: webhookHandler
-      }
-    ]
-  })
-  .then((result) => {
-    console.log('result:', 'registered webhooks');
-  })
-  .catch((err) => {
-    console.error('err', err);
-  });
+shopify.api.webhooks.addHandlers({
+  PRODUCTS_UPDATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: '/api/webhooks',
+      callback: webhookHandler
+    }
+  ]
+});
 
 const webhooks = Router();
 

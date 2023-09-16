@@ -28,6 +28,9 @@ const productUpdateListener = async (product, webhookId, topic) => {
     const listeners = result.rows;
     const promises = listeners.map(async (listener) => {
       const { shop: listenerShop, listenerUrl } = listener;
+      console.log('listenerUrl', listenerUrl);
+      console.log('listenerShop', listenerShop);
+
       await axios.post(listenerUrl, {
         shopName: listenerShop,
         product
@@ -43,6 +46,7 @@ const productUpdateListener = async (product, webhookId, topic) => {
 
     await query(insertWebhookQuery, insertWebhookValues);
 
+    console.log('webhook finished nicely :------');
     return {
       statusCode: 200
     };

@@ -15,3 +15,5 @@ FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 COMMIT;
+
+
