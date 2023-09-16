@@ -1,4 +1,4 @@
-import productUpdateListener from './product-update';
+import { productUpdateListener } from './product-update';
 
 /* eslint-disable no-undef */
 describe('Test listener', () => {

@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { query } from '../../../database/connect.js';
+import { query } from '../database/connect.js';
 
-const productUpdateListener = async (product, webhookId, topic) => {
+export const productUpdateListener = async (product, webhookId, topic) => {
   try {
     if (!product.tags.includes('fdc')) {
       return {
@@ -58,7 +58,12 @@ const productUpdateListener = async (product, webhookId, topic) => {
   }
 };
 
-export const webhookHandler = (topic, shop, webhookRequestBody, webhookId) => {
+const productUpdateWebhookCallback = (
+  topic,
+  shop,
+  webhookRequestBody,
+  webhookId
+) => {
   console.log('webhook handler fired :------');
 
   const product = JSON.parse(webhookRequestBody);
@@ -73,4 +78,4 @@ export const webhookHandler = (topic, shop, webhookRequestBody, webhookId) => {
   };
 };
 
-export default productUpdateListener;
+export default productUpdateWebhookCallback;

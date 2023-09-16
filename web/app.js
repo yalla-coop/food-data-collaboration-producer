@@ -9,7 +9,7 @@ import cors from 'cors';
 import apiRouters from './api-routers.js';
 import fdcRouters from './fdc-modules/fdc-routers.js';
 import shopify from './shopify.js';
-import GDPRWebhookHandlers from './gdpr.js';
+import webhookHandlers from './webhooks/index.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
 import subscribeToWebhook from './utils/subscribe-to-webhook.js';
 
@@ -41,7 +41,7 @@ const app = express();
 app.post(
   shopify.config.webhooks.path,
   shopify.processWebhooks({
-    webhookHandlers: GDPRWebhookHandlers
+    webhookHandlers
   })
 );
 
