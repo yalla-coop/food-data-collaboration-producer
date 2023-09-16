@@ -11,7 +11,7 @@ import fdcRouters from './fdc-modules/fdc-routers.js';
 import shopify from './shopify.js';
 import GDPRWebhookHandlers from './gdpr.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
-import subscribeToWebhook from './utils/subscribeToWebhook.js';
+import subscribeToWebhook from './utils/subscribe-to-webhook.js';
 
 dotenv.config();
 
