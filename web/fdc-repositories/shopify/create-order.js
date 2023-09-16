@@ -1,9 +1,9 @@
 // TODO :  handle order status -  billing address and shipping address
 
-import {getOfflineSessionByShopName} from './get-offline-session-by-shop-name.js';
+import { getOfflineSessionByShopName } from './get-offline-session-by-shop-name.js';
 import shopify from '../../shopify.js';
 import createCustomer from './create-customer.js';
-const createOrder = async ({lineItems, shopName, orderData}) => {
+const createOrder = async ({ lineItems, shopName, orderData }) => {
   let customerId = null;
 
   const session = await getOfflineSessionByShopName(shopName);

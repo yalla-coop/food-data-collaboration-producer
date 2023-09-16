@@ -34,6 +34,7 @@ const apiObject =
         restResources,
         billing: undefined,
         accessToken: config.SHOPIFY_ACCESS_TOKEN,
+        apiSecretKey: config.SHOPIFY_API_SECRET_KEY,
         HOST: config.HOST,
         scopes
       }

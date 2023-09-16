@@ -1,10 +1,13 @@
 import { Router } from 'express';
 
-import retrieveOrder from './retrieve-order.js';
-import convertFDCRequestFromJSON from '../../../middleware/convertFDCRequestFromJSON.js';
+import createBaseOrder from './create-base-order.js';
+import updateCurrentOrder from './update-current-order.js';
+import completedCurrentOrder from './complete-current-order.js';
 
 const orders = Router();
 
-orders.post('/', convertFDCRequestFromJSON, retrieveOrder);
+orders.post('/', createBaseOrder);
+orders.patch('/:id', updateCurrentOrder);
+orders.patch('/:id/complete', completedCurrentOrder);
 
 export default orders;

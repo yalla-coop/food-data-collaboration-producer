@@ -35,8 +35,9 @@ export const getFDCProductGraphQlQuery = ({
                 id
                 title
                 price
+                inventoryQuantity
                 inventoryItem {
-                  id
+                  tracked
                 }
                 inventoryPolicy
                 availableForSale

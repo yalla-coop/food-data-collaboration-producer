@@ -1,11 +1,10 @@
 BEGIN;
-DROP TABLE IF EXISTS users;
-CREATE TABLE IF NOT EXISTS users (
- "id" SERIAL PRIMARY KEY,
-  user_id TEXT NOT NULL UNIQUE,
+DROP TABLE IF EXISTS hub_stores_listeners;
+CREATE TABLE IF NOT EXISTS hub_stores_listeners (
+  "id" SERIAL PRIMARY KEY,
   shop TEXT,
-  name TEXT,
-  status BOOLEAN NOT NULL DEFAULT FALSE,
+  listener_url TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT FALSE,
   "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
   "updated_at" TIMESTAMP NOT NULL DEFAULT NOW()
 );

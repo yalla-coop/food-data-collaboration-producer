@@ -6,7 +6,7 @@ import express from 'express';
 import serveStatic from 'serve-static';
 import cors from 'cors';
 import apiRouters from './api-routers.js';
-import fdcRouters from './fdc-routers.js';
+import fdcRouters from './fdc-modules/fdc-routers.js';
 import shopify from './shopify.js';
 import GDPRWebhookHandlers from './gdpr.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
@@ -34,6 +34,13 @@ const STATIC_PATH =
 
 const app = express();
 
+app.post(
+  shopify.config.webhooks.path,
+  shopify.processWebhooks({
+    webhookHandlers: GDPRWebhookHandlers
+  })
+);
+
 app.get(shopify.config.auth.path, shopify.auth.begin());
 app.get(
   shopify.config.auth.callbackPath,
@@ -59,11 +66,17 @@ app.use('/*', shopify.ensureInstalledOnShop(), async (_req, res) =>
 
 app.use(errorMiddleware);
 
-app.post(
-  shopify.config.webhooks.path,
-  shopify.processWebhooks({
-    webhookHandlers: GDPRWebhookHandlers
-  })
-);
-
 export default app;
+
+/**
+ *
+ * TODO:-
+ * 1. Register the PRODUCTS_UPDATE webhook
+ * 2. Link this webhook to the listener
+ * 3. Create an endpoint to receive the access requests
+ *    from the hub users and add their data like the listener url,
+ *    shop name, etc to the database
+ * 4. Register the PRODUCTS_UPDATE webhook on the hub side also and the PRODUCTS DELETE
+ *  and based on them update the products table.
+ *
+ */
