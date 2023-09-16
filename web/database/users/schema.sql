@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TRIGGER set_timestamp
-BEFORE UPDATE ON "hub_stores_listeners"
+BEFORE UPDATE ON "users"
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
