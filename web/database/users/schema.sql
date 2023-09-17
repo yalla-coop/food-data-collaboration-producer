@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users (
  "id" SERIAL PRIMARY KEY,
   user_id TEXT NOT NULL UNIQUE,
+  listener_url TEXT,
   shop TEXT,
   name TEXT,
   status BOOLEAN NOT NULL DEFAULT FALSE,

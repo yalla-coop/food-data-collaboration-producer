@@ -1,4 +1,4 @@
-import { Checkbox } from '@shopify/polaris';
+import { Button, Checkbox } from '@shopify/polaris';
 import { useQueryClient } from 'react-query';
 import { useAppQuery, useAppMutation } from '../hooks';
 
@@ -9,6 +9,18 @@ export default function HubUsers() {
   });
 
   const { mutateAsync, isLoading: updateUserStatusLoading } = useAppMutation({
+    reactQueryOptions: {
+      onSuccess: () => {
+        queryClient.invalidateQueries('/api/hub-users');
+      }
+    }
+  });
+
+  const {
+    mutateAsync: deleteUser,
+    isLoading: deleteUserLoading,
+    error: deleteUserError
+  } = useAppMutation({
     reactQueryOptions: {
       onSuccess: () => {
         queryClient.invalidateQueries('/api/hub-users');
@@ -30,17 +42,35 @@ export default function HubUsers() {
     );
   }
 
+  if (deleteUserError) {
+    return (
+      <div>
+        <p>Something went wrong</p>
+        {deleteUserError && <p>{deleteUserError?.message}</p>}
+      </div>
+    );
+  }
+
   return users.map((user) => (
     <div
       key={user.id}
       style={{
         display: 'flex',
-        alignItems: 'center'
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        background: '#fff',
+        padding: '10px',
+        borderRadius: '5px',
+        marginBottom: '10px',
+        borderBottom: '1px solid #ccc'
       }}
     >
       <Checkbox
+        helpText="User status"
+        label="Approved"
         style={{
-          width: '50px'
+          width: '50px',
+          flexGrow: 1
         }}
         disabled={updateUserStatusLoading}
         checked={user.status}
@@ -56,14 +86,45 @@ export default function HubUsers() {
           });
         }}
       />
-      <p
+
+      <div
         style={{
-          margin: '0 10px'
+          flexGrow: 2,
+          marginLeft: '10px'
         }}
       >
-        {user.name}
-      </p>
-      <p>{user.userId}</p>
+        <p>
+          <strong>Name:</strong>
+          {user.name}
+        </p>
+        <p>
+          <strong>User Id:</strong>
+          {user.userId}
+        </p>
+        <p>
+          <strong>listener URL:</strong>
+          {user.listenerUrl}
+        </p>
+      </div>
+
+      <Button
+        primary
+        loading={deleteUserLoading}
+        disabled={deleteUserLoading}
+        onClick={async () => {
+          await deleteUser({
+            url: `/api/hub-users/${user.userId}`,
+            fetchInit: {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }
+          });
+        }}
+      >
+        Delete User
+      </Button>
     </div>
   ));
 }

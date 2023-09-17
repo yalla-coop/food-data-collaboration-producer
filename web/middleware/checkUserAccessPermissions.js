@@ -6,7 +6,12 @@ const clientSecret = process.env.OIDC_CLIENT_SECRET;
 const issuerURL = process.env.OIDC_ISSUER;
 
 const checkUserAccessPermissions = async (req, res, next) => {
-  const { userId, accessToken } = req.body;
+  const {
+    userId,
+    accessToken,
+    shop: hubShopName = '',
+    listenerUrl = ''
+  } = req.body;
 
   if (!userId) {
     return res.status(403).json({
@@ -41,9 +46,10 @@ const checkUserAccessPermissions = async (req, res, next) => {
     if (!user || user.rows.length === 0) {
       // insert this user into the database with status false
       await query(
-        'INSERT INTO users (user_id, status,name) VALUES ($1, $2,$3)',
-        [userId, false, userName]
+        'INSERT INTO users (user_id, status, name, shop, listener_url) VALUES ($1,$2,$3,$4,$5)',
+        [userId, false, userName, hubShopName, listenerUrl]
       );
+
       return res.status(403).json({
         message: 'User access denied',
         error: 'User not found in database'
