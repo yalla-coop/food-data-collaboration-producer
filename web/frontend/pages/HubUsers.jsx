@@ -102,7 +102,7 @@ export default function HubUsers() {
           {user.userId}
         </p>
         <p>
-          <strong>listener URL:</strong>
+          <strong>Listener URL:</strong>
           {user.listenerUrl}
         </p>
       </div>
