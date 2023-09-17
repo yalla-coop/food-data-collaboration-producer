@@ -13,6 +13,8 @@ const checkUserAccessPermissions = async (req, res, next) => {
     listenerUrl = ''
   } = req.body;
 
+  console.log('req.body--- from check user access permission :::', req.body);
+
   if (!userId) {
     return res.status(403).json({
       message: 'User access denied',
