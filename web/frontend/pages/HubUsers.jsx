@@ -101,10 +101,6 @@ export default function HubUsers() {
           <strong>User Id:</strong>
           {user.userId}
         </p>
-        <p>
-          <strong>Listener URL:</strong>
-          {user.listenerUrl}
-        </p>
       </div>
 
       <Button

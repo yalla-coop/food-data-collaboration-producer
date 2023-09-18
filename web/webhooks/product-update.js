@@ -22,19 +22,6 @@ export const productUpdateListener = async (product, webhookId, topic) => {
       return 'Webhook already exists';
     }
 
-    // const sql = 'SELECT * from users WHERE status = true';
-    // const result = await query(sql);
-    // const listeners = result.rows;
-    // const promises = listeners.map(async (listener) => {
-    //   const { shop: listenerShop, listenerUrl } = listener;
-    //   await axios.post(listenerUrl, {
-    //     shopName: listenerShop,
-    //     product
-    //   });
-    // });
-
-    // await Promise.allSettled(promises);
-
     const insertWebhookQuery =
       'INSERT INTO webhooks (id, topic, data) VALUES ($1, $2, $3)';
 
