@@ -30,17 +30,8 @@ const getProductsByIds = async (req, res) => {
     const products = await shopify.api.rest.Product.all({
       session: shopifySession,
       ids,
-      fields: ['variants'],
       limit: 250
     });
-
-    // await shopify.api.rest.InventoryLevel.all({
-    //   session: shopifySession,
-    //   limit: 250,
-    //   inventory_item_ids: products.map(
-    //     (product) => product.variants[0].inventory_item_id
-    //   )
-    // });
 
     return res.status(200).json({
       products,
