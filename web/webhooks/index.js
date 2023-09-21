@@ -1,5 +1,4 @@
 import { DeliveryMethod } from '@shopify/shopify-api';
-import productUpdateWebhookHandler from './productUpdateWebhookHandler.js';
 
 const GDPRWebhookHandlers = {
   CUSTOMERS_DATA_REQUEST: {
@@ -35,6 +34,5 @@ const GDPRWebhookHandlers = {
 };
 
 export default {
-  ...GDPRWebhookHandlers,
-  ...productUpdateWebhookHandler
+  ...GDPRWebhookHandlers
 };

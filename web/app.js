@@ -11,7 +11,6 @@ import fdcRouters from './fdc-modules/fdc-routers.js';
 import shopify from './shopify.js';
 import webhookHandlers from './webhooks/index.js';
 import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
-import subscribeToWebhook from './utils/subscribe-to-webhook.js';
 
 dotenv.config();
 
@@ -49,19 +48,6 @@ app.get(shopify.config.auth.path, shopify.auth.begin());
 app.get(
   shopify.config.auth.callbackPath,
   shopify.auth.callback(),
-  async (req, res, next) => {
-    try {
-      await subscribeToWebhook({
-        session: res.locals.shopify.session,
-        HOST: process.env.HOST,
-        topic: 'products/update',
-        shopify
-      });
-      return next();
-    } catch (err) {
-      return next(err);
-    }
-  },
   shopify.redirectToShopifyOrAppRoot()
 );
 
