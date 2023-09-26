@@ -35,6 +35,14 @@ const createBaseDraftOrder = async (req, res, next) => {
     order.line_items = [{ title: 'test-product', quantity: 1, price: 0 }];
     order.tags = 'FDC order';
 
+    order.customer = {
+      first_name: 'Mark',
+      last_name: 'Claydon',
+      email: 'mark@yallacooperative.com'
+    };
+
+    order.note = 'hassanstroe.myshopify.com';
+
     await order.save({
       update: true
     });

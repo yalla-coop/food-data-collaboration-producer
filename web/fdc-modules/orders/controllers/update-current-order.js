@@ -60,6 +60,14 @@ export const createNewOrderBasedOnCurrentOrder = async ({
       session
     });
 
+    newOrder.customer = {
+      first_name: 'Mark',
+      last_name: 'Claydon',
+      email: 'mark@yallacooperative.com'
+    };
+
+    newOrder.note = 'hassanstroe.myshopify.com';
+
     newOrder.line_items = aggregateLineItems([
       ...currentOrder.line_items,
       ...lineItems
