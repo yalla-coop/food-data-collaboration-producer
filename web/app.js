@@ -10,7 +10,6 @@ import apiRouters from './api-routers.js';
 import fdcRouters from './fdc-modules/fdc-routers.js';
 import shopify from './shopify.js';
 import webhookHandlers from './webhooks/index.js';
-import addSessionShopToReqParams from './middleware/addSessionShopToReqParameters.js';
 
 dotenv.config();
 
@@ -53,8 +52,6 @@ app.get(
 
 app.use('/fdc', cors(), express.json(), fdcRouters, errorMiddleware);
 app.use('/api/*', shopify.validateAuthenticatedSession());
-
-app.use('/*', addSessionShopToReqParams);
 
 app.use('/api', express.json(), apiRouters);
 

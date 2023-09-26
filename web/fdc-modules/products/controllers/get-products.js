@@ -3,16 +3,22 @@ import getProductsUseCase from '../use-cases/get-products.js';
 const getProducts = async (req, res) => {
   try {
     const { shopifySession } = req;
-    const { sinceId } = req.query;
+    const { sinceId, remainingProductsCountBeforeNextFetch } = req.query;
 
-    const { products, lastId } = await getProductsUseCase({
+    const {
+      products,
+      lastId,
+      remainingProductsCount: remainingProductsCountAfter
+    } = await getProductsUseCase({
       session: shopifySession,
-      sinceId
+      sinceId,
+      remainingProductsCount: remainingProductsCountBeforeNextFetch
     });
 
     return res.status(200).json({
       products,
       lastId,
+      remainingProductsCountAfter,
       success: true,
       message: 'Products retrieved successfully'
     });

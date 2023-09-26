@@ -3,18 +3,39 @@
 /* eslint-disable camelcase */
 import shopify from '../../../shopify.js';
 
-const getProducts = async ({ session, sinceId }) => {
+const getProducts = async ({
+  session,
+  sinceId = '0',
+  remainingProductsCount = 0
+}) => {
   try {
+    const productsCountResult = await shopify.api.rest.Product.count({
+      session
+    });
+
+    const { count: totalProductsCount } = productsCountResult;
+
     const products = await shopify.api.rest.Product.all({
       session,
       limit: 250,
       since_id: sinceId
     });
 
+    let remainingProducts = 0;
+
+    if (sinceId === '0') {
+      remainingProducts = Number(totalProductsCount) - products.length;
+    } else {
+      remainingProducts = Math.abs(
+        products.length - Number(remainingProductsCount)
+      );
+    }
+
     if (!products.length) {
       return {
         products: [],
-        sinceId: null
+        sinceId: null,
+        remainingProductsCount: remainingProducts
       };
     }
 
@@ -42,7 +63,8 @@ const getProducts = async ({ session, sinceId }) => {
 
     return {
       products: fdcProducts,
-      lastId
+      lastId,
+      remainingProductsCount: remainingProducts
     };
   } catch (err) {
     throw new Error(err);
