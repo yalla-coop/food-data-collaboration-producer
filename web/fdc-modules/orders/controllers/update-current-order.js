@@ -19,14 +19,17 @@ export const cancelOrderAndThenDeleted = async ({ session, id }) => {
 export const aggregateLineItems = (lineItems) => {
   const aggregatedLineItems = lineItems.reduce((acc, lineItem) => {
     const existingLineItem = acc.find(
-      (item) => item.variant_id === lineItem.variant_id
+      (item) => Number(item.variant_id) === Number(lineItem.variant_id)
     );
 
     if (existingLineItem) {
       existingLineItem.quantity =
         Number(existingLineItem.quantity) + Number(lineItem.quantity);
     } else {
-      acc.push(lineItem);
+      acc.push({
+        variant_id: Number(lineItem.variant_id),
+        quantity: Number(lineItem.quantity)
+      });
     }
 
     return acc;
@@ -71,7 +74,8 @@ export const createNewOrderBasedOnCurrentOrder = async ({
     newOrder.line_items = aggregateLineItems([
       ...currentOrder.line_items,
       ...lineItems
-    ]);
+    ]).filter((item) => Number(item.variant_id) !== 0);
+
     newOrder.inventory_behaviour = 'decrement_obeying_policy';
     newOrder.tags = 'FDC order';
 
