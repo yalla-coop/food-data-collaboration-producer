@@ -74,22 +74,13 @@ export const createNewOrderBasedOnCurrentOrder = async ({
     newOrder.inventory_behaviour = 'decrement_obeying_policy';
     newOrder.tags = 'FDC order';
 
-    newOrder.saveAndUpdate()
-        .then(()=>{
-          cancelOrderAndThenDeleted({
-            session,
-            id: orderId
-          })
-              .then(()=>{})
-              .catch((error)=>{
-                console.log(`Couldn't cancel a new order due to ${error}`)
-                throw new Error(`Couldn't cancel the old order due to ${error}`);
-              })
-        })
-        .catch((error)=>{
-          console.log(`Couldn't create a new order due to ${error}`)
-          throw new Error(`Couldn't create a new order due to ${error}`);
-        })
+    await newOrder.saveAndUpdate();
+
+    await cancelOrderAndThenDeleted({
+      session,
+      id: orderId
+    });
+
     return newOrder;
   } catch (err) {
     throw new Error(err);
