@@ -54,11 +54,6 @@ export const createNewOrderBasedOnCurrentOrder = async ({
       throw new Error(`No order found for id ${orderId}`);
     }
 
-    await cancelOrderAndThenDeleted({
-      session,
-      id: orderId
-    });
-
     const newOrder = new shopify.api.rest.Order({
       session
     });
@@ -79,8 +74,22 @@ export const createNewOrderBasedOnCurrentOrder = async ({
     newOrder.inventory_behaviour = 'decrement_obeying_policy';
     newOrder.tags = 'FDC order';
 
-    await newOrder.saveAndUpdate();
-
+    newOrder.saveAndUpdate()
+        .then(()=>{
+          cancelOrderAndThenDeleted({
+            session,
+            id: orderId
+          })
+              .then(()=>{})
+              .catch((error)=>{
+                console.log(`Couldn't cancel a new order due to ${error}`)
+                throw new Error(`Couldn't cancel the old order due to ${error}`);
+              })
+        })
+        .catch((error)=>{
+          console.log(`Couldn't create a new order due to ${error}`)
+          throw new Error(`Couldn't create a new order due to ${error}`);
+        })
     return newOrder;
   } catch (err) {
     throw new Error(err);
