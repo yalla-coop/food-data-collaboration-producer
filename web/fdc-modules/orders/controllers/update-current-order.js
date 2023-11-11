@@ -41,7 +41,8 @@ export const aggregateLineItems = (lineItems) => {
 export const createNewOrderBasedOnCurrentOrder = async ({
   session,
   orderId,
-  lineItems
+  lineItems,
+  customer
 }) => {
   try {
     const currentOrder = await shopify.api.rest.Order.find({
@@ -58,13 +59,8 @@ export const createNewOrderBasedOnCurrentOrder = async ({
       session
     });
 
-    newOrder.customer = {
-      first_name: 'Mark',
-      last_name: 'Claydon',
-      email: 'mark@yallacooperative.com'
-    };
-
-    newOrder.note = 'hassanstroe.myshopify.com';
+    newOrder.customer = customer;
+    newOrder.note = customer?.email ?? "test@yallacooperative.com";
 
     newOrder.line_items = aggregateLineItems([
       ...currentOrder.line_items,
@@ -83,6 +79,7 @@ export const createNewOrderBasedOnCurrentOrder = async ({
 
     return newOrder;
   } catch (err) {
+    console.log(err)
     throw new Error(err);
   }
 };
@@ -93,6 +90,8 @@ const updateCurrentOrder = async (req, res, next) => {
     const { id: orderId } = req.params;
 
     const { lineItems } = req.body;
+
+    const { customer } = req.body;
 
     const sessions = await shopify.config.sessionStorage.findSessionsByShop(
       shopName
@@ -116,7 +115,8 @@ const updateCurrentOrder = async (req, res, next) => {
     const newOrder = await createNewOrderBasedOnCurrentOrder({
       session: currentSession,
       orderId,
-      lineItems
+      lineItems,
+      customer
     });
 
     return res.status(200).json({
