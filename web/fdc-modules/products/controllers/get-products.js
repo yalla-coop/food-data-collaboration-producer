@@ -11,7 +11,7 @@ const getProducts = async (req, res) => {
       products,
       lastId,
       remainingProductsCount: remainingProductsCountAfter,
-      dfcTestProductExports
+      exportedDFCProducts
     } = await getProductsUseCase({
       session: shopifySession,
       sinceId,
@@ -24,7 +24,7 @@ const getProducts = async (req, res) => {
       remainingProductsCountAfter,
       success: true,
       message: 'Products retrieved successfully',
-      dfcTestProductExports
+      exportedDFCProducts
     });
   } catch (error) {
     return res.status(500).json({

@@ -3,9 +3,7 @@
 /* eslint-disable camelcase */
 import shopify from '../../../shopify.js';
 
-// import { connector, createSuppliedProduct } from '../../../connector/index.js';
-import { Connector } from '@datafoodconsortium/connector';
-const connector = new Connector();
+import { exportSuppliedProducts } from '../../../connector/index.js';
 
 const getProducts = async ({
   session,
@@ -65,31 +63,13 @@ const getProducts = async ({
       });
     });
 
-    const testProduct = fdcProducts?.[0];
-
-    const testId = JSON.stringify(testProduct.id);
-    const dfcTestProductData = {
-      semanticId: testId,
-      description: testProduct.title,
-
-      Name: testProduct.title
-
-      // id: testId
-    };
-
-    // console.log('dfcTestProductData :>> ', dfcTestProductData);
-    const dfcTestSuppliedProduct =
-      connector.createSuppliedProduct(dfcTestProductData);
-
-    const dfcTestProductExports = await connector.export([
-      dfcTestSuppliedProduct
-    ]);
+    const exportedDFCProducts = await exportSuppliedProducts(fdcProducts);
 
     return {
       products: fdcProducts,
       lastId,
       remainingProductsCount: remainingProducts,
-      dfcTestProductExports
+      exportedDFCProducts
     };
   } catch (err) {
     throw new Error(err);
