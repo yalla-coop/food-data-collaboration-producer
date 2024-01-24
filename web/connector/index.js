@@ -1,4 +1,4 @@
-import { Connector } from '@datafoodconsortium/connector';
+import { Connector, SuppliedProduct } from '@datafoodconsortium/connector';
 import facets from './thesaurus/facets.json' assert { type: 'json' };
 import measures from './thesaurus/measures.json' assert { type: 'json' };
 import productTypes from './thesaurus/productTypes.json' assert { type: 'json' };
@@ -12,25 +12,23 @@ await Promise.all([
   connector.loadProductTypes(JSON.stringify(productTypes))
 ]);
 
-function mapDFCProduct(product) {
-  const dfcMappedProduct = {
-    // semanticId: `${process.env.SHOPIFY_STORE_PRODUCTS_URL}/${product.id}`,
-    semanticId: `https://admin.shopify.com/store/fdc-hub-yalla-dev/products/${product.id}`,
-    description: product.title,
-    Name: product.title,
-    Id: JSON.stringify(product.id)
-  };
+function createSuppliedProduct(product) {
+  const suppliedProduct = new SuppliedProduct({
+    connector,
+    semanticId: `https://admin.shopify.com/store/fdc-hub-yalla-dev/products/${product.id}`, // TODO: add shop url to env
+    name: product.title,
+    description: product.body_html, // TODO: map description without html
+    productType: connector.PRODUCT_TYPES.VEGETABLE.TOMATO.ROUND_TOMATO // TODO: map product type
+  });
 
-  return dfcMappedProduct;
+  return suppliedProduct;
 }
 
 function createSuppliedProducts(fdcProductsFromShopify) {
   if (!fdcProductsFromShopify) {
     return [];
   }
-  return fdcProductsFromShopify.map((p) =>
-    connector.createSuppliedProduct(mapDFCProduct(p))
-  );
+  return fdcProductsFromShopify.map((p) => createSuppliedProduct(p));
 }
 
 async function exportSuppliedProducts(fdcProductsFromShopify) {

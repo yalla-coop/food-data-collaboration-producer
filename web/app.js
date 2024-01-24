@@ -57,7 +57,7 @@ app.use('/api', express.json(), apiRouters);
 
 app.use(serveStatic(STATIC_PATH, { index: false }));
 
-app.use('/*', shopify.ensureInstalledOnShop(), async (_req, res) =>
+app.use('/*', async (_req, res) =>
   res
     .status(200)
     .set('Content-Type', 'text/html')
