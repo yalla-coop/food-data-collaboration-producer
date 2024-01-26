@@ -65,10 +65,9 @@ const getProducts = async ({
     const exportedDFCProducts = await exportSuppliedProducts(fdcProducts);
 
     return {
-      products: fdcProducts,
+      products: exportedDFCProducts,
       lastId,
-      remainingProductsCount: remainingProducts,
-      exportedDFCProducts
+      remainingProductsCount: remainingProducts
     };
   } catch (err) {
     throw new Error(err);
