@@ -14,7 +14,7 @@ if (
 }
 
 const proxyOptions = {
-  target: `http://127.0.0.1:${process.env.BACKEND_PORT}`,
+  target: `http://127.0.0.1:${8081}`,
   changeOrigin: false,
   secure: true,
   ws: false
