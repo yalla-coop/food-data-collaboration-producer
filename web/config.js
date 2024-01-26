@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import * as yup from 'yup';
 
-const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+const envFile = process.env.NODE_ENV === 'development' ? '.env.test' : '.env';
 
 dotenv.config({ path: path.join(process.cwd(), envFile) });
 

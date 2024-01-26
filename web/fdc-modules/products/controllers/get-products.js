@@ -5,8 +5,6 @@ const getProducts = async (req, res) => {
     const { shopifySession } = req;
     const { sinceId, remainingProductsCountBeforeNextFetch } = req.query;
 
-    // const { accessToken, userId } = req.body;
-
     const {
       products,
       lastId,
