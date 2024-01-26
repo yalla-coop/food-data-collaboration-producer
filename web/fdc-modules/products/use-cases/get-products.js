@@ -1,9 +1,8 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable function-paren-newline */
 /* eslint-disable camelcase */
+import exportSuppliedProducts from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
-
-import { exportSuppliedProducts } from '../../../connector/index.js';
 
 const getProducts = async ({
   session,
