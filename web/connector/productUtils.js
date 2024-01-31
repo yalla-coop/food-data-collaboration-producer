@@ -1,4 +1,3 @@
-import { throwError } from '../utils/index.js';
 import {
   connector,
   CatalogItem,
@@ -7,22 +6,38 @@ import {
   Price,
   Offer
 } from './index.js';
+import { addParamToParams, throwError } from '../utils/index.js';
+import productTypes from './mappedProductTypes.js';
 
 const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
 const euro = connector.MEASURES.UNIT.CURRENCYUNIT.EURO;
 const semanticIdPrefix = process.env.PRODUCER_SHOP_URL;
+
 function createSuppliedProduct(product) {
-  const semanticId = `${semanticIdPrefix}product/${product.id}`;
+  const semanticBase = `${semanticIdPrefix}product/${product.id}`;
+  let params = '';
+
+  params = addParamToParams(params, 'handle', product.handle);
+  params = addParamToParams(params, 'imageId', product.image?.id);
+
+  const fullSemanticId = semanticBase + params;
 
   const suppliedProduct = new SuppliedProduct({
     connector,
-    semanticId,
+    semanticId: fullSemanticId,
     name: product.title,
-    image: product.image?.src,
-    // TODO make this dynamic
-    description: 'test description',
-    productType: connector.PRODUCT_TYPES.VEGETABLE.TOMATO.ROUND_TOMATO
+    description: product.body_html,
+    productType: productTypes[product.product_type] ?? null
   });
+
+  if (
+    product.image &&
+    product.image.src &&
+    product.image.product_id &&
+    product.image.product_id === product.id
+  ) {
+    suppliedProduct.addImage(product.image.src);
+  }
 
   return suppliedProduct;
 }
@@ -60,8 +75,14 @@ const createCatalogItem = (semanticId, offers, sku, stockLimitation) =>
   });
 
 // creates a variant supplied product with quantity and price
-function createVariantSuppliedProduct(variant) {
+function createVariantSuppliedProduct(variant, images) {
   const semanticBase = `${semanticIdPrefix}product/${variant.product_id}/variant/${variant.id}/inventory/${variant.inventory_item_id}`;
+  let params = '';
+
+  params = addParamToParams(params, 'tracked', variant.tracked);
+  params = addParamToParams(params, 'imageId', variant.image_id);
+
+  const fullSemanticId = semanticBase + params;
 
   const quantity = createQuantitativeValue(variant.weight, kilogram);
   const hasVat = variant.taxable ? 1.0 : 0.0; // TODO check how the vat rate can be added
@@ -76,11 +97,19 @@ function createVariantSuppliedProduct(variant) {
 
   const suppliedProduct = new SuppliedProduct({
     connector,
-    semanticId: semanticBase,
+    semanticId: fullSemanticId,
     name: variant.title,
     quantity,
     catalogItems: [catalogItem]
   });
+
+  if (Array.isArray(images) && images.length > 0 && variant.image_id) {
+    const variantImage = images.find((img) => img.id === variant.image_id);
+
+    if (variantImage && variantImage.src) {
+      suppliedProduct.addImage(variantImage.src);
+    }
+  }
 
   return [offer, catalogItem, suppliedProduct];
 }
@@ -100,7 +129,7 @@ function createSuppliedProducts(fdcProductsFromShopify) {
     // process variants
     if (Array.isArray(product.variants) && product.variants.length > 0) {
       const variantProducts = product.variants.flatMap((variant) =>
-        createVariantSuppliedProduct(variant)
+        createVariantSuppliedProduct(variant, product.images)
       );
 
       productsToExport.push(...variantProducts); // offer, catalogItem, suppliedProduct
