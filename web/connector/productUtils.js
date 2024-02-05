@@ -9,8 +9,8 @@ import {
 import { addParamToParams, throwError } from '../utils/index.js';
 import productTypes from './mappedProductTypes.js';
 
-const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
-const euro = connector.MEASURES.UNIT.CURRENCYUNIT.EURO;
+const kilogram = connector?.MEASURES?.UNIT?.QUANTITYUNIT?.KILOGRAM;
+const euro = connector?.MEASURES?.UNIT?.CURRENCYUNIT?.EURO;
 const semanticIdPrefix = process.env.PRODUCER_SHOP_URL;
 
 function createSuppliedProduct(product) {
