@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable function-paren-newline */
 /* eslint-disable camelcase */
+import exportSuppliedProducts from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
 
 const getProducts = async ({
@@ -61,8 +62,10 @@ const getProducts = async ({
       });
     });
 
+    const exportedDFCProducts = await exportSuppliedProducts(fdcProducts);
+
     return {
-      products: fdcProducts,
+      products: exportedDFCProducts,
       lastId,
       remainingProductsCount: remainingProducts
     };

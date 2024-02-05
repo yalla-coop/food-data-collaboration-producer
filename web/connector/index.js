@@ -1,50 +1,46 @@
 import {
   Connector,
-  QuantitativeValue,
+  CatalogItem,
   SuppliedProduct,
-  AllergenCharacteristic,
-  NutrientCharacteristic,
-  Person,
-  SaleSession,
-  OrderLine,
-  Order,
-  PhysicalCharacteristic
+  QuantitativeValue,
+  Price,
+  Offer
 } from '@datafoodconsortium/connector';
-import facets from './thesaurus/facets.json' assert {type: 'json'};
-import measures from './thesaurus/measures.json' assert {type: 'json'};
-import productTypes from './thesaurus/productTypes.json' assert {type: 'json'};
+import facets from './thesaurus/facets.json' assert { type: 'json' };
+import measures from './thesaurus/measures.json' assert { type: 'json' };
+import productTypes from './thesaurus/productTypes.json' assert { type: 'json' };
+import { throwError } from '../utils/index.js';
 
-const connector = new Connector();
+let _connector;
+let connected = false;
 
-connector.loadFacets(JSON.stringify(facets));
-connector.loadMeasures(JSON.stringify(measures));
-connector.loadProductTypes(JSON.stringify(productTypes));
+const loadConnectorWithResources = async () => {
+  try {
+    if (!connected) {
+      const connector = new Connector();
+      const resourcePromisesArray = [
+        connector.loadFacets(JSON.stringify(facets)),
+        connector.loadMeasures(JSON.stringify(measures)),
+        connector.loadProductTypes(JSON.stringify(productTypes))
+      ];
+      await Promise.all(resourcePromisesArray);
 
-function createSuppliedProduct(product) {
-  let {
-    id,
-    description,
-    descriptionHtml,
-    productType,
-    title,
-    totalInventory,
-    status,
-    handle,
-    metafields,
-    priceRange
-  } = product;
+      connected = true;
+      _connector = connector;
+      return _connector;
+    }
 
-  let suppliedProduct = new SuppliedProduct(title, description);
-
-  return suppliedProduct;
-}
+    return _connector;
+  } catch (error) {
+    throwError('Error loading connector', error);
+  }
+};
 
 export {
-  Connector,
-  connector,
-  Person,
-  SaleSession,
-  OrderLine,
-  Order,
-  createSuppliedProduct
+  loadConnectorWithResources,
+  CatalogItem,
+  SuppliedProduct,
+  QuantitativeValue,
+  Price,
+  Offer
 };
