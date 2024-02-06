@@ -2,9 +2,7 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import * as yup from 'yup';
 
-const envFile = ['development', 'test'].includes(process.env.NODE_ENV)
-  ? '/web/.env.test'
-  : '.env';
+const envFile = process.env.NODE_ENV === 'test' ? 'web/.env.test' : '.env';
 
 dotenv.config({ path: path.join(process.cwd(), envFile) });
 
