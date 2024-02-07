@@ -94,8 +94,8 @@ async function createVariantSuppliedProduct(variant, images) {
     const semanticBase = `${semanticIdPrefix}product/${variant.product_id}/variant/${variant.id}/inventory/${variant.inventory_item_id}`;
     let params = '';
 
-    params = addParamToParams(params, 'tracked', variant.tracked);
-    params = addParamToParams(params, 'imageId', variant.image_id);
+    params = addParamToParams(params, 'tracked', variant?.tracked);
+    params = addParamToParams(params, 'imageId', variant?.image_id);
 
     const fullSemanticId = semanticBase + params;
 
@@ -144,16 +144,16 @@ async function createVariantSuppliedProduct(variant, images) {
   return null;
 }
 
-async function createSuppliedProducts(fdcProductsFromShopify) {
+async function createSuppliedProducts(productsFromShopify) {
   try {
     if (
-      !Array.isArray(fdcProductsFromShopify) ||
-      fdcProductsFromShopify.length === 0
+      !Array.isArray(productsFromShopify) ||
+      productsFromShopify.length === 0
     ) {
       throwError('Error creating supplied products: no products found');
     }
 
-    const productsPromises = fdcProductsFromShopify.map(async (product) => {
+    const productsPromises = productsFromShopify.map(async (product) => {
       const suppliedProduct = await createSuppliedProduct(product);
       const productsToExport = [suppliedProduct]; // Start with the parent product
 
@@ -179,11 +179,11 @@ async function createSuppliedProducts(fdcProductsFromShopify) {
   return null;
 }
 
-async function exportSuppliedProducts(fdcProductsFromShopify) {
+async function exportSuppliedProducts(productsFromShopify) {
   try {
     if (
-      !Array.isArray(fdcProductsFromShopify) ||
-      fdcProductsFromShopify.length === 0
+      !Array.isArray(productsFromShopify) ||
+      productsFromShopify.length === 0
     ) {
       return [];
     }
@@ -191,7 +191,7 @@ async function exportSuppliedProducts(fdcProductsFromShopify) {
     const connector = await loadConnectorWithResources();
 
     const suppliedDFCProducts = await createSuppliedProducts(
-      fdcProductsFromShopify
+      productsFromShopify
     );
 
     if (suppliedDFCProducts.length === 0) {

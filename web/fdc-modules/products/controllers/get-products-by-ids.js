@@ -1,3 +1,4 @@
+import exportSuppliedProducts from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
 
 const getProductsByIds = async (req, res) => {
@@ -11,15 +12,16 @@ const getProductsByIds = async (req, res) => {
       message: 'Missing ids array'
     });
   }
+  const idsArray = ids.split(',');
 
-  if (ids?.split(',')?.length === 0) {
+  if (idsArray.length === 0) {
     return res.status(400).json({
       success: false,
       message: 'Empty ids array'
     });
   }
 
-  if (ids.length > 250) {
+  if (idsArray.length > 250) {
     return res.status(400).json({
       success: false,
       message: 'Maximum of 250 ids allowed'
@@ -33,8 +35,10 @@ const getProductsByIds = async (req, res) => {
       limit: 250
     });
 
+    const exportedDFCProducts = await exportSuppliedProducts(products);
+
     return res.status(200).json({
-      products,
+      products: exportedDFCProducts,
       success: true,
       message: 'Products retrieved successfully'
     });
