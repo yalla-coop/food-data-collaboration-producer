@@ -206,5 +206,9 @@ async function exportSuppliedProducts(fdcProductsFromShopify) {
   return null;
 }
 
-export default exportSuppliedProducts;
-export { createSuppliedProduct };
+export {
+  createSuppliedProduct,
+  createVariantSuppliedProduct,
+  createSuppliedProducts,
+  exportSuppliedProducts
+};
