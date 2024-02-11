@@ -206,4 +206,9 @@ async function exportSuppliedProducts(productsFromShopify) {
   return null;
 }
 
-export default exportSuppliedProducts;
+export {
+  createSuppliedProduct,
+  createVariantSuppliedProduct,
+  createSuppliedProducts,
+  exportSuppliedProducts
+};
