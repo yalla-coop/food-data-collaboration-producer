@@ -1,5 +1,8 @@
 import shopify from '../../../shopify.js';
-import importDFCConnectorOrder, { importDFCConnectorCustomer } from '../../../connector/ordersUtils.js';
+import importDFCConnectorOrder, {
+  importDFCConnectorCustomer
+} from '../../../connector/ordersUtils.js';
+import { throwError } from '../../../utils/index.js';
 
 export const cancelOrderAndThenDeleted = async ({ session, id }) => {
   const order = new shopify.api.rest.Order({
@@ -80,8 +83,7 @@ export const createNewOrderBasedOnCurrentOrder = async ({
 
     return newOrder;
   } catch (err) {
-    console.log(err);
-    throw new Error(err);
+    throwError('Error creating new order based on current order', err);
   }
 };
 
