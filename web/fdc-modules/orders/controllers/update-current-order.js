@@ -1,4 +1,5 @@
 import shopify from '../../../shopify.js';
+import importDFCConnectorOrder, { importDFCConnectorCustomer } from '../../../connector/ordersUtils.js';
 
 export const cancelOrderAndThenDeleted = async ({ session, id }) => {
   const order = new shopify.api.rest.Order({
@@ -60,7 +61,7 @@ export const createNewOrderBasedOnCurrentOrder = async ({
     });
 
     newOrder.customer = customer;
-    newOrder.note = customer?.email ?? "test@yallacooperative.com";
+    newOrder.note = customer?.email ?? 'test@yallacooperative.com';
 
     newOrder.line_items = aggregateLineItems([
       ...currentOrder.line_items,
@@ -79,7 +80,7 @@ export const createNewOrderBasedOnCurrentOrder = async ({
 
     return newOrder;
   } catch (err) {
-    console.log(err)
+    console.log(err);
     throw new Error(err);
   }
 };
@@ -89,9 +90,11 @@ const updateCurrentOrder = async (req, res, next) => {
     const { shop: shopName } = req.query;
     const { id: orderId } = req.params;
 
-    const { lineItems } = req.body;
+    const { exportedOrder, exportedCustomer } = req.body;
 
-    const { customer } = req.body;
+    const importedOrder = await importDFCConnectorOrder(exportedOrder);
+
+    const importedCustomer = await importDFCConnectorCustomer(exportedCustomer);
 
     const sessions = await shopify.config.sessionStorage.findSessionsByShop(
       shopName
@@ -115,8 +118,8 @@ const updateCurrentOrder = async (req, res, next) => {
     const newOrder = await createNewOrderBasedOnCurrentOrder({
       session: currentSession,
       orderId,
-      lineItems,
-      customer
+      lineItems: importedOrder,
+      customer: importedCustomer
     });
 
     return res.status(200).json({
