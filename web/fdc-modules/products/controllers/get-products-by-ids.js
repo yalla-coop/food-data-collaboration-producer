@@ -1,4 +1,4 @@
-import exportSuppliedProducts from '../../../connector/productUtils.js';
+import { exportSuppliedProducts } from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
 
 const getProductsByIds = async (req, res) => {
