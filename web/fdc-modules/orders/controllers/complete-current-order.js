@@ -6,7 +6,7 @@ export const completeCurrentShopifyOrder = async ({ session, id }) => {
   });
 
   order.id = id;
-  order.tags = 'FDC order,completed';
+  order.tags = 'FDC FINAL order';
   await order.saveAndUpdate();
   await order.close({});
 

@@ -33,7 +33,7 @@ const createBaseDraftOrder = async (req, res, next) => {
     });
 
     order.line_items = [{ title: 'test-product', quantity: 1, price: 0 }];
-    order.tags = 'FDC order';
+    order.tags = 'FDC part order';
 
     order.customer = {
       first_name: 'Mark',
