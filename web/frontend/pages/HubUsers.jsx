@@ -94,16 +94,16 @@ export default function HubUsers() {
           }}
       >
         <p>
+          <strong>Hub Name:</strong>
+          {user.shop}
+        </p>
+        <p>
           <strong>Name:</strong>
           {user.name}
         </p>
         <p>
           <strong>User Id:</strong>
           {user.userId}
-        </p>
-        <p>
-          <strong>Shop:</strong>
-          {user.shop}
         </p>
       </div>
 
