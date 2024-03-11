@@ -88,11 +88,15 @@ export default function HubUsers() {
       />
 
       <div
-        style={{
-          flexGrow: 2,
-          marginLeft: '10px'
-        }}
+          style={{
+            flexGrow: 2,
+            marginLeft: '10px'
+          }}
       >
+        <p>
+          <strong>Hub Name:</strong>
+          {user.shop}
+        </p>
         <p>
           <strong>Name:</strong>
           {user.name}
@@ -104,9 +108,9 @@ export default function HubUsers() {
       </div>
 
       <Button
-        primary
-        loading={deleteUserLoading}
-        disabled={deleteUserLoading}
+          primary
+          loading={deleteUserLoading}
+          disabled={deleteUserLoading}
         onClick={async () => {
           await deleteUser({
             url: `/api/hub-users/${user.userId}`,
