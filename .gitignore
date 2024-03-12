@@ -29,3 +29,5 @@ web/database.sqlite
 web/sessions.sqlite
 
 web/test-database.sqlite
+
+.yarn

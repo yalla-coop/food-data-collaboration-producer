@@ -2,19 +2,25 @@
 
 ## Getting Started
 
-Use Node js >=14.17.0
+Install Node (21.7.1 works)
 
 Install Shopify CLI:
 `https://shopify.dev/docs/themes/tools/cli/install`  
 
-Install ngrok:  
-`https://ngrok.com/`
+Install secrets into web/.env.test (get them from another developer for now)
 
 ```
 $ yarn
-$ yarn dev
+$ yarn dev --reset
 ```
 
+### Troubleshooting
+
+You may have to individually install the root, web and web/frontend directories, by typing yarn in each one respectively.
+If these fail due to errors about missing workspaces, you may be running yarn v3. Try downgrading to yarn v1.
+
+
+## Shopify stuff
 
 This is a template for building a [Shopify app](https://shopify.dev/apps/getting-started) using Node and React. It contains the basics for building a Shopify app.
 
