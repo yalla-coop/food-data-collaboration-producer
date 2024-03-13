@@ -1,8 +1,9 @@
 // TODO :  handle order status -  billing address and shipping address
-
 import { getOfflineSessionByShopName } from './get-offline-session-by-shop-name.js';
 import shopify from '../../shopify.js';
 import createCustomer from './create-customer.js';
+import { createOrder as createOrderFn } from '../../utils/handleShopifyOrders.js';
+
 const createOrder = async ({ lineItems, shopName, orderData }) => {
   let customerId = null;
 
@@ -19,7 +20,7 @@ const createOrder = async ({ lineItems, shopName, orderData }) => {
   } = orderData;
 
   const exitCustomers = await shopify.api.rest.Customer.search({
-    session: session,
+    session,
     query: `email:${emailAddress} OR phone:${phoneNumber}`
   });
 
@@ -36,18 +37,16 @@ const createOrder = async ({ lineItems, shopName, orderData }) => {
     customerId = exitCustomers?.customers?.[0]?.id;
   }
 
-  const order = new shopify.api.rest.Order({
-    session: session
-  });
-
-  order.line_items = lineItems;
-  order.inventory_behaviour = 'decrement_obeying_policy';
-  order.tags = 'FDC order';
-  order.customer = {
-    id: customerId
+  const orderDetails = {
+    line_items: lineItems,
+    tags: 'FDC part order',
+    inventory_behaviour: 'decrement_obeying_policy',
+    customer: {
+      id: customerId
+    }
   };
 
-  await order.saveAndUpdate();
+  const order = await createOrderFn(session, orderDetails);
 
   return {
     ...order,

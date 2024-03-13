@@ -1,16 +1,13 @@
-import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
+
+import {
+  createOrder,
+  holdFulfillmentOrder
+} from '../../../utils/handleShopifyOrders.js';
 
 // I am thinking of create an order for the first time , and then cancel it and create a new one
 // for the first time when we don't have any order , then I'll create a fake product
 // and add it to the order
-
-async function createOrder(session, orderDetails) {
-  const order = new shopify.api.rest.Order({ session });
-  Object.assign(order, orderDetails);
-  await order.save({ update: true });
-  return order;
-}
 
 const createBaseDraftOrder = async (req, res, next) => {
   try {
@@ -35,11 +32,12 @@ const createBaseDraftOrder = async (req, res, next) => {
       },
       // TODO: Replace with actual shipping address
       note: 'hassanstroe.myshopify.com',
-
       financial_status: 'pending'
     };
 
     const order = await createOrder(session, orderDetails);
+    await holdFulfillmentOrder(session, order);
+
     return res.status(200).json({
       success: true,
       message: 'Order retrieved successfully',

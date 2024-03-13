@@ -1,18 +1,8 @@
 import shopify from '../../../shopify.js';
-
-export const completeCurrentShopifyOrder = async ({ session, id }) => {
-  const order = new shopify.api.rest.Order({
-    session
-  });
-
-  order.id = id;
-  order.tags = 'FDC FINAL order';
-  await order.saveAndUpdate();
-  await order.close({});
-
-  return order;
-};
-
+import {
+  createOrder,
+  releaseFulfillmentOrder
+} from '../../../utils/handleShopifyOrders.js';
 const completeCurrentOrder = async (req, res) => {
   try {
     const { shop: shopName } = req.query;
@@ -21,7 +11,6 @@ const completeCurrentOrder = async (req, res) => {
     const sessions = await shopify.config.sessionStorage.findSessionsByShop(
       shopName
     );
-
     if (!sessions.length) {
       return res.status(500).json({
         success: false,
@@ -37,16 +26,19 @@ const completeCurrentOrder = async (req, res) => {
         message: `No access token found for store ${shopName}`
       });
     }
-    const order = await completeCurrentShopifyOrder({
-      session: currentSession,
-      id: orderId
-    });
+    const finalOrderDetails = {
+      id: orderId,
+      tags: 'FDC FINAL order'
+    };
+
+    const order = await createOrder(currentSession, finalOrderDetails);
+
+    await releaseFulfillmentOrder(currentSession, order?.id);
 
     return res.status(200).json({
       order
     });
   } catch (err) {
-    console.log('error completing order', err);
     return res.status(500).json({
       error: err.message
     });
