@@ -3,13 +3,17 @@ import importDFCConnectorOrder, {
   importDFCConnectorCustomer
 } from '../../../connector/ordersUtils.js';
 import { throwError } from '../../../utils/index.js';
+import {
+  createOrder,
+  holdFulfillmentOrder
+} from '../../../utils/handleShopifyOrders.js';
 
 export const cancelOrderAndThenDeleted = async ({ session, id }) => {
-  const order = new shopify.api.rest.Order({
-    session
-  });
+  const orderDetails = {
+    id
+  };
+  const order = await createOrder(session, orderDetails);
 
-  order.id = id;
   await order.cancel({
     restock: true
   });
@@ -56,26 +60,25 @@ export const createNewOrderBasedOnCurrentOrder = async ({
     });
 
     if (!currentOrder) {
-      throw new Error(`No order found for id ${orderId}`);
+      throwError(`No order found for id ${orderId}`);
     }
 
-    const newOrder = new shopify.api.rest.Order({
-      session
-    });
+    const orderDetails = {
+      customer,
+      note: customer?.email ?? 'test@yallacooperative.com',
+      line_items: aggregateLineItems([
+        ...currentOrder.line_items,
+        ...lineItems
+      ]).filter((item) => Number(item.variant_id) !== 0),
+      inventory_behaviour: 'decrement_obeying_policy',
+      tags: 'FDC part order',
+      financial_status: 'pending'
+    };
+    const newOrder = await createOrder(session, orderDetails);
 
-    newOrder.customer = customer;
-    newOrder.note = customer?.email ?? 'test@yallacooperative.com';
-
-    newOrder.line_items = aggregateLineItems([
-      ...currentOrder.line_items,
-      ...lineItems
-    ]).filter((item) => Number(item.variant_id) !== 0);
-
-    newOrder.inventory_behaviour = 'decrement_obeying_policy';
-    newOrder.tags = 'FDC order';
-
-    await newOrder.saveAndUpdate();
-
+    if (!newOrder) {
+      throwError('Failed to create new order based on current order');
+    }
     await cancelOrderAndThenDeleted({
       session,
       id: orderId
@@ -117,12 +120,15 @@ const updateCurrentOrder = async (req, res, next) => {
         message: `No access token found for store ${shopName}`
       });
     }
+
     const newOrder = await createNewOrderBasedOnCurrentOrder({
       session: currentSession,
       orderId,
       lineItems: importedOrder,
       customer: importedCustomer
     });
+
+    await holdFulfillmentOrder(currentSession, newOrder);
 
     return res.status(200).json({
       success: true,
