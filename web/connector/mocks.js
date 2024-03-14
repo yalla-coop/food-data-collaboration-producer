@@ -21,6 +21,7 @@ export const createVariantSuppliedProductInputs = [
       weight_unit: 'kg',
       inventory_item_id: 45401870631064,
       inventory_quantity: 224,
+      inventory_policy: 'deny',
       tracked: true
     }
   },
