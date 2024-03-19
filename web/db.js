@@ -1,7 +1,7 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 
-const isTestEnv = process.env.NODE_ENV === 'test';
+const isTestEnv = process.env.NODE_ENV === 'development';
 
 const DEFAULT_DB_FILE = isTestEnv
   ? path.join(process.cwd(), '/web/test-database.sqlite')
