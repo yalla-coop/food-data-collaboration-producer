@@ -113,12 +113,13 @@ async function createVariantSuppliedProduct(variant, images) {
       hasVat
     );
     const offer = createOffer(connector, semanticBase, price);
+    const inventoryQuantity = variant.inventory_policy === 'continue' ? -1 : variant.inventory_quantity;
     const catalogItem = createCatalogItem(
       connector,
       semanticBase,
       [offer],
       variant.sku,
-      variant.inventory_quantity
+      inventoryQuantity
     );
 
     const suppliedProduct = new SuppliedProduct({
