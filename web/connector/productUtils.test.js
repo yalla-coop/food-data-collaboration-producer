@@ -90,6 +90,20 @@ describe('createVariantSuppliedProduct', () => {
     expect(price.getUnit()).toBeDefined();
     expect(price.getVatRate()).toBe(variant.taxable ? 1.0 : 0.0);
   });
+
+  it('catalogue will have stock limitation -1 when inventory policy is to continue selling, regardless of inventory quantity', async () => {
+    const variantWithContinueSelling = {
+      ...createVariantSuppliedProductInputs[0].variantInput,
+      inventory_quantity: 1,
+      inventory_policy: 'continue',
+    }
+
+    const result = await createVariantSuppliedProduct(variantWithContinueSelling, createVariantSuppliedProductInputs[1].imagesInput);
+    const catalogItems = await result[2].getCatalogItems()
+
+    expect(catalogItems).toHaveLength(1);
+    expect(catalogItems[0].getStockLimitation()).toBe(-1);
+  });
 });
 
 describe('createSuppliedProducts', () => {

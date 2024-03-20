@@ -36,7 +36,7 @@ const scopes = [
 ];
 
 const apiObject =
-  process.env.NODE_ENV === 'test'
+  process.env.NODE_ENV === 'development'
     ? {
         apiVersion: LATEST_API_VERSION,
         restResources,
