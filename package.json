@@ -10,7 +10,8 @@
     "info": "shopify app info",
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",
-    "test": "jest --runInBand --detectOpenHandles --forceExit"
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
+    "build:db": "node ./web/database/build.js"
   },
   "dependencies": {
     "@datafoodconsortium/connector": "^1.0.0-alpha.8",
