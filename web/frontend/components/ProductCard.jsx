@@ -5,7 +5,8 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -14,11 +15,12 @@ import { useQueryClient } from 'react-query';
 import { useAppMutation } from '../hooks';
 import { ExpandMoreIcon } from './ExpandMoreIcon';
 import { VariantMappingComponent } from './VariantMapping';
+import { ProductsIcon } from './ProductsIcon';
 
 export function ProductCard({ product }) {
   const queryClient = useQueryClient();
   const [isDisabled, setDisabled] = useState(false);
-  const [variantsMappingData, setVariantsMappingData] = useState([{}]);
+  const [variantsMappingData, setVariantsMappingData] = useState(product.fdcVariants.length === 0 ? [{}] : product.fdcVariants);
 
   function updateVariantMapping(index, update) {
     if (!update){
@@ -28,11 +30,9 @@ export function ProductCard({ product }) {
     }
   }
 
-  const variantsInvalid = variantsMappingData.some(({selectedVariantA, selectedVariantB, noOfItemPerCase}) => (
-    !selectedVariantA ||  !selectedVariantB || !noOfItemPerCase
+  const variantsInvalid = variantsMappingData.some(({hubVariantId, producerVariantId, noOfItemsPerPackage}) => (
+    !hubVariantId ||  !producerVariantId || !noOfItemsPerPackage
   ));
-
-
 
   const { mutateAsync } = useAppMutation({
     reactQueryOptions: {
@@ -68,52 +68,62 @@ export function ProductCard({ product }) {
     }
   });
 
+  const {
+    mutateAsync: updateVariantMappings,
+    isLoading: variantMappingsBeingUpdated
+  } = useAppMutation({
+    reactQueryOptions: {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries('/api/products');
+      }
+    }
+  });
+
+  const persistUpdatedVariantMappings = async (variantMappings) => {
+    const newMappings = variantMappings.map(({hubVariantId, producerVariantId, noOfItemsPerPackage}) => ({
+      hubVariantId: hubVariantId.id,
+      producerVariantId: producerVariantId.id,
+      noOfItemsPerPackage: noOfItemsPerPackage
+    }))
+
+    await updateVariantMappings({
+      url: `/api/products/${product.id}/fdcVariantMappings`,
+      fetchInit: {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newMappings)
+      }
+    });
+  };
+
   const isFdcProduct = product.tags?.includes('fdc');
 
-  console.log("Rerendering:", variantsMappingData)
-
   return (
-    <Accordion key={product.id}>
+    <Accordion key={product.id} slotProps={{ transition: { unmountOnExit: true } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Stack direction="row" justifyContent="space-between" width="100%">
           <Typography variant="h6">{product.title}</Typography>
           <Stack spacing="20px" direction="row" alignItems="center">
 
-            {/* {exitingProduct?.variants?.length > 0 && (
+            {variantsMappingData.length > 0 && (
               <Tooltip title="Number of variants">
                 <Badge
-                  badgeContent={numberOfExitingProductVariants}
+                  badgeContent={product.fdcVariants.length}
                   color="secondary"
                 >
                   <ProductsIcon />
                 </Badge>
               </Tooltip>
-            )} */}
-            {/* {exitingProduct?.variants?.length > 0 && (
-              <Tooltip
-                title={`Number of excess items`}
-              >
-                <Badge
-                  showZero
-                  badgeContent={
-                    numberOfExcessOutstandingItems === 0
-                      ? 0
-                      : `+${numberOfExcessOutstandingItems}`
-                  }
-                  color="primary"
-                >
-                  <ItemsIcon />
-                </Badge>
-              </Tooltip>
-            )} */}
-
+            )}
             <FormControlLabel
               control={
                 <Checkbox
                   style={{
                     width: '50px'
                   }}
-                  disabled={isDisabled}
+                  disabled={isDisabled || product.fdcVariants.length === 0}
                   checked={isFdcProduct}
                   onChange={() => {
                     setDisabled(true);
@@ -173,8 +183,8 @@ export function ProductCard({ product }) {
                 <Button
                   variant="contained"
                   type="button"
-                  disabled={variantsInvalid}
-                  onClick={() => alert("implement me")}
+                  disabled={variantsInvalid || variantMappingsBeingUpdated }
+                  onClick={() => persistUpdatedVariantMappings(variantsMappingData)}
                 >
                   Save product variant updates
                 </Button>

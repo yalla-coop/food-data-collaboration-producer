@@ -22,44 +22,33 @@ const convertShopifyGraphQLIdToNumber = (id) => {
 function VariantMappingComponent({
   product,
   updateVariantMapping,
-  variant = {},
+  variant,
 }) {
-  const exitingVariantA =
+  const existingHubVariantId =
   (variant && product?.variants?.find(
+      (v) =>
+        convertShopifyGraphQLIdToNumber(v.id) ===
+        Number(variant.hubVariantId)
+    )) || null;
+
+  const existingProducerVariantId =
+    (variant && product?.variants?.find(
       (v) =>
         convertShopifyGraphQLIdToNumber(v.id) ===
         Number(variant.producerVariantId)
     )) || null;
 
-  const exitingVariantB =
-    (variant && product?.variants?.find(
-      (v) =>
-        convertShopifyGraphQLIdToNumber(v.id) ===
-        Number(variant.mappedVariantId)
-    )) || null;
+  const existingNoOfItemsPerPackage = variant?.noOfItemsPerPackage || '';
 
-  const exitingNoOfItemPerCase = variant?.noOfItemsPerPackage || '';
-
-  const [selectedVariantA, setSelectedVariantA] = useState(exitingVariantA);
-  const [selectedVariantB, setSelectedVariantB] = useState(exitingVariantB);
-  const [noOfItemPerCase, setNoOfItemPerCase] = useState(
-    exitingNoOfItemPerCase
+  const [hubVariantId, setSelectedHubVariant] = useState(existingHubVariantId);
+  const [producerVariantId, setSelectedProducerVariant] = useState(existingProducerVariantId);
+  const [noOfItemsPerPackage, setNoOfItemPerPackage] = useState(
+    existingNoOfItemsPerPackage
   );
 
   useEffect(() => {
-    updateVariantMapping({selectedVariantA, selectedVariantB, noOfItemPerCase});
-  }, [selectedVariantA, selectedVariantB, noOfItemPerCase])
-
-  const isFormComplete = () => {
-    if (
-      selectedVariantA &&
-      selectedVariantB &&
-      noOfItemPerCase
-    ) {
-      return true;
-    }
-    return false;
-  };
+    updateVariantMapping({hubVariantId, producerVariantId, noOfItemsPerPackage});
+  }, [hubVariantId, producerVariantId, noOfItemsPerPackage])
 
   return (
     <Stack
@@ -85,9 +74,9 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            value={selectedVariantA || ''}
+            value={hubVariantId || ''}
             onChange={(_e) => {
-              setSelectedVariantA(_e.target.value);
+              setSelectedHubVariant(_e.target.value);
             }}
           >
             {product.variants.map((variant, idx) => (
@@ -110,8 +99,8 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            value={selectedVariantB || ''}
-            onChange={(event) => setSelectedVariantB(event.target.value)}
+            value={producerVariantId || ''}
+            onChange={(event) => setSelectedProducerVariant(event.target.value)}
           >
             {product.variants.map((variant, idx) => (
               <MenuItem key={variant.id} value={variant}>
@@ -146,8 +135,8 @@ function VariantMappingComponent({
           type="number"
           label="No. of items per Case/Box/Package"
           inputProps={{ inputMode: 'numeric', min: 0, pattern: '[0-9]*' }}
-          value={noOfItemPerCase}
-          onChange={(e) => setNoOfItemPerCase(e.target.value)}
+          value={noOfItemsPerPackage}
+          onChange={(e) => setNoOfItemPerPackage(e.target.value)}
         />
       </Stack>
       <Stack
