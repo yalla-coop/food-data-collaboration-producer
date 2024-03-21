@@ -30,8 +30,8 @@ export function ProductCard({ product }) {
     }
   }
 
-  const variantsInvalid = variantsMappingData.some(({hubVariantId, producerVariantId, noOfItemsPerPackage}) => (
-    !hubVariantId ||  !producerVariantId || !noOfItemsPerPackage
+  const variantsInvalid = variantsMappingData.some(({retailVariantId, wholesaleVariantId, noOfItemsPerPackage}) => (
+    !retailVariantId ||  !wholesaleVariantId || !noOfItemsPerPackage
   ));
 
   const { mutateAsync } = useAppMutation({
@@ -80,12 +80,6 @@ export function ProductCard({ product }) {
   });
 
   const persistUpdatedVariantMappings = async (variantMappings) => {
-    const newMappings = variantMappings.map(({hubVariantId, producerVariantId, noOfItemsPerPackage}) => ({
-      hubVariantId: hubVariantId.id,
-      producerVariantId: producerVariantId.id,
-      noOfItemsPerPackage: noOfItemsPerPackage
-    }))
-
     await updateVariantMappings({
       url: `/api/products/${product.id}/fdcVariantMappings`,
       fetchInit: {
@@ -93,7 +87,7 @@ export function ProductCard({ product }) {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(newMappings)
+        body: JSON.stringify(variantMappings)
       }
     });
   };

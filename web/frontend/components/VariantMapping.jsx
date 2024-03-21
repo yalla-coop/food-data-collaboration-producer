@@ -24,31 +24,31 @@ function VariantMappingComponent({
   updateVariantMapping,
   variant,
 }) {
-  const existingHubVariantId =
+  const existingRetailVariant =
   (variant && product?.variants?.find(
       (v) =>
         convertShopifyGraphQLIdToNumber(v.id) ===
-        Number(variant.hubVariantId)
+        Number(variant.retailVariantId)
     )) || null;
 
-  const existingProducerVariantId =
+  const existingWholesaleVariant =
     (variant && product?.variants?.find(
       (v) =>
         convertShopifyGraphQLIdToNumber(v.id) ===
-        Number(variant.producerVariantId)
+        Number(variant.wholesaleVariantId)
     )) || null;
 
   const existingNoOfItemsPerPackage = variant?.noOfItemsPerPackage || '';
 
-  const [hubVariantId, setSelectedHubVariant] = useState(existingHubVariantId);
-  const [producerVariantId, setSelectedProducerVariant] = useState(existingProducerVariantId);
+  const [retailVariant, setSelectedRetailVariant] = useState(existingRetailVariant);
+  const [wholesaleVariant, setSelectedWholesaleVariant] = useState(existingWholesaleVariant);
   const [noOfItemsPerPackage, setNoOfItemPerPackage] = useState(
     existingNoOfItemsPerPackage
   );
 
   useEffect(() => {
-    updateVariantMapping({hubVariantId, producerVariantId, noOfItemsPerPackage});
-  }, [hubVariantId, producerVariantId, noOfItemsPerPackage])
+    updateVariantMapping({retailVariantId: retailVariant?.id, wholesaleVariantId: wholesaleVariant?.id, noOfItemsPerPackage});
+  }, [retailVariant, wholesaleVariant, noOfItemsPerPackage])
 
   return (
     <Stack
@@ -63,7 +63,7 @@ function VariantMappingComponent({
         width="100%"
       >
         <Stack flexGrow={1} spacing="10px">
-          <Typography>Variant to sell on hub</Typography>
+          <Typography>Retail variant</Typography>
           <TextField
             fullWidth
             label="Select"
@@ -74,9 +74,9 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            value={hubVariantId || ''}
+            value={retailVariant || ''}
             onChange={(_e) => {
-              setSelectedHubVariant(_e.target.value);
+              setSelectedRetailVariant(_e.target.value);
             }}
           >
             {product.variants.map((variant, idx) => (
@@ -88,7 +88,7 @@ function VariantMappingComponent({
         </Stack>
 
         <Stack flexGrow={1} spacing="10px">
-          <Typography>Variant to order from you</Typography>
+          <Typography>Wholesale variant</Typography>
           <TextField
             fullWidth
             label="Select"
@@ -99,8 +99,8 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            value={producerVariantId || ''}
-            onChange={(event) => setSelectedProducerVariant(event.target.value)}
+            value={wholesaleVariant || ''}
+            onChange={(event) => setSelectedWholesaleVariant(event.target.value)}
           >
             {product.variants.map((variant, idx) => (
               <MenuItem key={variant.id} value={variant}>

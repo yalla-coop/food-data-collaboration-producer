@@ -14,11 +14,11 @@ const updateFdcVariantMappings = async (req, res, next) => {
 
     variants.forEach(async variant => {
       await query(
-        'INSERT INTO fdc_variants (product_id, producer_variant_id, hub_variant_id, no_of_items_per_package) VALUES ($1,$2,$3,$4) RETURNING id',
+        'INSERT INTO fdc_variants (product_id, wholesale_variant_id, retail_variant_id, no_of_items_per_package) VALUES ($1,$2,$3,$4) RETURNING id',
         [
           productId,
-          variant.producerVariantId,
-          variant.hubVariantId,
+          variant.wholesaleVariantId,
+          variant.retailVariantId,
           variant.noOfItemsPerPackage,
         ],
         client
