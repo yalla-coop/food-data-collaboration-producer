@@ -24,7 +24,7 @@ async function createSuppliedProduct(product) {
 
     const productTypes = await loadProductTypes();
 
-    const suppliedProduct = new SuppliedProduct({
+    const suppliedProduct = connector.createSuppliedProduct({
       connector,
       semanticId: fullSemanticId,
       name: product.title,
@@ -48,14 +48,14 @@ async function createSuppliedProduct(product) {
 }
 
 const createQuantitativeValue = (connector, value, unit) =>
-  new QuantitativeValue({
+  connector.createQuantitativeValue({
     connector,
     value,
     unit
   });
 
 const createPrice = (connector, semanticId, value, unit, vatRate) =>
-  new Price({
+  connector.createPrice({
     connector,
     semanticId: `${semanticId}/price`,
     value,
@@ -64,7 +64,7 @@ const createPrice = (connector, semanticId, value, unit, vatRate) =>
   });
 
 const createOffer = (connector, semanticId, price) =>
-  new Offer({
+  connector.createOffer({
     connector,
     semanticId: `${semanticId}/offer`,
     price
@@ -77,7 +77,7 @@ const createCatalogItem = (
   sku,
   stockLimitation
 ) =>
-  new CatalogItem({
+  connector.createCatalogItem({
     connector,
     semanticId: `${semanticId}/catalogItem`,
     offers,
@@ -122,7 +122,7 @@ async function createVariantSuppliedProduct(variant, images) {
       inventoryQuantity
     );
 
-    const suppliedProduct = new SuppliedProduct({
+    const suppliedProduct = connector.createSuppliedProduct({
       connector,
       semanticId: fullSemanticId,
       name: variant.title,
@@ -154,31 +154,58 @@ async function createSuppliedProducts(productsFromShopify) {
       throwError('Error creating supplied products: no products found');
     }
 
-    const productsPromises = productsFromShopify.map(async (product) => {
-      const suppliedProduct = await createSuppliedProduct(product);
-      const productsToExport = [suppliedProduct]; // Start with the parent product
-
-      // If there are variants, process them
-      if (Array.isArray(product.variants) && product.variants.length > 0) {
-        const variantPromises = product.variants.map((variant) =>
-          createVariantSuppliedProduct(variant, product.images)
-        );
-
-        const variantProducts = await Promise.all(variantPromises);
-        const flattenedVariantProducts = variantProducts.flat();
-        productsToExport.push(...flattenedVariantProducts);
-      }
-
-      return productsToExport;
+    const productsPromises = productsFromShopify.flatMap((product) => {
+      const suppliedProduct = createSuppliedProduct(product);
+      const variants = product.fdcVariants ? Promise.all(product.fdcVariants.flatMap(createVariants(product))) : []
+      return [suppliedProduct, ...variants];
     });
 
-    const suppliedProducts = await Promise.all(productsPromises);
-    return suppliedProducts.flat();
+    return await Promise.all(productsPromises);
   } catch (error) {
     throwError('Error creating supplied products:', error);
   }
-  return null;
 }
+
+const createVariants = (product) => async ({ wholesaleVariantId, retailVariantId, noOfItemsPerPackage }) => {
+  const retailVariant = product.variants.find(({ id }) => id === retailVariantId);
+  const wholesaleVariant = product.variants.find(({ id }) => id === wholesaleVariantId);
+
+  if (!retailVariant || !wholesaleVariant) {
+    console.error(`Variant mapping for Product ${product.id} between ${retailVariantId} and ${wholesaleVariantId} is invalid. Contains non existant variant. Skipping`)
+    return [];
+  }
+
+  const retailSuppliedProduct = await createVariantSuppliedProduct(retailVariant, product.images)
+  const wholesaleSuppliedProduct = await createVariantSuppliedProduct(wholesaleVariant, product.images)
+
+  const connector = await loadConnectorWithResources();
+
+  const plannedConsumptionFlow = connector.createPlannedConsumptionFlow({
+    semanticId: "http://myplatform.com/plannedConsumptionFlow",
+    quantity: connector.createQuantity({
+      value: noOfItemsPerPackage,
+      unit: connector.MEASURES.UNIT.QUANTITYUNIT.PIECE
+    }),
+    product: retailSuppliedProduct
+  });
+
+  const plannedProductionFlow = connector.createPlannedProductionFlow({
+    semanticId: "http://myplatform.com/plannedProductionFlow",
+    quantity: connector.createQuantity({
+      value: 1.0,
+      unit: connector.MEASURES.UNIT.QUANTITYUNIT.PIECE
+    }),
+    product: wholesaleSuppliedProduct
+  });
+
+  const plannedTransformation = connector.createPlannedTransformation({
+    semanticId: "http://myplatform.com/transformation",
+    transformationType: connector.VOCABULARY.TRANSFORMATIONTYPE.COMBINES,
+    consumptionFlows: [plannedConsumptionFlow],
+    productionFlows: [plannedProductionFlow]
+  });
+  return [plannedTransformation]
+};
 
 async function exportSuppliedProducts(productsFromShopify) {
   try {

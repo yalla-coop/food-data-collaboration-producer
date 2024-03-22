@@ -1,5 +1,6 @@
 import { exportSuppliedProducts } from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
+import { addVariantsToProducts } from '../../../database/variants/variants.js';
 
 const getProductsByIds = async (req, res) => {
   const { body } = req;
@@ -35,7 +36,7 @@ const getProductsByIds = async (req, res) => {
       limit: 250
     });
 
-    const exportedDFCProducts = await exportSuppliedProducts(products);
+    const exportedDFCProducts = await exportSuppliedProducts((await addVariantsToProducts(products)));
 
     return res.status(200).json({
       products: exportedDFCProducts,

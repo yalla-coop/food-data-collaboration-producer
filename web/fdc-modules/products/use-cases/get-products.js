@@ -3,6 +3,7 @@
 /* eslint-disable camelcase */
 import { exportSuppliedProducts } from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
+import {addVariantsToProducts} from '../../../database/variants/variants.js';
 
 const getProducts = async ({
   session,
@@ -61,8 +62,9 @@ const getProducts = async ({
         hv.tracked = inventoryItem?.tracked || false;
       });
     });
+    
 
-    const exportedDFCProducts = await exportSuppliedProducts(fdcProducts);
+    const exportedDFCProducts = await exportSuppliedProducts((await addVariantsToProducts(fdcProducts)));
 
     return {
       products: exportedDFCProducts,
