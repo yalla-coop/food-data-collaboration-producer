@@ -1,13 +1,18 @@
+import { addParamToParams, throwError } from '../utils/index.js';
 import {
-  CatalogItem,
-  SuppliedProduct,
-  QuantitativeValue,
-  Price,
-  Offer,
   loadConnectorWithResources
 } from './index.js';
-import { addParamToParams, throwError } from '../utils/index.js';
 import loadProductTypes from './mappedProductTypes.js';
+
+
+// Question
+// The applications currently represents the relationship as a parent Supplied Product plus pairs of supplied variants for each transformation.
+// I can see from the example how to construct the planned transformation for each pair of retail/wholesale variants (consumption/production) to link the two sides together. 
+// Is there a way in the graph to associate these planned transformations with the concept of the parent product?
+// Currently variants have a semantic Id representing a relationship:
+// ${semanticIdPrefix}product/${variant.product_id}/variant/${variant.id}/inventory/${variant.inventory_item_id}
+// Should this stay?
+// Should the transformation have some sort of semantic ID that links it to the product?
 
 const semanticIdPrefix = process.env.PRODUCER_SHOP_URL;
 
@@ -235,8 +240,6 @@ async function exportSuppliedProducts(productsFromShopify) {
 }
 
 export {
-  createSuppliedProduct,
-  createVariantSuppliedProduct,
-  createSuppliedProducts,
-  exportSuppliedProducts
+  createSuppliedProduct, createSuppliedProducts, createVariantSuppliedProduct, exportSuppliedProducts
 };
+

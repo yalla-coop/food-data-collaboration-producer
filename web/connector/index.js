@@ -1,10 +1,5 @@
 import {
   Connector,
-  CatalogItem,
-  SuppliedProduct,
-  QuantitativeValue,
-  Price,
-  Offer
 } from '@datafoodconsortium/connector';
 import facets from './thesaurus/facets.json' assert { type: 'json' };
 import measures from './thesaurus/measures.json' assert { type: 'json' };
@@ -14,7 +9,7 @@ import { throwError } from '../utils/index.js';
 let _connector;
 let connected = false;
 
-const loadConnectorWithResources = async () => {
+export default loadConnectorWithResources = async () => {
   try {
     if (!connected) {
       const connector = new Connector();
@@ -34,13 +29,4 @@ const loadConnectorWithResources = async () => {
   } catch (error) {
     throwError('Error loading connector', error);
   }
-};
-
-export {
-  loadConnectorWithResources,
-  CatalogItem,
-  SuppliedProduct,
-  QuantitativeValue,
-  Price,
-  Offer
 };
