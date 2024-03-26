@@ -1,8 +1,5 @@
 import { OrderLine, Person } from '@datafoodconsortium/connector';
-import {
-  getTargetStringFromSemanticId,
-  throwError
-} from '../utils/index.js';
+import { getTargetStringFromSemanticId, throwError } from '../utils/index.js';
 
 import { loadConnectorWithResources } from './index.js';
 
@@ -24,7 +21,7 @@ async function getOrderLine(order) {
 async function getCustomer(connector, dfcCustomer) {
   let importedCustomers = await connector.import(dfcCustomer);
   if (!Array.isArray(importedCustomers) || !importedCustomers.length) {
-    throwError('Error importing Order: no imports');
+    throwError('Error importing Customers: no imports');
   }
 
   importedCustomers = importedCustomers.filter(
@@ -40,7 +37,7 @@ async function getCustomer(connector, dfcCustomer) {
 async function getOrder(connector, dfcOrder) {
   let importedOrders = await connector.import(dfcOrder);
   if (!Array.isArray(importedOrders) || !importedOrders.length) {
-    throwError('Error importing Order: no imports');
+    throwError('Error importing Orders: no imports');
   }
 
   importedOrders = importedOrders.filter(
