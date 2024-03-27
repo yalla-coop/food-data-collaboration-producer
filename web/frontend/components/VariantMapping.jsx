@@ -8,7 +8,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { CustomTooltip } from './CustomTooltip';
 import { InfoIcon } from './InfoIcon';
 import { VariantCard } from './VariantCard';
@@ -21,11 +21,12 @@ const convertShopifyGraphQLIdToNumber = (id) => {
 
 function VariantMappingComponent({
   product,
-  updateVariantMapping,
+  saveVariantMapping,
   variant,
+  loadingInProgress
 }) {
   const existingRetailVariant =
-  (variant && product?.variants?.find(
+    (variant && product?.variants?.find(
       (v) =>
         convertShopifyGraphQLIdToNumber(v.id) ===
         Number(variant.retailVariantId)
@@ -46,9 +47,14 @@ function VariantMappingComponent({
     existingNoOfItemsPerPackage
   );
 
-  useEffect(() => {
-    updateVariantMapping({retailVariantId: retailVariant?.id, wholesaleVariantId: wholesaleVariant?.id, noOfItemsPerPackage});
-  }, [retailVariant, wholesaleVariant, noOfItemsPerPackage])
+  if (product.id == 8119767826681) {
+    console.log('variant', variant);
+    console.log('existingNoOfItemsPerPackage', noOfItemsPerPackage);
+  }
+
+  const invalid = !retailVariant || !wholesaleVariant || !noOfItemsPerPackage;
+
+  const changed = (retailVariant !== existingRetailVariant) || (wholesaleVariant !== existingWholesaleVariant) || (noOfItemsPerPackage != existingNoOfItemsPerPackage);
 
   return (
     <Stack
@@ -74,6 +80,7 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
+            disabled={loadingInProgress}
             value={retailVariant || ''}
             onChange={(_e) => {
               setSelectedRetailVariant(_e.target.value);
@@ -99,6 +106,7 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
+            disabled={loadingInProgress}
             value={wholesaleVariant || ''}
             onChange={(event) => setSelectedWholesaleVariant(event.target.value)}
           >
@@ -136,6 +144,7 @@ function VariantMappingComponent({
           label="No. of items per Case/Box/Package"
           inputProps={{ inputMode: 'numeric', min: 0, pattern: '[0-9]*' }}
           value={noOfItemsPerPackage}
+          disabled={loadingInProgress}
           onChange={(e) => setNoOfItemPerPackage(e.target.value)}
         />
       </Stack>
@@ -143,12 +152,21 @@ function VariantMappingComponent({
         spacing="10px"
       >
         <Button
-                  variant="contained"
-                  type="button"
-                  onClick={() => updateVariantMapping(null)}
-                >
-                  Remove variant
-                </Button>
+          variant="contained"
+          type="button"
+          disabled={!variant || loadingInProgress}
+          onClick={() => saveVariantMapping(null)}
+        >
+          Remove variant
+        </Button>
+        <Button
+          variant="contained"
+          type="button"
+          disabled={invalid || loadingInProgress || !changed}
+          onClick={() => saveVariantMapping({retailVariantId: retailVariant?.id, wholesaleVariantId: wholesaleVariant?.id, noOfItemsPerPackage})}
+        >
+          Save product variant updates
+        </Button>
       </Stack>
     </Stack>
   );
