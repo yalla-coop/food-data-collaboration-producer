@@ -1,18 +1,6 @@
 import { addParamToParams, throwError } from '../utils/index.js';
-import {
-  loadConnectorWithResources
-} from './index.js';
+import loadConnectorWithResources from './index.js';
 import loadProductTypes from './mappedProductTypes.js';
-
-
-// Question
-// The applications currently represents the relationship as a parent Supplied Product plus pairs of supplied variants for each transformation.
-// I can see from the example how to construct the planned transformation for each pair of retail/wholesale variants (consumption/production) to link the two sides together. 
-// Is there a way in the graph to associate these planned transformations with the concept of the parent product?
-// Currently variants have a semantic Id representing a relationship:
-// ${semanticIdPrefix}product/${variant.product_id}/variant/${variant.id}/inventory/${variant.inventory_item_id}
-// Should this stay?
-// Should the transformation have some sort of semantic ID that links it to the product?
 
 const semanticIdPrefix = process.env.PRODUCER_SHOP_URL;
 
@@ -53,16 +41,13 @@ async function createSuppliedProduct(product) {
 }
 
 const createQuantitativeValue = (connector, value, unit) =>
-  connector.createQuantitativeValue({
-    connector,
+  connector.createQuantity({
     value,
     unit
   });
 
-const createPrice = (connector, semanticId, value, unit, vatRate) =>
+const createPrice = (connector, value, unit, vatRate) =>
   connector.createPrice({
-    connector,
-    semanticId: `${semanticId}/price`,
     value,
     unit,
     vatRate
@@ -70,7 +55,6 @@ const createPrice = (connector, semanticId, value, unit, vatRate) =>
 
 const createOffer = (connector, semanticId, price) =>
   connector.createOffer({
-    connector,
     semanticId: `${semanticId}/offer`,
     price
   });
@@ -91,15 +75,18 @@ const createCatalogItem = (
   });
 
 // creates a variant supplied product with quantity and price
-async function createVariantSuppliedProduct(variant, images) {
+async function createVariantSuppliedProduct(parentProduct, variant, images) {
   try {
     const connector = await loadConnectorWithResources();
     const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
     const euro = connector.MEASURES.UNIT.CURRENCYUNIT.EURO;
+
+    //todo: This needs to be simplified, but do we have the IDs we need if it does? What does the product ID become, the variant id?
     const semanticBase = `${semanticIdPrefix}product/${variant.product_id}/variant/${variant.id}/inventory/${variant.inventory_item_id}`;
     let params = '';
 
     params = addParamToParams(params, 'tracked', variant?.tracked);
+    params = addParamToParams(params, 'handle', parentProduct.handle)
     params = addParamToParams(params, 'imageId', variant?.image_id);
 
     const fullSemanticId = semanticBase + params;
@@ -112,7 +99,6 @@ async function createVariantSuppliedProduct(variant, images) {
     const hasVat = variant.taxable ? 1.0 : 0.0; // TODO check how the vat rate can be added
     const price = createPrice(
       connector,
-      semanticBase,
       variant.price,
       euro,
       hasVat
@@ -127,13 +113,26 @@ async function createVariantSuppliedProduct(variant, images) {
       inventoryQuantity
     );
 
+    const productTypes = await loadProductTypes();
+
     const suppliedProduct = connector.createSuppliedProduct({
       connector,
       semanticId: fullSemanticId,
-      name: variant.title,
+      name: parentProduct.title + ' - ' + variant.title,
+      description: parentProduct.body_html,
       quantity,
-      catalogItems: [catalogItem]
+      catalogItems: [catalogItem],
+      productType: productTypes[parentProduct.product_type] ?? null
     });
+
+    if (
+      parentProduct.image &&
+      parentProduct.image.src &&
+      parentProduct.image.product_id &&
+      parentProduct.image.product_id === parentProduct.id
+    ) {
+      suppliedProduct.addImage(parentProduct.image.src);
+    }
 
     if (Array.isArray(images) && images.length > 0 && variant.image_id) {
       const variantImage = images.find((img) => img.id === variant.image_id);
@@ -143,7 +142,7 @@ async function createVariantSuppliedProduct(variant, images) {
       }
     }
 
-    return [offer, catalogItem, suppliedProduct];
+    return suppliedProduct;
   } catch (error) {
     throwError('Error creating variant supplied product:', error);
   }
@@ -159,29 +158,30 @@ async function createSuppliedProducts(productsFromShopify) {
       throwError('Error creating supplied products: no products found');
     }
 
-    const productsPromises = productsFromShopify.flatMap((product) => {
-      const suppliedProduct = createSuppliedProduct(product);
-      const variants = product.fdcVariants ? Promise.all(product.fdcVariants.flatMap(createVariants(product))) : []
-      return [suppliedProduct, ...variants];
+    const productsPromises = productsFromShopify.map( async (product) => {
+      return product.fdcVariants[0] ? await createVariants(product) : []
     });
 
-    return await Promise.all(productsPromises);
+    return (await Promise.all(productsPromises)).flat();
   } catch (error) {
     throwError('Error creating supplied products:', error);
   }
 }
 
-const createVariants = (product) => async ({ wholesaleVariantId, retailVariantId, noOfItemsPerPackage }) => {
-  const retailVariant = product.variants.find(({ id }) => id === retailVariantId);
-  const wholesaleVariant = product.variants.find(({ id }) => id === wholesaleVariantId);
+const createVariants = async (shopifyProduct, variantMapping) => {
+
+  const { wholesaleVariantId, retailVariantId, noOfItemsPerPackage } = variantMapping;
+
+  const retailVariant = shopifyProduct.variants.find(({ id }) => id == retailVariantId);
+  const wholesaleVariant = shopifyProduct.variants.find(({ id }) => id == wholesaleVariantId);
 
   if (!retailVariant || !wholesaleVariant) {
-    console.error(`Variant mapping for Product ${product.id} between ${retailVariantId} and ${wholesaleVariantId} is invalid. Contains non existant variant. Skipping`)
+    console.error(`Variant mapping for Product ${shopifyProduct.id} between ${retailVariantId} and ${wholesaleVariantId} is invalid. Contains non existant variant. Skipping`);
     return [];
   }
 
-  const retailSuppliedProduct = await createVariantSuppliedProduct(retailVariant, product.images)
-  const wholesaleSuppliedProduct = await createVariantSuppliedProduct(wholesaleVariant, product.images)
+  const retailSuppliedProduct = await createVariantSuppliedProduct(shopifyProduct, retailVariant, shopifyProduct.images)
+  const wholesaleSuppliedProduct = await createVariantSuppliedProduct(shopifyProduct, wholesaleVariant, shopifyProduct.images)
 
   const connector = await loadConnectorWithResources();
 
@@ -209,7 +209,8 @@ const createVariants = (product) => async ({ wholesaleVariantId, retailVariantId
     consumptionFlows: [plannedConsumptionFlow],
     productionFlows: [plannedProductionFlow]
   });
-  return [plannedTransformation]
+
+  return [retailSuppliedProduct, wholesaleSuppliedProduct, plannedConsumptionFlow, plannedProductionFlow, plannedTransformation];
 };
 
 async function exportSuppliedProducts(productsFromShopify) {
@@ -234,6 +235,7 @@ async function exportSuppliedProducts(productsFromShopify) {
     const exports = await connector.export(suppliedDFCProducts);
     return exports;
   } catch (error) {
+    console.error(error);
     throwError('Error exporting supplied products:', error);
   }
   return null;

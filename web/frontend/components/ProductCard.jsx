@@ -1,12 +1,9 @@
 import {
-  Button,
   Checkbox,
   FormControlLabel,
   Stack,
   Typography
 } from '@mui/material';
-import Tooltip from '@mui/material/Tooltip';
-import Badge from '@mui/material/Badge';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -15,26 +12,20 @@ import { useQueryClient } from 'react-query';
 import { useAppMutation } from '../hooks';
 import { ExpandMoreIcon } from './ExpandMoreIcon';
 import { VariantMappingComponent } from './VariantMapping';
-import { ProductsIcon } from './ProductsIcon';
 
 export function ProductCard({ product }) {
   const queryClient = useQueryClient();
   const [isDisabled, setDisabled] = useState(false);
-  const [variantsMappingData, setVariantsMappingData] = useState(product.fdcVariants.length === 0 ? [{}] : product.fdcVariants);
 
-  function updateVariantMapping(index, update) {
-    if (!update){
-      setVariantsMappingData(variantsMappingData.filter((_, i) => i !== index));
+  function saveVariantMapping(update) {
+    if (!update) {
+      persistUpdatedVariantMappings([]);
     } else {
-      setVariantsMappingData(variantsMappingData.map((variant, i) => i == index? update : variant))
+      persistUpdatedVariantMappings([update]);
     }
   }
 
-  const variantsInvalid = variantsMappingData.some(({retailVariantId, wholesaleVariantId, noOfItemsPerPackage}) => (
-    !retailVariantId ||  !wholesaleVariantId || !noOfItemsPerPackage
-  ));
-
-  const { mutateAsync } = useAppMutation({
+  const { mutateAsync, isLoading: productsLoading } = useAppMutation({
     reactQueryOptions: {
       onSettled: () => {
         setDisabled(false);
@@ -100,17 +91,6 @@ export function ProductCard({ product }) {
         <Stack direction="row" justifyContent="space-between" width="100%">
           <Typography variant="h6">{product.title}</Typography>
           <Stack spacing="20px" direction="row" alignItems="center">
-
-            {variantsMappingData.length > 0 && (
-              <Tooltip title="Number of variants">
-                <Badge
-                  badgeContent={product.fdcVariants.length}
-                  color="secondary"
-                >
-                  <ProductsIcon />
-                </Badge>
-              </Tooltip>
-            )}
             <FormControlLabel
               control={
                 <Checkbox
@@ -146,46 +126,18 @@ export function ProductCard({ product }) {
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
+        <Stack spacing="12px">
           <Stack spacing="12px">
-            <Stack spacing="12px">
-              {
-                variantsMappingData.map((variant, index) =>
-                  <VariantMappingComponent
-                    key={product.id + '_variant_' + index}
-                    updateVariantMapping={(update) => updateVariantMapping(index, update)}
-                    product={product}
-                    variant={variant}
-                  />)
-              }
-            </Stack>
-
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-            >
-              <Stack direction="row" spacing="12px">
-                {<Button
-                  variant="contained"
-                  type="button"
-                  onClick={() =>
-                    setVariantsMappingData([...variantsMappingData, {}])
-                  }
-                >
-                  Add another variant
-                </Button>}
-
-                <Button
-                  variant="contained"
-                  type="button"
-                  disabled={variantsInvalid || variantMappingsBeingUpdated }
-                  onClick={() => persistUpdatedVariantMappings(variantsMappingData)}
-                >
-                  Save product variant updates
-                </Button>
-              </Stack>
-            </Stack>
+            <VariantMappingComponent
+              key={product.id + '_variant' +  (product.fdcVariants.length ? '' : '_missing')}
+              saveVariantMapping={saveVariantMapping}
+              product={product}
+              variant={product.fdcVariants[0]}
+              loadingInProgress={variantMappingsBeingUpdated || productsLoading}
+            />
           </Stack>
-        </AccordionDetails>
+        </Stack>
+      </AccordionDetails>
     </Accordion>
   );
 }
