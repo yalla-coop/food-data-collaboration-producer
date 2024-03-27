@@ -142,7 +142,7 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
       }
     }
 
-    return suppliedProduct;
+    return [suppliedProduct, offer, catalogItem];
   } catch (error) {
     throwError('Error creating variant supplied product:', error);
   }
@@ -159,7 +159,7 @@ async function createSuppliedProducts(productsFromShopify) {
     }
 
     const productsPromises = productsFromShopify.map( async (product) => {
-      return product.fdcVariants[0] ? await createVariants(product) : []
+      return product.fdcVariants[0] ? await createVariants(product, product.fdcVariants[0]) : []
     });
 
     return (await Promise.all(productsPromises)).flat();
@@ -180,8 +180,8 @@ const createVariants = async (shopifyProduct, variantMapping) => {
     return [];
   }
 
-  const retailSuppliedProduct = await createVariantSuppliedProduct(shopifyProduct, retailVariant, shopifyProduct.images)
-  const wholesaleSuppliedProduct = await createVariantSuppliedProduct(shopifyProduct, wholesaleVariant, shopifyProduct.images)
+  const [retailSuppliedProduct, ...retailOthers] = await createVariantSuppliedProduct(shopifyProduct, retailVariant, shopifyProduct.images)
+  const [wholesaleSuppliedProduct, ...wholesaleOthers] = await createVariantSuppliedProduct(shopifyProduct, wholesaleVariant, shopifyProduct.images)
 
   const connector = await loadConnectorWithResources();
 
@@ -210,7 +210,7 @@ const createVariants = async (shopifyProduct, variantMapping) => {
     productionFlows: [plannedProductionFlow]
   });
 
-  return [retailSuppliedProduct, wholesaleSuppliedProduct, plannedConsumptionFlow, plannedProductionFlow, plannedTransformation];
+  return [retailSuppliedProduct, wholesaleSuppliedProduct, plannedConsumptionFlow, plannedProductionFlow, plannedTransformation, ...retailOthers, ...wholesaleOthers];
 };
 
 async function exportSuppliedProducts(productsFromShopify) {
