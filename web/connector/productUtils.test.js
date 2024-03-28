@@ -1,5 +1,4 @@
 import {
-  createSuppliedProduct,
   createSuppliedProducts,
   createVariantSuppliedProduct,
   exportSuppliedProducts
@@ -13,32 +12,11 @@ import {
 } from './index.js';
 import {
   createSuppliedProductsInput,
-  createSuppliedProductInput,
   createVariantSuppliedProductInputs,
   exportSuppliedProductsJSONLD
 } from './mocks.js';
 // import loadProductTypes from './mappedProductTypes.js';
 
-describe('createSuppliedProduct', () => {
-  it('should create a supplied product', async () => {
-    const product = createSuppliedProductInput;
-    // TODO add product types once they are implemented
-    // const productTypes = await loadProductTypes();
-
-    const semanticBase = `${process.env.PRODUCER_SHOP_URL}product/${product.id}`;
-    const params = '?handle=test-handle&imageId=456';
-    const fullSemanticId = semanticBase + params;
-
-    const result = await createSuppliedProduct(product);
-
-    expect(result).toBeInstanceOf(SuppliedProduct);
-    expect(result.getSemanticId()).toBe(fullSemanticId);
-    expect(result.getName()).toBe(product.title);
-    expect(result.getDescription()).toBe(product.body_html);
-    expect(result.getImages()).toEqual([product.image.src]);
-    // expect(result.getProductType()).toBe(productTypes[product.product_type]);
-  });
-});
 
 describe('createVariantSuppliedProduct', () => {
   it('should create a variant supplied product', async () => {

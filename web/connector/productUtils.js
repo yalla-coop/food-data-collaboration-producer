@@ -4,42 +4,6 @@ import loadProductTypes from './mappedProductTypes.js';
 
 const semanticIdPrefix = process.env.PRODUCER_SHOP_URL;
 
-async function createSuppliedProduct(product) {
-  try {
-    const connector = await loadConnectorWithResources();
-    const semanticBase = `${semanticIdPrefix}product/${product.id}`;
-    let params = '';
-
-    params = addParamToParams(params, 'handle', product.handle);
-    params = addParamToParams(params, 'imageId', product.image?.id);
-
-    const fullSemanticId = semanticBase + params;
-
-    const productTypes = await loadProductTypes();
-
-    const suppliedProduct = connector.createSuppliedProduct({
-      connector,
-      semanticId: fullSemanticId,
-      name: product.title,
-      description: product.body_html,
-      productType: productTypes[product.product_type] ?? null
-    });
-
-    if (
-      product.image &&
-      product.image.src &&
-      product.image.product_id &&
-      product.image.product_id === product.id
-    ) {
-      suppliedProduct.addImage(product.image.src);
-    }
-    return suppliedProduct;
-  } catch (error) {
-    throwError('Error creating supplied product:', error);
-  }
-  return null;
-}
-
 const createQuantitativeValue = (connector, value, unit) =>
   connector.createQuantity({
     value,
@@ -81,8 +45,7 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
     const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
     const euro = connector.MEASURES.UNIT.CURRENCYUNIT.EURO;
 
-    //todo: This needs to be simplified, but do we have the IDs we need if it does? What does the product ID become, the variant id?
-    const semanticBase = `${semanticIdPrefix}product/${variant.product_id}/variant/${variant.id}/inventory/${variant.inventory_item_id}`;
+    const semanticBase = `${semanticIdPrefix}product/${variant.id}`;
     let params = '';
 
     params = addParamToParams(params, 'tracked', variant?.tracked);
@@ -242,6 +205,6 @@ async function exportSuppliedProducts(productsFromShopify) {
 }
 
 export {
-  createSuppliedProduct, createSuppliedProducts, createVariantSuppliedProduct, exportSuppliedProducts
+  createSuppliedProducts, createVariantSuppliedProduct, exportSuppliedProducts
 };
 
