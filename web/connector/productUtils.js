@@ -1,4 +1,4 @@
-import { addParamToParams, throwError } from '../utils/index.js';
+import { throwError } from '../utils/index.js';
 import loadConnectorWithResources from './index.js';
 import loadProductTypes from './mappedProductTypes.js';
 
@@ -46,11 +46,6 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
     const euro = connector.MEASURES.UNIT.CURRENCYUNIT.EURO;
 
     const semanticBase = `${semanticIdPrefix}product/${variant.id}`;
-    let params = '';
-
-    params = addParamToParams(params, 'imageId', variant?.image_id);
-
-    const fullSemanticId = semanticBase + params;
 
     const quantity = createQuantitativeValue(
       connector,
@@ -78,7 +73,7 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
 
     const suppliedProduct = connector.createSuppliedProduct({
       connector,
-      semanticId: fullSemanticId,
+      semanticId: semanticBase,
       name: parentProduct.title + ' - ' + variant.title,
       description: parentProduct.body_html,
       quantity,
