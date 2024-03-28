@@ -15,7 +15,6 @@ import {
   createVariantSuppliedProductInputs,
   exportSuppliedProductsJSONLD
 } from './mocks.js';
-// import loadProductTypes from './mappedProductTypes.js';
 
 
 describe('createVariantSuppliedProduct', () => {

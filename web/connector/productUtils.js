@@ -48,8 +48,6 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
     const semanticBase = `${semanticIdPrefix}product/${variant.id}`;
     let params = '';
 
-    params = addParamToParams(params, 'tracked', variant?.tracked);
-    params = addParamToParams(params, 'handle', parentProduct.handle)
     params = addParamToParams(params, 'imageId', variant?.image_id);
 
     const fullSemanticId = semanticBase + params;
