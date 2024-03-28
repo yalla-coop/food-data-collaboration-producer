@@ -24,15 +24,35 @@ export const cancelOrderAndThenDeleted = async ({ session, id }) => {
   });
 };
 
-export const aggregateLineItems = (lineItems) => {
+const testProductCancellation = [
+  {
+    title: 'test-product',
+    description: 'no more items required due to cancellation',
+    quantity: 1,
+    price: 0,
+    variant_id: 1
+  }
+];
+
+export const aggregateLineItems = (orderType, lineItems) => {
+  let hasNoMoreItems = false;
   const aggregatedLineItems = lineItems.reduce((acc, lineItem) => {
     const existingLineItem = acc.find(
       (item) => Number(item.variant_id) === Number(lineItem.variant_id)
     );
 
     if (existingLineItem) {
-      existingLineItem.quantity =
-        Number(existingLineItem.quantity) + Number(lineItem.quantity);
+      // add the quantity if the order type is completed or subtract if the type is cancelled
+      if (orderType === 'completed') {
+        existingLineItem.quantity =
+          Number(existingLineItem.quantity) + Number(lineItem.quantity);
+      } else {
+        existingLineItem.quantity =
+          Number(existingLineItem.quantity) - Number(lineItem.quantity);
+        if (existingLineItem.quantity === 0) {
+          hasNoMoreItems = true;
+        }
+      }
     } else {
       acc.push({
         variant_id: Number(lineItem.variant_id),
@@ -42,11 +62,12 @@ export const aggregateLineItems = (lineItems) => {
 
     return acc;
   }, []);
-
-  return aggregatedLineItems;
+  // return the test product if the quantity is 0
+  return hasNoMoreItems ? testProductCancellation : aggregatedLineItems;
 };
 
 export const createNewOrderBasedOnCurrentOrder = async ({
+  orderType,
   session,
   orderId,
   lineItems,
@@ -62,14 +83,15 @@ export const createNewOrderBasedOnCurrentOrder = async ({
     if (!currentOrder) {
       throwError(`No order found for id ${orderId}`);
     }
+    const updatedLineItems = aggregateLineItems(orderType, [
+      ...currentOrder.line_items,
+      ...lineItems
+    ]).filter((item) => Number(item.variant_id) !== 0);
 
     const orderDetails = {
       customer,
       note: customer?.email ?? 'test@yallacooperative.com',
-      line_items: aggregateLineItems([
-        ...currentOrder.line_items,
-        ...lineItems
-      ]).filter((item) => Number(item.variant_id) !== 0),
+      line_items: updatedLineItems,
       inventory_behaviour: 'decrement_obeying_policy',
       tags: 'FDC part order',
       financial_status: 'pending'
@@ -92,10 +114,19 @@ export const createNewOrderBasedOnCurrentOrder = async ({
 
 const updateCurrentOrder = async (req, res, next) => {
   try {
-    const { shop: shopName } = req.query;
+    const { shop: shopName, orderType = 'completed' } = req.query;
     const { id: orderId } = req.params;
 
     const { exportedOrder, exportedCustomer } = req.body;
+
+    if (!exportedOrder || !exportedCustomer) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields ${!exportedOrder ? 'order' : ''} ${
+          !exportedCustomer ? 'customer' : ''
+        }`
+      });
+    }
 
     const importedOrder = await importDFCConnectorOrder(exportedOrder);
 
@@ -122,6 +153,7 @@ const updateCurrentOrder = async (req, res, next) => {
     }
 
     const newOrder = await createNewOrderBasedOnCurrentOrder({
+      orderType,
       session: currentSession,
       orderId,
       lineItems: importedOrder,
