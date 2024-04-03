@@ -141,8 +141,10 @@ const createVariants = async (shopifyProduct, variantMapping) => {
 
   const connector = await loadConnectorWithResources();
 
+  const semanticBase = `${semanticIdPrefix}product/${retailVariant.id}`;
+
   const plannedConsumptionFlow = connector.createPlannedConsumptionFlow({
-    semanticId: "http://myplatform.com/plannedConsumptionFlow",
+    semanticId: `${semanticBase}/plannedConsumptionFlow`,
     quantity: connector.createQuantity({
       value: noOfItemsPerPackage,
       unit: connector.MEASURES.UNIT.QUANTITYUNIT.PIECE
@@ -151,7 +153,7 @@ const createVariants = async (shopifyProduct, variantMapping) => {
   });
 
   const plannedProductionFlow = connector.createPlannedProductionFlow({
-    semanticId: "http://myplatform.com/plannedProductionFlow",
+    semanticId: `${semanticBase}/plannedProductionFlow`,
     quantity: connector.createQuantity({
       value: 1.0,
       unit: connector.MEASURES.UNIT.QUANTITYUNIT.PIECE
@@ -160,7 +162,7 @@ const createVariants = async (shopifyProduct, variantMapping) => {
   });
 
   const plannedTransformation = connector.createPlannedTransformation({
-    semanticId: "http://myplatform.com/transformation",
+    semanticId: `${semanticBase}/transformation`,
     transformationType: connector.VOCABULARY.TRANSFORMATIONTYPE.COMBINES,
     consumptionFlows: [plannedConsumptionFlow],
     productionFlows: [plannedProductionFlow]
