@@ -25,7 +25,7 @@ export function ProductCard({ product }) {
     }
   }
 
-  const { mutateAsync, isLoading: productsLoading } = useAppMutation({
+  const { mutateAsync, isFetching: productsLoading } = useAppMutation({
     reactQueryOptions: {
       onSettled: () => {
         setDisabled(false);
@@ -47,7 +47,7 @@ export function ProductCard({ product }) {
           }
 
           const updatedProducts = [...query.products];
-          updatedProducts[productIndex] = updateProductData.product;
+          updatedProducts[productIndex] = {...updateProductData.product, fdcVariants: updatedProducts[productIndex].fdcVariants};
 
           return {
             ...query,
@@ -61,7 +61,7 @@ export function ProductCard({ product }) {
 
   const {
     mutateAsync: updateVariantMappings,
-    isLoading: variantMappingsBeingUpdated
+    isFetching: variantMappingsBeingUpdated
   } = useAppMutation({
     reactQueryOptions: {
       onSuccess: async () => {
@@ -99,7 +99,7 @@ export function ProductCard({ product }) {
                   }}
                   disabled={isDisabled || product.fdcVariants.length === 0}
                   checked={isFdcProduct}
-                  onChange={() => {
+                  onClick={(event) => {
                     setDisabled(true);
                     mutateAsync({
                       url: `/api/products/${product.id}`,
@@ -110,6 +110,7 @@ export function ProductCard({ product }) {
                         }
                       }
                     });
+                    event.stopPropagation();
                   }}
                 />
               }

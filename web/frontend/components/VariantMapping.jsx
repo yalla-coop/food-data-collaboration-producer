@@ -47,11 +47,6 @@ function VariantMappingComponent({
     existingNoOfItemsPerPackage
   );
 
-  if (product.id == 8119767826681) {
-    console.log('variant', variant);
-    console.log('existingNoOfItemsPerPackage', noOfItemsPerPackage);
-  }
-
   const invalid = !retailVariant || !wholesaleVariant || !noOfItemsPerPackage;
 
   const changed = (retailVariant !== existingRetailVariant) || (wholesaleVariant !== existingWholesaleVariant) || (noOfItemsPerPackage != existingNoOfItemsPerPackage);
