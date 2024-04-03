@@ -55,7 +55,7 @@ const getProductsByIds = async (req, res) => {
 };
 
 async function parentProductIds(retailVariantIds) {
-  const sql = `SELECT product_id from variants where hub_variant_id = ANY ($1) `;
+  const sql = `SELECT product_id from fdc_variants where hub_variant_id = ANY ($1) `;
   const result = await query(sql, [retailVariantIds]);
   return result.rows.map(({ productId }) => productId);
 }
