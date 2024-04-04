@@ -88,7 +88,7 @@ export const createNewOrderBasedOnCurrentOrder = async ({
       ...lineItems
     ]).filter((item) => Number(item.variant_id) !== 0);
 
-    console.log(`Creating order to replace ${orderId} with new line items: ${lineItems}\n Setting line items to: ${updatedLineItems}`);
+    console.log(`Creating order to replace ${orderId} with new line items: ${JSON.stringify(lineItems)}\n Setting line items to: ${JSON.stringify(updatedLineItems)}`);
 
     const orderDetails = {
       customer,
