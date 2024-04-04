@@ -168,6 +168,7 @@ const updateCurrentOrder = async (req, res, next) => {
       order: newOrder
     });
   } catch (error) {
+    console.error(`Error processing order!: ${id}`, e, e.stack);
     return next(error);
   }
 };
