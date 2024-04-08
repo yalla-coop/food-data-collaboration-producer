@@ -35,7 +35,7 @@ const testProductCancellation = [
 ];
 
 export const aggregateLineItems = (orderType, lineItems) => {
-  let hasNoMoreItems = false;
+  console.log('lineItems :>> ', lineItems);
   const aggregatedLineItems = lineItems.reduce((acc, lineItem) => {
     const existingLineItem = acc.find(
       (item) => Number(item.variant_id) === Number(lineItem.variant_id)
@@ -50,7 +50,8 @@ export const aggregateLineItems = (orderType, lineItems) => {
         existingLineItem.quantity =
           Number(existingLineItem.quantity) - Number(lineItem.quantity);
         if (existingLineItem.quantity === 0) {
-          hasNoMoreItems = true;
+          // remove the item from the array if the quantity is 0
+          acc.splice(acc.indexOf(existingLineItem), 1);
         }
       }
     } else {
@@ -62,8 +63,10 @@ export const aggregateLineItems = (orderType, lineItems) => {
 
     return acc;
   }, []);
-  // return the test product if the quantity is 0
-  return hasNoMoreItems ? testProductCancellation : aggregatedLineItems;
+  // return the test product if there are no more items in the order
+  return aggregatedLineItems.length
+    ? aggregatedLineItems
+    : testProductCancellation;
 };
 
 export const createNewOrderBasedOnCurrentOrder = async ({
