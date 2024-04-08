@@ -63,10 +63,11 @@ export const aggregateLineItems = (orderType, lineItems) => {
 
     return acc;
   }, []);
+  const hasVariants = aggregatedLineItems.some(
+    (item) => Number(item?.variant_id) > 1
+  );
   // return the test product if there are no more items in the order
-  return aggregatedLineItems.length
-    ? aggregatedLineItems
-    : testProductCancellation;
+  return hasVariants ? aggregatedLineItems : testProductCancellation;
 };
 
 export const createNewOrderBasedOnCurrentOrder = async ({
