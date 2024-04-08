@@ -35,7 +35,6 @@ const testProductCancellation = [
 ];
 
 export const aggregateLineItems = (orderType, lineItems) => {
-  console.log('lineItems :>> ', lineItems);
   const aggregatedLineItems = lineItems.reduce((acc, lineItem) => {
     const existingLineItem = acc.find(
       (item) => Number(item.variant_id) === Number(lineItem.variant_id)
