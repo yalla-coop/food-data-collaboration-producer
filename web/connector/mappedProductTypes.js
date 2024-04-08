@@ -1,4 +1,4 @@
-import { loadConnectorWithResources } from './index.js';
+import loadConnectorWithResources from './index.js';
 
 const loadProductTypes = async () => {
   const connector = await loadConnectorWithResources();

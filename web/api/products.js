@@ -101,8 +101,6 @@ export function applyProductEndpoints(app) {
       return p.node;
     });
 
-    //let suppliedProducts = products.map(p => createSuppliedProduct(p.node))
-
     res.setHeader('Content-Type', 'application/json');
     res.send(products);
   });

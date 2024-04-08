@@ -1,5 +1,7 @@
 import { exportSuppliedProducts } from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
+import { getAndAddVariantsToProducts } from '../../../database/variants/variants.js';
+import { query } from '../../../database/connect.js';
 
 const getProductsByIds = async (req, res) => {
   const { body } = req;
@@ -12,30 +14,32 @@ const getProductsByIds = async (req, res) => {
       message: 'Missing ids array'
     });
   }
-  const idsArray = ids.split(',');
+  const retailVariantIds = ids.split(',');
 
-  if (idsArray.length === 0) {
+  if (retailVariantIds.length === 0) {
     return res.status(400).json({
       success: false,
       message: 'Empty ids array'
     });
   }
 
-  if (idsArray.length > 250) {
+  if (retailVariantIds.length > 250) {
     return res.status(400).json({
       success: false,
       message: 'Maximum of 250 ids allowed'
     });
   }
 
+  const parentIds = await parentProductIds(retailVariantIds);
+
   try {
     const products = await shopify.api.rest.Product.all({
       session: shopifySession,
-      ids,
+      ids: parentIds.join(','),
       limit: 250
     });
 
-    const exportedDFCProducts = await exportSuppliedProducts(products);
+    const exportedDFCProducts = await exportSuppliedProducts((await getAndAddVariantsToProducts(products)));
 
     return res.status(200).json({
       products: exportedDFCProducts,
@@ -49,5 +53,11 @@ const getProductsByIds = async (req, res) => {
     });
   }
 };
+
+async function parentProductIds(retailVariantIds) {
+  const sql = `SELECT product_id from fdc_variants where retail_variant_id = ANY ($1) `;
+  const result = await query(sql, [retailVariantIds]);
+  return result.rows.map(({ productId }) => productId);
+}
 
 export default getProductsByIds;

@@ -12,7 +12,7 @@ const getProducts = async (req, res) => {
     } = await getProductsUseCase({
       session: shopifySession,
       sinceId,
-      remainingProductsCount: remainingProductsCountBeforeNextFetch
+      remainingProductsCount: remainingProductsCountBeforeNextFetch ? Number(remainingProductsCountBeforeNextFetch) : null
     });
 
     return res.status(200).json({

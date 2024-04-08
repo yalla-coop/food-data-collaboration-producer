@@ -2,16 +2,20 @@
 /* eslint-disable no-underscore-dangle */
 import pg from 'pg';
 import fs from 'fs';
+import dotenv from 'dotenv';
 import {
   toCamelCase,
   toParentChild,
   sanitizeCSVInjection
 } from './utils/index.js';
-import config from '../config.js';
+
+dotenv.config({
+  path: process.cwd() + '/web/.env'
+});
 
 const { Pool } = pg;
 
-const connectionString = config.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL;
 
 const env = process.env.NODE_ENV;
 // eslint-disable-next-line prefer-regex-literals

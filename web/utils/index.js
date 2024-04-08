@@ -6,16 +6,6 @@ export function throwError(message, errorObj) {
   }
 }
 
-export function addParamToParams(params, paramName, paramValue) {
-  if (paramValue === undefined || paramValue === null) {
-    return params;
-  }
-  const encodedParamValue = encodeURIComponent(paramValue);
-  const separator = params ? '&' : '?';
-  const newParams = `${params}${separator}${paramName}=${encodedParamValue}`;
-  return newParams;
-}
-
 export function getTargetStringFromSemanticId(url, key) {
   const parts = url.split('/');
   const targetIdIndex = parts.indexOf(key) + 1;

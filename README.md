@@ -7,7 +7,7 @@ Install Node (21.7.1 works)
 Install Shopify CLI:
 `https://shopify.dev/docs/themes/tools/cli/install`  
 
-Install secrets into web/.env.test (get them from another developer for now)
+Install secrets into web/.env (get them from another developer for now)
 
 ```
 $ yarn

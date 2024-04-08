@@ -1,7 +1,7 @@
 import { OrderLine, Person } from '@datafoodconsortium/connector';
 import { getTargetStringFromSemanticId, throwError } from '../utils/index.js';
 
-import { loadConnectorWithResources } from './index.js';
+import loadConnectorWithResources from './index.js';
 
 async function getOrderLine(order) {
   try {

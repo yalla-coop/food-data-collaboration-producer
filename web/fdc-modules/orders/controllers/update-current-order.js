@@ -94,6 +94,8 @@ export const createNewOrderBasedOnCurrentOrder = async ({
       ...lineItems
     ]).filter((item) => Number(item.variant_id) !== 0);
 
+    console.log(`Creating order to replace ${orderId} with new line items: ${JSON.stringify(lineItems)}\n Setting line items to: ${JSON.stringify(updatedLineItems)}`);
+
     const orderDetails = {
       customer,
       note: customer?.email ?? 'test@yallacooperative.com',
@@ -174,6 +176,7 @@ const updateCurrentOrder = async (req, res, next) => {
       order: newOrder
     });
   } catch (error) {
+    console.error(`Error processing order!: ${req.params.id} ${req.query.orderType}`, error, error.stack);
     return next(error);
   }
 };
