@@ -36,11 +36,12 @@ const testProductCancellation = [
 
 export const aggregateLineItems = (orderType, lineItems) => {
   const aggregatedLineItems = lineItems.reduce((acc, lineItem) => {
-    const existingLineItem = acc.find(
+    const existingIndex = acc.findIndex(
       (item) => Number(item.variant_id) === Number(lineItem.variant_id)
     );
 
-    if (existingLineItem) {
+    if (existingIndex !== -1) {
+      const existingLineItem = acc[existingIndex];
       // add the quantity if the order type is completed or subtract if the type is cancelled
       if (orderType === 'completed') {
         existingLineItem.quantity =
@@ -50,7 +51,7 @@ export const aggregateLineItems = (orderType, lineItems) => {
           Number(existingLineItem.quantity) - Number(lineItem.quantity);
         if (existingLineItem.quantity === 0) {
           // remove the item from the array if the quantity is 0
-          acc.splice(acc.indexOf(existingLineItem), 1);
+          acc.splice(existingIndex, 1);
         }
       }
     } else {
@@ -62,11 +63,13 @@ export const aggregateLineItems = (orderType, lineItems) => {
 
     return acc;
   }, []);
-  const hasVariants = aggregatedLineItems.some(
+
+  const hasActualVariantOrders = aggregatedLineItems.some(
     (item) => Number(item?.variant_id) > 1
   );
+
   // return the test product if there are no more items in the order
-  return hasVariants ? aggregatedLineItems : testProductCancellation;
+  return hasActualVariantOrders ? aggregatedLineItems : testProductCancellation;
 };
 
 export const createNewOrderBasedOnCurrentOrder = async ({
