@@ -7,6 +7,7 @@ import {
   createOrder,
   holdFulfillmentOrder
 } from '../../../utils/handleShopifyOrders.js';
+import { aggregateLineItems } from '../../../utils/aggregateLineItems.js';
 
 export const cancelOrderAndThenDeleted = async ({ session, id }) => {
   const orderDetails = {
@@ -22,54 +23,6 @@ export const cancelOrderAndThenDeleted = async ({ session, id }) => {
     session,
     id
   });
-};
-
-const testProductCancellation = [
-  {
-    title: 'test-product',
-    description: 'no more items required due to cancellation',
-    quantity: 1,
-    price: 0,
-    variant_id: 1
-  }
-];
-
-export const aggregateLineItems = (orderType, lineItems) => {
-  const aggregatedLineItems = lineItems.reduce((acc, lineItem) => {
-    const existingIndex = acc.findIndex(
-      (item) => Number(item.variant_id) === Number(lineItem.variant_id)
-    );
-
-    if (existingIndex !== -1) {
-      const existingLineItem = acc[existingIndex];
-      // add the quantity if the order type is completed or subtract if the type is cancelled
-      if (orderType === 'completed') {
-        existingLineItem.quantity =
-          Number(existingLineItem.quantity) + Number(lineItem.quantity);
-      } else {
-        existingLineItem.quantity =
-          Number(existingLineItem.quantity) - Number(lineItem.quantity);
-        if (existingLineItem.quantity === 0) {
-          // remove the item from the array if the quantity is 0
-          acc.splice(existingIndex, 1);
-        }
-      }
-    } else {
-      acc.push({
-        variant_id: Number(lineItem.variant_id),
-        quantity: Number(lineItem.quantity)
-      });
-    }
-
-    return acc;
-  }, []);
-
-  const hasActualVariantOrders = aggregatedLineItems.some(
-    (item) => Number(item?.variant_id) > 1
-  );
-
-  // return the test product if there are no more items in the order
-  return hasActualVariantOrders ? aggregatedLineItems : testProductCancellation;
 };
 
 export const createNewOrderBasedOnCurrentOrder = async ({
@@ -94,7 +47,11 @@ export const createNewOrderBasedOnCurrentOrder = async ({
       ...lineItems
     ]).filter((item) => Number(item.variant_id) !== 0);
 
-    console.log(`Creating order to replace ${orderId} with new line items: ${JSON.stringify(lineItems)}\n Setting line items to: ${JSON.stringify(updatedLineItems)}`);
+    console.log(
+      `Creating order to replace ${orderId} with new line items: ${JSON.stringify(
+        lineItems
+      )}\n Setting line items to: ${JSON.stringify(updatedLineItems)}`
+    );
 
     const orderDetails = {
       customer,
@@ -176,7 +133,11 @@ const updateCurrentOrder = async (req, res, next) => {
       order: newOrder
     });
   } catch (error) {
-    console.error(`Error processing order!: ${req.params.id} ${req.query.orderType}`, error, error.stack);
+    console.error(
+      `Error processing order!: ${req.params.id} ${req.query.orderType}`,
+      error,
+      error.stack
+    );
     return next(error);
   }
 };
