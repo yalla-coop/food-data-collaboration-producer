@@ -39,7 +39,9 @@ const getProductsByIds = async (req, res) => {
       limit: 250
     });
 
-    const exportedDFCProducts = await exportSuppliedProducts((await getAndAddVariantsToProducts(products)));
+    const fdcProducts = products.filter(({ tags }) => tags.includes('fdc'));
+
+    const exportedDFCProducts = await exportSuppliedProducts((await getAndAddVariantsToProducts(fdcProducts)));
 
     return res.status(200).json({
       products: exportedDFCProducts,
