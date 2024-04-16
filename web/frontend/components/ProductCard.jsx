@@ -61,6 +61,7 @@ export function ProductCard({ product }) {
 
   const {
     mutateAsync: updateVariantMappings,
+    status: variantMappingUpdateStatus,
     isFetching: variantMappingsBeingUpdated
   } = useAppMutation({
     reactQueryOptions: {
@@ -84,6 +85,7 @@ export function ProductCard({ product }) {
   };
 
   const isFdcProduct = product.tags?.includes('fdc');
+  const hasVariantMapped = !!product.fdcVariants[0];
 
   return (
     <Accordion key={product.id} slotProps={{ transition: { unmountOnExit: true } }}>
@@ -92,10 +94,12 @@ export function ProductCard({ product }) {
           <Typography variant="h6">{product.title}</Typography>
           <Stack spacing="20px" direction="row" alignItems="center">
             <FormControlLabel
+              style={{ pointerEvents: "none" }}
               control={
                 <Checkbox
                   style={{
-                    width: '50px'
+                    width: '50px',
+                    pointerEvents: 'auto'
                   }}
                   disabled={isDisabled || product.fdcVariants.length === 0}
                   checked={isFdcProduct}
@@ -115,8 +119,8 @@ export function ProductCard({ product }) {
                 />
               }
               sx={{
-                '& .MuiFormControlLabel-label.Mui-disabled': {
-                  color: isFdcProduct ? 'green' : 'gray'
+                '& .MuiFormControlLabel-label': {
+                  color: hasVariantMapped && isFdcProduct ? 'green' : isFdcProduct ? 'red !important' : 'gray'
                 }
               }}
               label={isFdcProduct ? 'FDC Product' : 'Not FDC Product'}
@@ -134,7 +138,7 @@ export function ProductCard({ product }) {
               saveVariantMapping={saveVariantMapping}
               product={product}
               variant={product.fdcVariants[0]}
-              loadingInProgress={variantMappingsBeingUpdated || productsLoading}
+              loadingInProgress={variantMappingsBeingUpdated || variantMappingUpdateStatus === 'loading' || productsLoading}
             />
           </Stack>
         </Stack>
