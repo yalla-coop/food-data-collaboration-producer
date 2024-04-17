@@ -55,7 +55,6 @@ export const createNewOrderBasedOnCurrentOrder = async ({
 
     const orderDetails = {
       customer,
-      note: customer?.email ?? 'test@yallacooperative.com',
       line_items: updatedLineItems,
       inventory_behaviour: 'decrement_obeying_policy',
       tags: 'FDC part order',
