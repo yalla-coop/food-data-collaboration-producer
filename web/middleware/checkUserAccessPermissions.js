@@ -79,7 +79,7 @@ async function authorise(userId, accessToken, res, next) {
 
 function bearerToken(req) {
   const token = req.get('authorization');
-  return token?.split(" ")[1];
+  return token?.split(' ')[1];
 }
 
 export default checkUserAccessPermissions;

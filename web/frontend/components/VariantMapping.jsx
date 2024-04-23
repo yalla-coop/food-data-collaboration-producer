@@ -56,10 +56,6 @@ function VariantMappingComponent({
   );
 
   const invalid = !retailVariant || !wholesaleVariant || !noOfItemsPerPackage;
-  const variantStoredInDB =
-    existingNoOfItemsPerPackage &&
-    existingRetailVariant &&
-    existingWholesaleVariant;
 
   const changed =
     retailVariant !== existingRetailVariant ||
@@ -171,7 +167,7 @@ function VariantMappingComponent({
           Remove variant
         </Button>
 
-        {!variantStoredInDB && (
+        {!variant && (
           <Button
             variant="contained"
             type="button"
