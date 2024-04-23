@@ -82,7 +82,7 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            disabled={loadingInProgress}
+            disabled={loadingInProgress || existingRetailVariant}
             value={retailVariant || ''}
             onChange={(_e) => {
               setSelectedRetailVariant(_e.target.value);
@@ -108,7 +108,7 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            disabled={loadingInProgress}
+            disabled={loadingInProgress || existingWholesaleVariant}
             value={wholesaleVariant || ''}
             onChange={(event) =>
               setSelectedWholesaleVariant(event.target.value)
@@ -166,20 +166,23 @@ function VariantMappingComponent({
         >
           Remove variant
         </Button>
-        <Button
-          variant="contained"
-          type="button"
-          disabled={invalid || loadingInProgress || !changed}
-          onClick={() =>
-            saveVariantMapping({
-              retailVariantId: retailVariant?.id,
-              wholesaleVariantId: wholesaleVariant?.id,
-              noOfItemsPerPackage
-            })
-          }
-        >
-          Save product variant updates
-        </Button>
+
+        {!variant && (
+          <Button
+            variant="contained"
+            type="button"
+            disabled={invalid || loadingInProgress || !changed}
+            onClick={() =>
+              saveVariantMapping({
+                retailVariantId: retailVariant?.id,
+                wholesaleVariantId: wholesaleVariant?.id,
+                noOfItemsPerPackage
+              })
+            }
+          >
+            Save product variant updates
+          </Button>
+        )}
       </Stack>
     </Stack>
   );
