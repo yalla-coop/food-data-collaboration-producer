@@ -5,16 +5,24 @@ const clientId = process.env.OIDC_CLIENT_ID;
 const clientSecret = process.env.OIDC_CLIENT_SECRET;
 const issuerURL = process.env.OIDC_ISSUER;
 
+const API_KEY = process.env.PRODUCER_API_KEY;
+
 const checkUserAccessPermissions = async (req, res, next) => {
   const { userId, accessToken } = req.body;
 
-  if (!userId) {
+  if (userId) {
+    await authorise(userId, accessToken, res, next);
+  } else if (bearerToken(req) === API_KEY) {
+    return next();
+  } else {
     return res.status(403).json({
       message: 'User access denied',
       error: 'No user id provided'
     });
   }
+};
 
+async function authorise(userId, accessToken, res, next) {
   const issuer = await Issuer.discover(issuerURL);
 
   const client = new issuer.Client({
@@ -67,6 +75,11 @@ const checkUserAccessPermissions = async (req, res, next) => {
       error: err.message
     });
   }
-};
+}
+
+function bearerToken(req) {
+  const token = req.get('authorization');
+  return token?.split(' ')[1];
+}
 
 export default checkUserAccessPermissions;

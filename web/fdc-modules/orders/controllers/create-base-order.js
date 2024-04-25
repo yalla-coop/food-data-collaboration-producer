@@ -12,6 +12,7 @@ import {
 const createBaseDraftOrder = async (req, res, next) => {
   try {
     const { shop: shopName } = req.query;
+    const { customer } = req.body;
     const session = await getSession(shopName);
 
     if (!session.accessToken) {
@@ -24,14 +25,8 @@ const createBaseDraftOrder = async (req, res, next) => {
     const orderDetails = {
       line_items: [{ title: 'test-product', quantity: 1, price: 0 }],
       tags: 'FDC part order',
-      // TODO: Replace with actual customer details
-      customer: {
-        first_name: 'Mark',
-        last_name: 'Claydon',
-        email: 'mark@yallacooperative.com'
-      },
-      // TODO: Replace with actual shipping address
-      note: 'hassanstroe.myshopify.com',
+      customer,
+      note: 'Initial order when starting a new sales session',
       financial_status: 'pending'
     };
 

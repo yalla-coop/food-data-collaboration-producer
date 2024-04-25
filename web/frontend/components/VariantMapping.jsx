@@ -26,30 +26,41 @@ function VariantMappingComponent({
   loadingInProgress
 }) {
   const existingRetailVariant =
-    (variant && product?.variants?.find(
-      (v) =>
-        convertShopifyGraphQLIdToNumber(v.id) ===
-        Number(variant.retailVariantId)
-    )) || null;
+    (variant &&
+      product?.variants?.find(
+        (v) =>
+          convertShopifyGraphQLIdToNumber(v.id) ===
+          Number(variant.retailVariantId)
+      )) ||
+    null;
 
   const existingWholesaleVariant =
-    (variant && product?.variants?.find(
-      (v) =>
-        convertShopifyGraphQLIdToNumber(v.id) ===
-        Number(variant.wholesaleVariantId)
-    )) || null;
+    (variant &&
+      product?.variants?.find(
+        (v) =>
+          convertShopifyGraphQLIdToNumber(v.id) ===
+          Number(variant.wholesaleVariantId)
+      )) ||
+    null;
 
   const existingNoOfItemsPerPackage = variant?.noOfItemsPerPackage || '';
 
-  const [retailVariant, setSelectedRetailVariant] = useState(existingRetailVariant);
-  const [wholesaleVariant, setSelectedWholesaleVariant] = useState(existingWholesaleVariant);
+  const [retailVariant, setSelectedRetailVariant] = useState(
+    existingRetailVariant
+  );
+  const [wholesaleVariant, setSelectedWholesaleVariant] = useState(
+    existingWholesaleVariant
+  );
   const [noOfItemsPerPackage, setNoOfItemPerPackage] = useState(
     existingNoOfItemsPerPackage
   );
 
   const invalid = !retailVariant || !wholesaleVariant || !noOfItemsPerPackage;
 
-  const changed = (retailVariant !== existingRetailVariant) || (wholesaleVariant !== existingWholesaleVariant) || (noOfItemsPerPackage != existingNoOfItemsPerPackage);
+  const changed =
+    retailVariant !== existingRetailVariant ||
+    wholesaleVariant !== existingWholesaleVariant ||
+    noOfItemsPerPackage != existingNoOfItemsPerPackage;
 
   return (
     <Stack
@@ -58,11 +69,7 @@ function VariantMappingComponent({
       borderRadius="12px"
       padding="12px"
     >
-      <Stack
-        direction="row"
-        spacing="20px"
-        width="100%"
-      >
+      <Stack direction="row" spacing="20px" width="100%">
         <Stack flexGrow={1} spacing="10px">
           <Typography>Retail variant</Typography>
           <TextField
@@ -75,7 +82,7 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            disabled={loadingInProgress}
+            disabled={loadingInProgress || existingRetailVariant}
             value={retailVariant || ''}
             onChange={(_e) => {
               setSelectedRetailVariant(_e.target.value);
@@ -101,9 +108,11 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            disabled={loadingInProgress}
+            disabled={loadingInProgress || existingWholesaleVariant}
             value={wholesaleVariant || ''}
-            onChange={(event) => setSelectedWholesaleVariant(event.target.value)}
+            onChange={(event) =>
+              setSelectedWholesaleVariant(event.target.value)
+            }
           >
             {product.variants.map((variant, idx) => (
               <MenuItem key={variant.id} value={variant}>
@@ -114,11 +123,10 @@ function VariantMappingComponent({
         </Stack>
       </Stack>
 
-      <Stack
-        spacing="10px"
-      >
+      <Stack spacing="10px">
         <Stack direction="row" spacing="6px" alignItems="center">
           <Typography variant="h5">Mapped Variant Ratio</Typography>
+
           <CustomTooltip
             title={
               <Typography variant="body1">
@@ -134,18 +142,22 @@ function VariantMappingComponent({
             </IconButton>
           </CustomTooltip>
         </Stack>
+        {!existingNoOfItemsPerPackage && (
+          <Typography variant="body1" color="error">
+            Please make sure to carefully select the correct number of items as
+            this cannot be changed later
+          </Typography>
+        )}
         <TextField
           type="number"
           label="No. of items per Case/Box/Package"
           inputProps={{ inputMode: 'numeric', min: 0, pattern: '[0-9]*' }}
           value={noOfItemsPerPackage}
-          disabled={loadingInProgress}
+          disabled={loadingInProgress || existingNoOfItemsPerPackage}
           onChange={(e) => setNoOfItemPerPackage(e.target.value)}
         />
       </Stack>
-      <Stack
-        spacing="10px"
-      >
+      <Stack spacing="10px">
         <Button
           variant="contained"
           type="button"
@@ -154,14 +166,23 @@ function VariantMappingComponent({
         >
           Remove variant
         </Button>
-        <Button
-          variant="contained"
-          type="button"
-          disabled={invalid || loadingInProgress || !changed}
-          onClick={() => saveVariantMapping({retailVariantId: retailVariant?.id, wholesaleVariantId: wholesaleVariant?.id, noOfItemsPerPackage})}
-        >
-          Save product variant updates
-        </Button>
+
+        {!variant && (
+          <Button
+            variant="contained"
+            type="button"
+            disabled={invalid || loadingInProgress || !changed}
+            onClick={() =>
+              saveVariantMapping({
+                retailVariantId: retailVariant?.id,
+                wholesaleVariantId: wholesaleVariant?.id,
+                noOfItemsPerPackage
+              })
+            }
+          >
+            Save product variant updates
+          </Button>
+        )}
       </Stack>
     </Stack>
   );
