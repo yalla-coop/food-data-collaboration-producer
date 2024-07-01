@@ -7,9 +7,17 @@ import express from 'express';
 import serveStatic from 'serve-static';
 import cors from 'cors';
 import apiRouters from './api-routers.js';
-import fdcRouters from './fdc-modules/fdc-routers.js';
+import legacyfdcRouter from './legacy-fdc-modules/legacy-fdc-routers.js';
 import shopify from './shopify.js';
 import webhookHandlers from './webhooks/index.js';
+
+import checkUserAccessPermissions from './middleware/checkUserAccessPermissions.js'
+
+import ProductsModules from './api-modules/products/index.js';
+import UsersModules from './api-modules/users/index.js';
+import checkOnlineSession from './middleware/checkOnlineSession.js';
+
+import fdcOrderRoutes from './fdc-modules/orders'
 
 dotenv.config();
 
@@ -50,10 +58,13 @@ app.get(
   shopify.redirectToShopifyOrAppRoot()
 );
 
-app.use('/fdc', cors(), express.json(), fdcRouters, errorMiddleware);
-app.use('/api/*', shopify.validateAuthenticatedSession());
+app.use('/fdc', cors(), express.json(), legacyfdcRouter, errorMiddleware);
 
-app.use('/api', express.json(), apiRouters);
+//todo: Who's enterprise is this? Is a hub posting to their own enterprise endpoint? Is it something that exists on the producer?
+app.use('/api/dfc/Enterprises/tbd/Orders', cors(), express.json(), checkUserAccessPermissions, fdcOrderRoutes)
+
+app.use('/api/products', shopify.validateAuthenticatedSession(), express.json(), checkOnlineSession, ProductsModules.Controllers);
+app.use('/api/hub-users', shopify.validateAuthenticatedSession(), express.json(), checkOnlineSession, UsersModules.Controllers)
 
 app.use(serveStatic(STATIC_PATH, { index: false }));
 
