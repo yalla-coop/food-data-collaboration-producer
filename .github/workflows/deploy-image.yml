@@ -6,10 +6,12 @@ on:
   push:
     branches: ['jelastic']
 
-# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  JELASTIC_URL: app.jpc.infomaniak.com
+  JELASTIC_ENV: fdc-producer-staging
+  NODE_ID: 157485
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
@@ -46,8 +48,6 @@ jobs:
               type=ref,event=tag
               type=sha
               type=sha,prefix={{branch}}-
-              type=sha,format=long
-              type=sha,format=long,prefix={{branch}}-
 
       # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
       # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
@@ -68,3 +68,7 @@ jobs:
       #     subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
       #     subject-digest: ${{ steps.push.outputs.digest }}
       #     push-to-registry: true
+      - name: Redeploy containers
+        run: |
+          sudo apt-get install curl -y
+          curl https://${{ env.JELASTIC_URL }}/1.0/environment/control/rest/redeploycontainersbygroup?envName=${{env.JELASTIC_ENV}}\&session=${{secrets.JELASTIC_ACCESS_TOKEN}}\&tag=${{steps.meta.outputs.tags[0]}}\&nodeId=${{env.NODE_ID}}
