@@ -1,0 +1,27 @@
+#
+name: Create and publish a Docker image
+
+on:
+  push:
+    branches: ['jelastic']
+
+env:
+  JELASTIC_ENV: fdc-producer-staging
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    env:
+      SHOPIFY_API_KEY: ${{ secrets.SHOPIFY_API_KEY }}
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: build and deploy
+        uses: ./.github/actions/buildAndDeploy
+        with:
+          jelastic_env: env-0105831
+        secrets: inherit
+      
