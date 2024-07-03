@@ -71,4 +71,4 @@ jobs:
       - name: Redeploy containers
         run: |
           sudo apt-get install curl -y
-          curl https://${{ env.JELASTIC_URL }}/1.0/environment/control/rest/redeploycontainersbygroup?envName=${{env.JELASTIC_ENV}}\&session=${{secrets.JELASTIC_ACCESS_TOKEN}}\&tag=${{steps.meta.outputs.tags[0]}}\&nodeId=${{env.NODE_ID}}
+          curl https://${{ env.JELASTIC_URL }}/1.0/environment/control/rest/redeploycontainersbygroup?envName=${{env.JELASTIC_ENV}}\&session=${{secrets.JELASTIC_ACCESS_TOKEN}}\&tag=${{steps.meta.outputs.tags[0]}}\&nodeGroup=cp
