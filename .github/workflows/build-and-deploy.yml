@@ -39,10 +39,6 @@ jobs:
           with:
             images: ghcr.io/${{ inputs.image_name }}
             tags: |
-                type=ref,event=branch
-                type=ref,event=pr
-                type=ref,event=tag
-                type=sha
                 type=sha,prefix={{branch}}-
 
         # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
@@ -69,4 +65,4 @@ jobs:
         - name: Redeploy containers
           run: |
             sudo apt-get install curl -y
-            curl https://app.jpc.infomaniak.com/1.0/environment/control/rest/redeploycontainersbygroup?envName=${{inputs.jelastic_env}}\&session=${{secrets.jelastic_access_token}}\&tag=${{steps.meta.outputs.tags[0]}}\&nodeGroup=cp
+            curl https://app.jpc.infomaniak.com/1.0/environment/control/rest/redeploycontainersbygroup?envName=${{inputs.jelastic_env}}\&session=${{secrets.jelastic_access_token}}\&tag=${{steps.meta.outputs.tags}}\&nodeGroup=cp
