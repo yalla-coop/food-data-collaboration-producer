@@ -7,13 +7,6 @@ on:
 
 jobs:
   build-and-push-image:
-    env:
-      SHOPIFY_API_KEY: ${{ secrets.SHOPIFY_API_KEY }}
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
     uses: ./.github/workflows/build-and-deploy.yml
     with:
       jelastic_env: env-0105831
