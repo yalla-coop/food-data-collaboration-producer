@@ -14,9 +14,7 @@ jobs:
       packages: write
       attestations: write
       id-token: write
-    steps:
-      - name: build and deploy
-        uses: ./build-and-deploy
+    uses: ./build-and-deploy
         with:
           jelastic_env: env-0105831
         secrets: inherit
