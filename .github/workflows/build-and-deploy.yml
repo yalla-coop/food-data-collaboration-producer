@@ -54,6 +54,8 @@ jobs:
           with:
             context: .
             push: true
+            build-args: |
+              SHOPIFY_API_KEY=${{ secrets.shopify_api_key }}
             tags: ${{ steps.meta.outputs.tags }}
             labels: ${{ steps.meta.outputs.labels }}
         
