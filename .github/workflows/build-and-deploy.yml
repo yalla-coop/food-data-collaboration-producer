@@ -5,10 +5,12 @@ on:
       jelastic_env:
         description: 'Jelastic environment name'
         required: true
+        type: string
       image_name:
         description: 'Name for image'
         required: false
         default: ${{ github.repository }}
+        type: string
     secrets:
       jelastic_access_token:
         required: true
@@ -20,11 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SHOPIFY_API_KEY: ${{ secrets.shopify_api_key }}
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
     steps:
         - name: Checkout repository
           uses: actions/checkout@v4
