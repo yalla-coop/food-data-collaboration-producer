@@ -1,21 +1,22 @@
 import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
-
+import { extractOrderAndLines, createDfcOrderFromShopify } from './dfc-order.js';
 
 const createOrder = async (req, res) => { 
     const session = await getSession(shopName)
     const client = new shopify.api.clients.Graphql({ session });
     const customerEmail = ''
 
-    const customerId = await findCustomer(customerEmail);
-    const orderId = await createShopifyOrder(customerId);
-
-    res.send("TODO");
+    const customerId = await findCustomer(client, customerEmail);
+    const order = extractOrderAndLines(req.body)
+    const shopifyDraftOrder = await createShopifyOrder(client, customerId, customerEmail, await order.getLines());
+    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder);
+    res.type('application/json')
+    res.send(dfcOrder);
 }
 
 
-async function findCustomer(customerEmail) {
-
+async function findCustomer(client, customerEmail) {
     const response = await client.query({
         data: {
             "query": `query MyQuery($query: String) {
@@ -44,14 +45,39 @@ async function findCustomer(customerEmail) {
     
 }
 
+async function createShopifyOrder(client, customerId, customerEmail, dfcLines) {
 
-async function createShopifyOrder({customerId, customerEmail, lines}) {
+    const shopifyLines = dfcLines.map(async dfcLine => {
+        const offer = await dfcLine.getOffer();
+        return {
+            variantId: `gid://shopify/ProductVariant/${offer.getSemanticId()}`,
+            quantity: dfcLine.getQuantity()
+        }
+    })
+
     const response = await client.query({
         data: {
             "query": `mutation draftOrderCreate($input: DraftOrderInput!) {
           draftOrderCreate(input: $input) {
-            draftOrder {
-              id
+            userErrors {
+                field
+                message
+            }
+            draftOrder  {
+                id
+                lineItems(first: 250) {
+                 edges {
+                   node {
+                      id
+                      quantity
+                       variant {
+                           id
+                           title 
+                           price
+                       }
+                   }
+                 }         
+               }
             }
           }
         }`,
@@ -62,17 +88,7 @@ async function createShopifyOrder({customerId, customerEmail, lines}) {
                     },
                     "note": "FDC Order",
                     "email": customerEmail,
-                    "lineItems": [
-                        {
-                            "title": "Custom product",
-                            "originalUnitPrice": 10,
-                            "quantity": 1,
-                        },
-                        // {
-                        //     "variantId": "gid://shopify/ProductVariant/43729076",
-                        //     "quantity": 2
-                        // }
-                    ],
+                    "lineItems": shopifyLines,
                 }
             },
         },
@@ -83,6 +99,11 @@ async function createShopifyOrder({customerId, customerEmail, lines}) {
         throw new Error('Failed to create draft order');
     }
 
-    return response.data.draftOrderCreate.draftOrder.id
+    if (response.data.draftOrderCreate.userErrors.length > 0) {
+        console.error('Failed to create draft order', JSON.stringify(response.data.draftOrderCreate.userErrors));
+        throw new Error('Failed to create draft order');
+    }
+
+    return response.data.draftOrderCreate.draftOrder
 }
 
