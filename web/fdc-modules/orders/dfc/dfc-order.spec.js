@@ -1,6 +1,6 @@
 import { Offer, Order, OrderLine } from '@datafoodconsortium/connector';
 import loadConnectorWithResources from '../../../connector/index.js';
-import { createDfcOrderFromShopify, createDfcOrderLineFromShopify, createDfcOrderLinesFromShopify, extractOrderAndLines } from './dfc-order.js';
+import { createDfcOrderFromShopify, createDfcOrderLineFromShopify, createDfcOrderLinesFromShopify, extractOrderAndLines, extractOrderLine } from './dfc-order.js';
 describe('dfc orders', () => {
 
     describe("Request", () => {
@@ -49,7 +49,7 @@ describe('dfc orders', () => {
             expect(lines[0].getQuantity()).toBe(5);
         });
 
-        it('will fail if order is missing', async () => {
+        it('Order extraction will fail if order is missing', async () => {
             const orderPayload = await connector.export([orderLine1Request, orderLine2Request])
 
             expect.assertions(1);
@@ -58,12 +58,36 @@ describe('dfc orders', () => {
             })
         });
 
-        it('will fail if lines are missing', async () => {
+        it('Order extraction will fail if lines are missing', async () => {
             const orderPayload = await connector.export([orderRequest, orderLine1Request])
 
             expect.assertions(1);
             return extractOrderAndLines(orderPayload).catch(error => {
                 expect(error.message).toBe('Graph is missing OrderLine')
+            })
+        });
+
+        it('Can extract dfc order line from request payload', async () => {
+            const orderLinePayload = await connector.export([orderLine1Request])
+            const deserialisedOrderLine = await extractOrderLine(orderLinePayload)
+            expect(deserialisedOrderLine.getSemanticType()).toBe('dfc-b:OrderLine')
+        });
+
+        it('Single OrderLine extraction will fail if OrderLine is missing', async () => {
+            const orderPayload = await connector.export([new Offer({ connector, semanticId: "http://myplatform.com/Product2" })])
+
+            expect.assertions(1);
+            return extractOrderLine(orderPayload).catch(error => {
+                expect(error.message).toBe('Single OrderLine not present in graph')
+            })
+        });
+
+        it('Single OrderLine extraction will fail if multiple OrderLines', async () => {
+            const orderPayload = await connector.export([orderLine1Request, orderLine2Request])
+
+            expect.assertions(1);
+            return extractOrderLine(orderPayload).catch(error => {
+                expect(error.message).toBe('Single OrderLine not present in graph')
             })
         });
     });

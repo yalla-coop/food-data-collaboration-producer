@@ -1,6 +1,18 @@
 import loadConnectorWithResources from '../../../connector/index.js';
 import { OrderLine, Order } from '@datafoodconsortium/connector';
 
+export async function extractOrderLine(payload) {
+   const connector = await loadConnectorWithResources();
+
+    const deserialised = await connector.import(payload);
+
+    if (deserialised.length !== 1 || !(deserialised[0] instanceof OrderLine)) {
+        throw Error('Single OrderLine not present in graph');
+    }
+
+    return deserialised[0];
+}
+
 export async function extractOrderAndLines(payload) {
     const connector = await loadConnectorWithResources();
 
