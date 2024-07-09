@@ -16,6 +16,7 @@ const buildProductTable = async () => {
         await readSqlFile(process.cwd() + '/web/database/webhooks/schema.sql');
         await readSqlFile(process.cwd() + '/web/database/users/schema.sql');
         await readSqlFile(process.cwd() + '/web/database/variants/schema.sql');
+        await readSqlFile(process.cwd() + '/web/database/line_items/schema.sql');
         await readSqlFile(process.cwd() + '/web/database/users/test-users.sql');
     } catch (err) {
         throw new Error(err);
