@@ -13,6 +13,7 @@ const getProducts = async (req, res) => {
       message: 'Products retrieved successfully'
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: 'Error retrieving products'
