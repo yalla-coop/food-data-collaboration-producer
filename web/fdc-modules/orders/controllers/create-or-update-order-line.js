@@ -5,7 +5,7 @@ import {persistLineIdMappings} from './lineItemMappings.js'
 import * as orders from './shopify/orders.js';
 
 // transaction
-const createOrderLine = async (req, res) => { 
+const createOrUpdateOrderLine = async (req, res) => { 
     const session = await getSession(shopName)
     const client = new shopify.api.clients.Graphql({ session });
 
@@ -25,4 +25,4 @@ const createOrderLine = async (req, res) => {
     res.send(dfcOrder);
 }
 
-export default createOrderLine
+export default createOrUpdateOrderLine

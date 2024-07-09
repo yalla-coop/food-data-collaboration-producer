@@ -4,7 +4,7 @@ import create from './controllers/create-order'
 import update from './controllers/update-order'
 import get from './controllers/get-order'
 import getOrderLines from './controllers/get-order-lines'
-import createOrderLine from './controllers/create-order-line'
+import createOrUpdateOrderLine from './controllers/create-or-update-order-line'
 import getOrderLine from './controllers/get-order-line'
 
 const fdcOrderRoutes = Router();
@@ -16,7 +16,8 @@ fdcOrderRoutes.post('/', create);
 fdcOrderRoutes.get('/:id', get);
 fdcOrderRoutes.put('/:id', update);
 fdcOrderRoutes.get('/:id/orderLines', getOrderLines);
-fdcOrderRoutes.post('/:id/orderLines', createOrderLine);
+fdcOrderRoutes.post('/:id/orderLines', createOrUpdateOrderLine);
 fdcOrderRoutes.get('/:id/orderLines/:lineId', getOrderLine);
+fdcOrderRoutes.put('/:id/orderLines/:lineId', createOrUpdateOrderLine);
 
 export default fdcOrderRoutes;

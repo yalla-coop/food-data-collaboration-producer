@@ -78,22 +78,36 @@ export async function updateOrder(client, orderId, lines) {
 }
 
 export async function dfcLineToShopifyLine(dfcLine) {
-        const offer = await dfcLine.getOffer();
-        return {
-            variantId: `gid://shopify/ProductVariant/${offer.getSemanticId()}`,
-            quantity: dfcLine.getQuantity()
-        }
+    const offer = await dfcLine.getOffer();
+    return {
+        variantId: `gid://shopify/ProductVariant/${offer.getSemanticId()}`,
+        quantity: dfcLine.getQuantity()
+    }
 }
 
-export function shopifyOutputLineToInputLine(shopifyOutputLine) {
+function shopifyOutputLineToInputLine(shopifyOutputLine) {
     return {
         variantId: shopifyOutputLine.node.variant.id,
         quantity: shopifyOutputLine.node.quantity
     }
 }
 
-export async function createUpdatedShopifyLines(draftOrder, dfcOrderLine){
-    const existingLines = draftOrder.lineItems.edges.map(shopifyOutputLineToInputLine);
-    const newLine = await dfcLineToShopifyLine(dfcOrderLine);
-    return [...existingLines, newLine];
+function numericPortion(id){
+    return id.substring(id.lastIndexOf('/') + 1);
+}
+
+export async function createUpdatedShopifyLines(draftOrder, dfcOrderLine) {
+    const { lines, hasBeenReplacement } = await draftOrder.lineItems.edges.reduce(
+        async (accumulator, shopifyOutputLine) => {
+            const { lines, hasBeenReplacement } = await accumulator;
+
+            if (numericPortion(shopifyOutputLine.node.variant.id) === (await dfcOrderLine.getOffer()).getSemanticId()) {
+                return { lines: [...lines, await dfcLineToShopifyLine(dfcOrderLine)], hasBeenReplacement: true };
+            } else {
+                return { lines: [...lines, shopifyOutputLineToInputLine(shopifyOutputLine)], hasBeenReplacement };
+            }
+        },
+        { lines: [], hasBeenReplacement: false })
+
+    return hasBeenReplacement ? lines : [...lines, await dfcLineToShopifyLine(dfcOrderLine)];
 }
