@@ -28,6 +28,65 @@ export async function findOrder(client, orderId) {
     return response.data.draftOrder;
 }
 
+export async function createShopifyOrder(client, customerId, customerEmail, lines) {
+
+    //todo: what should the reservation date be, we dont know the sales session details on the producer
+    var reservationDate = new Date();
+    reservationDate.setDate(reservationDate.getDate() + 20);
+
+    const response = await client.query({
+        data: {
+            "query": `mutation draftOrderCreate($input: DraftOrderInput!) {
+          draftOrderCreate(input: $input) {
+            userErrors {
+                field
+                message
+            }
+            draftOrder  {
+                id
+                lineItems(first: 250) {
+                 edges {
+                   node {
+                      id
+                      quantity
+                       variant {
+                           id
+                           title 
+                           price
+                       }
+                   }
+                 }         
+               }
+            }
+          }
+        }`,
+            "variables": {
+                "input": {
+                    "purchasingEntity": {
+                        "customerId": customerId
+                    },
+                    "note": "FDC Order",
+                    "email": customerEmail,
+                    "reserveInventoryUntil": reservationDate.toISOString(),
+                    "lineItems": lines,
+                }
+            },
+        },
+    });
+
+    if (response.errors) {
+        console.error('Failed to create draft order', JSON.stringify(response.errors));
+        throw new Error('Failed to create order');
+    }
+
+    if (response.data.draftOrderCreate.userErrors.length > 0) {
+        console.error('Failed to create draft order', JSON.stringify(response.data.draftOrderCreate.userErrors));
+        throw new Error('Failed to create order');
+    }
+
+    return response.data.draftOrderCreate.draftOrder;
+}
+
 export async function updateOrder(client, orderId, lines) {
     const response = await client.query({
         data: {
