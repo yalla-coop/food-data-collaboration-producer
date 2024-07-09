@@ -13,7 +13,7 @@ const getOrder = async (req, res) => {
         return res.status(404).send('Unable to find order');
     }
 
-    const dfcOrder = await createDfcOrderFromShopify(shopifyOrder);
+    const dfcOrder = await createDfcOrderFromShopify(shopifyOrder, await getLineItemIdMappings(shopifyOrder.id));
     res.type('application/json')
     res.send(dfcOrder);
 }

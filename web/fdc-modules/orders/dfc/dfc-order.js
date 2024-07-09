@@ -27,7 +27,7 @@ export async function extractOrderAndLines(payload) {
     return order;
 }
 
-export async function createDfcOrderFromShopify(shopifyDraftOrderResponse) {
+export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings) {
     const connector = await loadConnectorWithResources();
 
     const shopifyLineItems = shopifyDraftOrderResponse.lineItems.edges;
@@ -44,7 +44,7 @@ export async function createDfcOrderFromShopify(shopifyDraftOrderResponse) {
         });
 
         return connector.createOrderLine({
-            semanticId: item.id,
+            semanticId: lineIdMappings[item.id].toString(),
             offer: offer,
             price: price,
             quantity: item.quantity

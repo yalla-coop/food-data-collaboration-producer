@@ -1,11 +1,11 @@
 import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
 import { extractOrderAndLines, createDfcOrderFromShopify } from '../dfc/dfc-order.js';
-import { findCustomer } from './shopify/customer.js';
 import { findOrder } from './shopify/orders.js';
+import {persistLineIdMappings} from './lineItemMappings.js'
 
 //todo: What do we do with a draft order at the end of a sales session, "complete" it and move it to orders?
-
+//todo: transaction
 const updateOrder = async (req, res) => { 
     const session = await getSession(shopName)
     const client = new shopify.api.clients.Graphql({ session });
@@ -24,7 +24,9 @@ const updateOrder = async (req, res) => {
     }
 
     const shopifyDraftOrder = await updateShopifyOrder(client, order.getSemanticId(), await order.getLines());
-    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder);
+    
+    const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
+    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings);
     res.type('application/json')
     res.send(dfcOrder);
 }

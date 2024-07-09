@@ -2,6 +2,7 @@ import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
 import { extractOrderAndLines, createDfcOrderFromShopify } from '../dfc/dfc-order.js';
 import { findCustomer } from './shopify/customer.js';
+import {persistLineIdMappings} from './lineItemMappings.js'
 
 const createOrder = async (req, res) => { 
     const session = await getSession(shopName)
@@ -11,7 +12,9 @@ const createOrder = async (req, res) => {
     const customerId = await findCustomer(client, customerEmail);
     const order = extractOrderAndLines(req.body)
     const shopifyDraftOrder = await createShopifyOrder(client, customerId, customerEmail, await order.getLines());
-    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder);
+
+    const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
+    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings);
     res.type('application/json')
     res.send(dfcOrder);
 }

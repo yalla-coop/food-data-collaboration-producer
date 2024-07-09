@@ -6,11 +6,10 @@ describe('dfc orders', () => {
     describe("Request", () => {
         //Open questions to Garethe / DFC
         //What is the order date in our context? Can it be updated? Do we need to store it? Does it get assigned by the hub or the producer?
-        //What is the sales session quantity?
-        //You cant create dfc objects without assigning the semantic ID, but the request payloads wont have an ID already
 
         //Awaiting answer:
         //Where does the product id go in the order line? Is it in the offer ID? Or does the offer have to link to a supplied product?
+        //You cant create dfc objects without assigning the semantic ID, but the request payloads wont have an ID already
 
         let connector, orderRequest, orderLine1Request, orderLine2Request;
 
@@ -85,13 +84,26 @@ describe('dfc orders', () => {
                                     "price": "54.00"
                                 }
                             }
+                        },
+                        {
+                            "node": {
+                                "id": "gid://shopify/DraftOrderLineItem/67543322145",
+                                "quantity": 5,
+                                "variant": {
+                                    "id": "gid://shopify/ProductVariant/44519466336563",
+                                    "title": "Small case, 6 x 100ml",
+                                    "price": "54.00"
+                                }
+                            }
                         }
                     ]
                 }
             };
 
-            const dfcOutput = await createDfcOrderFromShopify(shopifyOrder)
-            console.log(dfcOutput)
+            const idMappings = {"gid://shopify/DraftOrderLineItem/58380080054579": 1, "gid://shopify/DraftOrderLineItem/67543322145": 2};
+
+            const dfcOutput = await createDfcOrderFromShopify(shopifyOrder, idMappings)
+            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"1\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"gid://shopify/ProductVariant/44519466336563\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b1\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"gid://shopify/ProductVariant/44519466336563\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b2\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"_:b1\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"54.00\"},{\"@id\":\"_:b2\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"54.00\"},{\"@id\":\"gid://shopify/DraftOrder/1166522712371\",\"@type\":\"dfc-b:Order\",\"dfc-b:hasPart\":[{\"@id\":\"1\"},{\"@id\":\"2\"}]}]}`);
         })
     });
 
