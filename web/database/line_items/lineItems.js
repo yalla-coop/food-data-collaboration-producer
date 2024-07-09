@@ -1,4 +1,4 @@
-import {pool} from '../connect'
+import {pool} from '../connect.js'
 export const createLineItems = async (orderId, lineItems) => {
     const parameters = lineItems.map(line => ({ orderId, id: line.id, variantId: line.variantId }));
     try {

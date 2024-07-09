@@ -17,7 +17,7 @@ import ProductsModules from './api-modules/products/index.js';
 import UsersModules from './api-modules/users/index.js';
 import checkOnlineSession from './middleware/checkOnlineSession.js';
 
-import fdcOrderRoutes from './fdc-modules/orders'
+import fdcOrderRoutes from './fdc-modules/orders/index.js'
 
 dotenv.config();
 

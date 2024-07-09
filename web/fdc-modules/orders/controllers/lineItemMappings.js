@@ -1,4 +1,4 @@
-import {createLineItems, getLineItemIdMappings} from '../../../database/line_items/lineItems'
+import {createLineItems, getLineItemIdMappings} from '../../../database/line_items/lineItems.js'
 
 export async function persistLineIdMappings(shopifyDraftOrder) {
 

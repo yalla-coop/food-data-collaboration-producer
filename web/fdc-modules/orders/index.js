@@ -1,11 +1,11 @@
 import { Router } from 'express';
 
-import create from './controllers/create-order'
-import update from './controllers/update-order'
-import get from './controllers/get-order'
-import getOrderLines from './controllers/get-order-lines'
-import createOrUpdateOrderLine from './controllers/create-or-update-order-line'
-import getOrderLine from './controllers/get-order-line'
+import create from './controllers/create-order.js'
+import update from './controllers/update-order.js'
+import get from './controllers/get-order.js'
+import getOrderLines from './controllers/get-order-lines.js'
+import createOrUpdateOrderLine from './controllers/create-or-update-order-line.js'
+import getOrderLine from './controllers/get-order-line.js'
 
 const fdcOrderRoutes = Router();
 
