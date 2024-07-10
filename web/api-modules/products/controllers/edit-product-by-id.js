@@ -16,6 +16,7 @@ const editProductById = async (req, res) => {
       message: 'Product updated successfully'
     });
   } catch (error) {
+    console.error('Error updating product', error);
     return res.status(500).json({
       success: false,
       message: 'Error updating product'

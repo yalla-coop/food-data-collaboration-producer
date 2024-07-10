@@ -9,47 +9,17 @@ async function findProducts(client) {
         products(first: 250) {
           edges {
             node {
-              description
-              handle
               id
-              images(first: 250) {
-                edges {
-                  node {
-                    src
-                    id
-                    url
-                  }
-                }
-              }
-              productType
-              status
+              tags
               title
-              totalVariants
-              tracksInventory
-              totalInventory
-              variants(first: 10) {
+              variants(first: 250) {
                 edges {
                   node {
-                    compareAtPrice
                     id
-                    image {
-                      altText
-                      height
-                      id
-                      originalSrc
-                      src
-                      url
-                    }
-                    inventoryPolicy
-                    inventoryQuantity
-                    price
-                    sku
-                    taxable
                     title
                   }
                 }
               }
-              vendor
             }
           }
         }
