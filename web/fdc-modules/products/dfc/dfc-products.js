@@ -1,5 +1,5 @@
-import { exportSuppliedProducts } from '../../../connector/productUtils';
-import { addVariantsToProducts } from '../../../database/variants/variants';
+import { exportSuppliedProducts } from '../../../connector/productUtils.js';
+import { addVariantsToProducts } from '../../../database/variants/variants.js';
 
 export async function createDFCProductsFromShopify(
   fdcProducts,
