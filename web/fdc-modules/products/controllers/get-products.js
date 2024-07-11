@@ -5,9 +5,14 @@ import { findFDCProducts, getFdcVariantsFromDB } from './shopify/products.js';
 
 const getProducts = async (req, res) => {
   try {
-    const { shop } = req.query;
+    const { EnterpriseName } = req.params;
 
-    const session = await getSession(shop);
+    const session = await getSession(`${EnterpriseName}.myshopify.com`);
+
+    if (!session) {
+      return res.status(401).json({ message: 'Unauthorised' });
+    }
+
     const client = new shopify.api.clients.Graphql({ session });
 
     const fdcVariantsFromDB = await getFdcVariantsFromDB();

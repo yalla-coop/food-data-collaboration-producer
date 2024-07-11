@@ -71,7 +71,7 @@ app.use(
 );
 
 app.use(
-  '/api/dfc/Enterprises/tbd/SuppliedProducts',
+  '/api/dfc/Enterprises/:EnterpriseName/SuppliedProducts',
   cors(),
   express.json(),
   // checkUserAccessPermissions,

@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import getProducts from './controllers/get-products.js';
 
-const fdcOrderRoutes = Router();
+const fdcProductRoutes = Router({ mergeParams: true });
 
-fdcOrderRoutes.get('/', getProducts);
+fdcProductRoutes.get('/', getProducts);
 
-export default fdcOrderRoutes;
+export default fdcProductRoutes;
