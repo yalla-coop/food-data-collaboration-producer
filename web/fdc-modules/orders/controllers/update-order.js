@@ -1,9 +1,11 @@
 import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
 import { extractOrderAndLines, createDfcOrderFromShopify } from '../dfc/dfc-order.js';
-import * as orders from './shopify/orders.js';
+import * as shopifyOrders from './shopify/orders.js';
+import * as ids from './shopify/ids.js';
 import {persistLineIdMappings} from './lineItemMappings.js'
 import loadConnectorWithResources from '../../../connector/index.js';
+import * as database from '../../../database/orders/orders.js'
 
 //todo: transaction
 const updateOrder = async (req, res) => { 
@@ -16,7 +18,7 @@ const updateOrder = async (req, res) => {
         return res.status(400).send('ID does not match payload');
     }
 
-    const shopifyOrder = await orders.findOrder(client, req.params.id);
+    const shopifyOrder = await shopifyOrders.findOrder(client, req.params.id);
 
     if (!shopifyOrder) {
         return res.status(404).send('Unable to find order');
@@ -31,18 +33,17 @@ const updateOrder = async (req, res) => {
 }
 
 async function updateOrder(client, order) {
-    const shopifyDraftOrder = await updateShopifyOrder(client, order.getSemanticId(), await order.getLines());
+    const dfcLines = await order.getLines();
+    const shopifyLines = dfcLines.map(shopifyOrders.dfcLineToShopifyLine);
+    const shopifyDraftOrder = await shopifyOrders.updateOrder(client, order.getSemanticId(), shopifyLines)
     const connector = await loadConnectorWithResources();
     if (order.getOrderStatus() === connector.VOCABULARY.STATES.ORDERSTATE.COMPLETE) {
-        return await completeDraftOrder(client, order.getSemanticId());
+        const completedOrder = await shopifyOrders.completeDraftOrder(client, order.getSemanticId());
+        await database.completeDraftOrder(ids.extract(completedOrder.id), ids.extract(completedOrder.order.id))
+        return completedOrder;
     } else {
         return shopifyDraftOrder;
     }
-}
-
-async function updateShopifyOrder(client, orderId, dfcLines) {
-    const shopifyLines = dfcLines.map(orders.dfcLineToShopifyLine);
-    return await orders.updateOrder(client, orderId, shopifyLines)
 }
 
 export default updateOrder

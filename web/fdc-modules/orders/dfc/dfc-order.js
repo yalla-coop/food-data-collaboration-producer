@@ -1,5 +1,6 @@
 import loadConnectorWithResources from '../../../connector/index.js';
 import { OrderLine, Order } from '@datafoodconsortium/connector';
+import * as ids from '../controllers/shopify/ids.js'
 
 export async function extractOrderLine(payload) {
     const connector = await loadConnectorWithResources();
@@ -42,10 +43,10 @@ export async function extractOrderAndLines(payload) {
 function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId) {
 
     const suppliedProduct = connector.createSuppliedProduct({
-        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${numericPortion(line.variant.id)}`
+        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${ids.extract(line.variant.id)}`
     });
 
-    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[numericPortion(line.id)].toString()}`
+    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[ids.extract(line.id)].toString()}`
 
     const offer = connector.createOffer({
         semanticId: madeUpIdForTheOfferSoTheConnectorWorks,
@@ -62,7 +63,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
     return [
         offer,
         connector.createOrderLine({
-            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[numericPortion(line.id)].toString()}`,
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[ids.extract(line.id)].toString()}`,
             offer: offer,
             price: price,
             quantity: line.quantity
@@ -79,7 +80,7 @@ function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, 
 async function createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
     const connector = await loadConnectorWithResources();
 
-    const orderId = numericPortion(shopifyDraftOrderResponse.id)
+    const orderId = ids.extract(shopifyDraftOrderResponse.id)
 
     const dfcOrderLinesGraph = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId);
 
@@ -101,7 +102,7 @@ export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineI
 export async function createBulkDfcOrderFromShopify(shopifyDraftOrderResponses, lineIdMappingsByDraftId, enterpriseName) {
     const connector = await loadConnectorWithResources();
     const megaGraph = await (Promise.all(shopifyDraftOrderResponses.map(async draftOrderResponse => {
-        const lineItemIdMapping = lineIdMappingsByDraftId.find(({draftOrderId}) => draftOrderId === numericPortion(draftOrderResponse.id));
+        const lineItemIdMapping = lineIdMappingsByDraftId.find(({draftOrderId}) => draftOrderId === ids.extract(draftOrderResponse.id));
 
         if (!lineItemIdMapping) {
             throw Error("Weird inconsistency. No stored line litems found for draft Id " + draftOrderResponse.id);
@@ -124,17 +125,13 @@ export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, 
 export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, externalLineId, lineIdMappings, enterpriseName, orderId) {
     const connector = await loadConnectorWithResources();
 
-    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => lineIdMappings[numericPortion(line.id)] === externalLineId)?.node
+    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => lineIdMappings[ids.extract(line.id)] === externalLineId)?.node
 
     if (!line) {
         return null;
     }
 
     return await connector.export(createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId));
-}
-
-function numericPortion(id) {
-    return id.substring(id.lastIndexOf('/') + 1);
 }
 
 function currencyMeasureFor(connector, currencyCode) {

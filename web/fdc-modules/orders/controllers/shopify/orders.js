@@ -1,9 +1,10 @@
+import * as ids from './ids'
 
 export async function findOrder(client, orderId) {
     const response = await client.query({
         data: {
             "query": `query MyQuery($query: String) {
-                draftOrder(id: "${orderId}") {
+                draftOrder(id: "${ids.draftOrder(orderId)}") {
                     id
                     status
                     lineItems(first: 250) {
@@ -68,7 +69,7 @@ async function findOrdersBatch(client, orderIds) {
     const response = await client.query({
         data: {
             query,
-            variables: { ids: orderIds.map((id) => `gid://shopify/DraftOrder/${id}`) }
+            variables: { ids: orderIds.map(ids.draftOrder) }
         }
     });
 
@@ -185,7 +186,7 @@ export async function updateOrder(client, orderId, lines) {
           }
         }`,
             "variables": {
-                "id": orderId,
+                "id": `${ids.draftOrder(orderId)}`,
                 "input": {
                     "lineItems": lines,
                 }
@@ -206,7 +207,7 @@ export async function updateOrder(client, orderId, lines) {
     return response.data.draftOrderCreate.draftOrder
 }
 
-async function completeDraftOrder(client, orderId) {
+export async function completeDraftOrder(client, orderId) {
     const response = await client.query({
         data: {
             "query": `mutation CompleteDraftOrder($id: ID!) {
@@ -243,7 +244,7 @@ async function completeDraftOrder(client, orderId) {
                 }
               }`,
             "variables": {
-                "id": orderId
+                "id": ids.draftOrder(orderId)
             },
         },
     });
@@ -264,7 +265,7 @@ async function completeDraftOrder(client, orderId) {
 export async function dfcLineToShopifyLine(dfcLine) {
     const offer = await dfcLine.getOffer();
     return {
-        variantId: `gid://shopify/ProductVariant/${offer.getSemanticId()}`,
+        variantId: ids.variant(offer.getSemanticId()),
         quantity: dfcLine.getQuantity()
     }
 }
@@ -276,16 +277,12 @@ function shopifyOutputLineToInputLine(shopifyOutputLine) {
     }
 }
 
-function numericPortion(id) {
-    return id.substring(id.lastIndexOf('/') + 1);
-}
-
 export async function createUpdatedShopifyLines(draftOrder, dfcOrderLine) {
     const { lines, hasBeenReplacement } = await draftOrder.lineItems.edges.reduce(
         async (accumulator, shopifyOutputLine) => {
             const { lines, hasBeenReplacement } = await accumulator;
 
-            if (numericPortion(shopifyOutputLine.node.variant.id) === (await dfcOrderLine.getOffer()).getSemanticId()) {
+            if (ids.extract(shopifyOutputLine.node.variant.id) === (await dfcOrderLine.getOffer()).getSemanticId()) {
                 return { lines: [...lines, await dfcLineToShopifyLine(dfcOrderLine)], hasBeenReplacement: true };
             } else {
                 return { lines: [...lines, shopifyOutputLineToInputLine(shopifyOutputLine)], hasBeenReplacement };
