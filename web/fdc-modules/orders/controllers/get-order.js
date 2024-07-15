@@ -4,7 +4,7 @@ import { createDfcOrderFromShopify } from '../dfc/dfc-order.js';
 import { findOrder } from './shopify/orders.js';
 
 const getOrder = async (req, res) => { 
-    const session = await getSession(req.params.shopName)
+    const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
     const client = new shopify.api.clients.Graphql({ session });
 
     const shopifyOrder = await findOrder(client, req.params.id);
@@ -13,7 +13,7 @@ const getOrder = async (req, res) => {
         return res.status(404).send('Unable to find order');
     }
 
-    const dfcOrder = await createDfcOrderFromShopify(shopifyOrder, await getLineItemIdMappings(shopifyOrder.id), req.params.shopName);
+    const dfcOrder = await createDfcOrderFromShopify(shopifyOrder, await getLineItemIdMappings(shopifyOrder.id), req.params.EnterpriseName);
     res.type('application/json')
     res.send(dfcOrder);
 }

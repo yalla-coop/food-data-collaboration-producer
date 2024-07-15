@@ -6,7 +6,7 @@ import * as orders from './shopify/orders.js';
 
 // transaction
 const createOrUpdateOrderLine = async (req, res) => { 
-    const session = await getSession(req.params.shopName)
+    const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
     const client = new shopify.api.clients.Graphql({ session });
 
     const orderLine = extractOrderLine(req.body)
@@ -20,7 +20,7 @@ const createOrUpdateOrderLine = async (req, res) => {
     const updatedLines = await orders.createUpdatedShopifyLines(shopifyOrder, orderLine);
     const updatedShopifyDraftOrder = await orders.updateOrder(client, req.params.id, updatedLines);
     const lineItemIdMappings = await persistLineIdMappings(updatedShopifyDraftOrder)
-    const dfcOrder = await createDfcOrderLineFromShopify(updatedShopifyDraftOrder, req.params.lineId, lineItemIdMappings, req.params.shopName, req.params.id);
+    const dfcOrder = await createDfcOrderLineFromShopify(updatedShopifyDraftOrder, req.params.lineId, lineItemIdMappings, req.params.EnterpriseName, req.params.id);
     res.type('application/json')
     res.send(dfcOrder);
 }

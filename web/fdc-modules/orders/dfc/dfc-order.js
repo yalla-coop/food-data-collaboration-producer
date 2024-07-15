@@ -39,13 +39,13 @@ export async function extractOrderAndLines(payload) {
     return order;
 }
 
-function createOrderLine(connector, line, lineIdMappings, shopName, orderId) {
+function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId) {
 
     const suppliedProduct = connector.createSuppliedProduct({
-        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${shopName}/SuppliedProducts/${numericPortion(line.variant.id)}`
+        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${numericPortion(line.variant.id)}`
     });
 
-    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${shopName}/offers/#${lineIdMappings[line.id].toString()}`
+    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[line.id].toString()}`
 
     const offer = connector.createOffer({
         semanticId: madeUpIdForTheOfferSoTheConnectorWorks,
@@ -62,44 +62,44 @@ function createOrderLine(connector, line, lineIdMappings, shopName, orderId) {
     return [
         offer,
         connector.createOrderLine({
-            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${shopName}/Orders/${orderId}/orderLines/${lineIdMappings[line.id].toString()}`,
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[line.id].toString()}`,
             offer: offer,
             price: price,
             quantity: line.quantity
         })];
 }
 
-function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, shopName, orderId) {
+function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId) {
     const shopifyLineItems = shopifyDraftOrderResponse.lineItems.edges;
     return shopifyLineItems.flatMap(({ node: line }) => {
-        return createOrderLine(connector, line, lineIdMappings, shopName, orderId);
+        return createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId);
     })
 }
 
-export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, shopName) {
+export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
     const connector = await loadConnectorWithResources();
 
     const orderId = numericPortion(shopifyDraftOrderResponse.id)
 
-    const dfcOrderLinesGraph = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, shopName, orderId);
+    const dfcOrderLinesGraph = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId);
 
     const order = connector.createOrder({
-        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${shopName}/Orders/${orderId}`,
+        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}`,
         lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine)
     });
 
     return await connector.export([order, ...dfcOrderLinesGraph]);
 }
 
-export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, lineIdMappings, shopName, orderId) {
+export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId) {
     const connector = await loadConnectorWithResources();
 
-    const dfcOrderLines = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, shopName, orderId);
+    const dfcOrderLines = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId);
 
     return await connector.export(dfcOrderLines);
 }
 
-export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, externalLineId, lineIdMappings, shopName, orderId) {
+export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, externalLineId, lineIdMappings, enterpriseName, orderId) {
     const connector = await loadConnectorWithResources();
 
     const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => lineIdMappings[line.id] === externalLineId)?.node
@@ -108,7 +108,7 @@ export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, e
         return null;
     }
 
-    return await connector.export(createOrderLine(connector, line, lineIdMappings, shopName, orderId));
+    return await connector.export(createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId));
 }
 
 function numericPortion(id) {
