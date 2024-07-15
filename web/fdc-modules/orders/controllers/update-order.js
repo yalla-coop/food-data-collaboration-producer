@@ -3,8 +3,8 @@ import getSession from '../../../utils/getShopifySession.js';
 import { extractOrderAndLines, createDfcOrderFromShopify } from '../dfc/dfc-order.js';
 import * as orders from './shopify/orders.js';
 import {persistLineIdMappings} from './lineItemMappings.js'
+import loadConnectorWithResources from '../../../connector/index.js';
 
-//todo: What do we do with a draft order at the end of a sales session, "complete" it and move it to orders?
 //todo: transaction
 const updateOrder = async (req, res) => { 
     const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
@@ -22,12 +22,22 @@ const updateOrder = async (req, res) => {
         return res.status(404).send('Unable to find order');
     }
 
-    const shopifyDraftOrder = await updateShopifyOrder(client, order.getSemanticId(), await order.getLines());
+    const shopifyDraftOrder = await updateOrder(client, order);
     
     const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
     const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings, req.params.EnterpriseName);
     res.type('application/json')
     res.send(dfcOrder);
+}
+
+async function updateOrder(client, order) {
+    const shopifyDraftOrder = await updateShopifyOrder(client, order.getSemanticId(), await order.getLines());
+    const connector = await loadConnectorWithResources();
+    if (order.getOrderStatus() === connector.VOCABULARY.STATES.ORDERSTATE.COMPLETE) {
+        return await completeDraftOrder(client, order.getSemanticId());
+    } else {
+        return shopifyDraftOrder;
+    }
 }
 
 async function updateShopifyOrder(client, orderId, dfcLines) {

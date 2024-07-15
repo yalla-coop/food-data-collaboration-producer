@@ -85,7 +85,8 @@ async function createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, li
 
     const order = connector.createOrder({
         semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}`,
-        lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine)
+        lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine),
+        orderStatus: orderStatusFor(connector, shopifyDraftOrderResponse.status)
     });
 
     return [order, ...dfcOrderLinesGraph];
@@ -109,7 +110,6 @@ export async function createBulkDfcOrderFromShopify(shopifyDraftOrderResponses, 
         return await createUnexportedDfcOrderFromShopify(draftOrderResponse, lineItemIdMapping.lineItems, enterpriseName)
     })));
 
-    console.log(megaGraph)
     return await connector.export(megaGraph.flat());
 }
 
@@ -149,4 +149,19 @@ function currencyMeasureFor(connector, currencyCode) {
     }
 
     return measure;
+}
+
+function orderStatusFor(connector, shopifyDraftOrderStatus) {
+    const status = {
+        'OPEN': connector.VOCABULARY.STATES.ORDERSTATE.HELD,
+        'INVOICE_SENT': connector.VOCABULARY.STATES.ORDERSTATE.HELD,
+        'COMPLETED': connector.VOCABULARY.STATES.ORDERSTATE.COMPLETE,
+    }[shopifyDraftOrderStatus];
+
+    if (!status) {
+        throw new Error(`Unknown connector order status mapping for ${shopifyDraftOrderStatus}`);
+    }
+
+    return status;
+
 }

@@ -4,11 +4,19 @@ export async function findOrder(client, orderId) {
         data: {
             "query": `query MyQuery($query: String) {
                 draftOrder(id: "${orderId}") {
+                    id
+                    status
                     lineItems(first: 250) {
                         edges {
                             node {
                                 id
                                 quantity
+                                originalUnitPriceSet {
+                                    shopMoney {
+                                        amount
+                                        currencyCode
+                                    }
+                                }
                                 variant {
                                     id
                                 }
@@ -34,12 +42,19 @@ async function findOrdersBatch(client, orderIds) {
     query findDraftOrders($ids: [ID!]!) {
         draftOrders: nodes(ids: $ids) {
           ... on DraftOrder {
-            id       
+            id    
+            status   
             lineItems(first: 250) {
                 edges {
                     node {
                         id
                         quantity
+                        originalUnitPriceSet {
+                            shopMoney {
+                                amount
+                                currencyCode
+                            }
+                        }
                         variant {
                             id
                         }
@@ -87,6 +102,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, line
             }
             draftOrder  {
                 id
+                status
                 lineItems(first: 250) {
                  edges {
                    node {
@@ -138,7 +154,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, line
 export async function updateOrder(client, orderId, lines) {
     const response = await client.query({
         data: {
-            "query": `mutation draftOrderUpdate($id, ID!, $input: DraftOrderInput!) {
+            "query": `mutation draftOrderUpdate($id: ID!, $input: DraftOrderInput!) {
           draftOrderCreate(id: $id, input: $input) {
             userErrors {
                 field
@@ -146,6 +162,7 @@ export async function updateOrder(client, orderId, lines) {
             }
             draftOrder  {
                 id
+                status
                 lineItems(first: 250) {
                  edges {
                    node {
@@ -187,6 +204,61 @@ export async function updateOrder(client, orderId, lines) {
     }
 
     return response.data.draftOrderCreate.draftOrder
+}
+
+async function completeDraftOrder(client, orderId) {
+    const response = await client.query({
+        data: {
+            "query": `mutation CompleteDraftOrder($id: ID!) {
+                draftOrderComplete(id: $id) {
+                  userErrors {
+                    field
+                    message
+                  }
+                  draftOrder {
+                    id
+                    status
+                    lineItems(first: 250) {
+                        edges {
+                        node {
+                            id
+                            quantity
+                            originalUnitPriceSet {
+                                shopMoney {
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            variant {
+                                id
+                                title
+                            }
+                        }
+                        }         
+                    }
+                    order {
+                      id
+                    }
+                  }
+                }
+              }`,
+            "variables": {
+                "id": orderId
+            },
+        },
+    });
+
+    if (response.errors) {
+        console.error('Failed to create draft order', JSON.stringify(response.errors));
+        throw new Error('Failed to create order');
+    }
+
+    if (response.data.draftOrderComplete.userErrors.length > 0) {
+        console.error('Failed to complete draft order', JSON.stringify(response.data.draftOrderComplete.userErrors));
+        throw new Error('Failed to complete draft order');
+    }
+
+    return response.data.draftOrderComplete.draftOrder;
 }
 
 export async function dfcLineToShopifyLine(dfcLine) {
