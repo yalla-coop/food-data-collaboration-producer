@@ -6,18 +6,19 @@ import dotenv from 'dotenv';
 import express from 'express';
 import serveStatic from 'serve-static';
 import cors from 'cors';
-import apiRouters from './api-routers.js';
+// import apiRouters from './api-routers.js';
 import legacyfdcRouter from './legacy-fdc-modules/legacy-fdc-routers.js';
 import shopify from './shopify.js';
 import webhookHandlers from './webhooks/index.js';
 
-import checkUserAccessPermissions from './middleware/checkUserAccessPermissions.js'
+import checkUserAccessPermissions from './middleware/checkUserAccessPermissions.js';
 
 import ProductsModules from './api-modules/products/index.js';
 import UsersModules from './api-modules/users/index.js';
 import checkOnlineSession from './middleware/checkOnlineSession.js';
 
-import fdcOrderRoutes from './fdc-modules/orders/index.js'
+import fdcOrderRoutes from './fdc-modules/orders/index.js';
+import fdcProductRoutes from './fdc-modules/products/index.js';
 
 dotenv.config();
 
@@ -61,10 +62,36 @@ app.get(
 app.use('/fdc', cors(), express.json(), legacyfdcRouter, errorMiddleware);
 
 //todo: Who's enterprise is this? Is a hub posting to their own enterprise endpoint? Is it something that exists on the producer? Ask Garethe
-app.use('/api/dfc/Enterprises/:EnterpriseName/Orders', cors(), express.json(), checkUserAccessPermissions, fdcOrderRoutes)
+app.use(
+  '/api/dfc/Enterprises/:EnterpriseName/Orders',
+  cors(),
+  express.json(),
+  checkUserAccessPermissions,
+  fdcOrderRoutes
+);
 
-app.use('/api/products', shopify.validateAuthenticatedSession(), express.json(), checkOnlineSession, ProductsModules.Controllers);
-app.use('/api/hub-users', shopify.validateAuthenticatedSession(), express.json(), checkOnlineSession, UsersModules.Controllers)
+app.use(
+  '/api/dfc/Enterprises/:EnterpriseName/SuppliedProducts',
+  cors(),
+  express.json(),
+  checkUserAccessPermissions,
+  fdcProductRoutes
+);
+
+app.use(
+  '/api/products',
+  shopify.validateAuthenticatedSession(),
+  express.json(),
+  checkOnlineSession,
+  ProductsModules.Controllers
+);
+app.use(
+  '/api/hub-users',
+  shopify.validateAuthenticatedSession(),
+  express.json(),
+  checkOnlineSession,
+  UsersModules.Controllers
+);
 
 app.use(serveStatic(STATIC_PATH, { index: false }));
 
