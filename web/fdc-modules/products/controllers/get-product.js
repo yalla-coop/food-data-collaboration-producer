@@ -6,7 +6,7 @@ import {
   getFdcVariantsByProductIdFromDB
 } from './shopify/products.js';
 
-const getProducts = async (req, res) => {
+const getProduct = async (req, res) => {
   try {
     const { EnterpriseName, ProductId } = req.params;
 
@@ -41,4 +41,4 @@ const getProducts = async (req, res) => {
   }
 };
 
-export default getProducts;
+export default getProduct;
