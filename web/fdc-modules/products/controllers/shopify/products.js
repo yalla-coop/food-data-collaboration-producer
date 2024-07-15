@@ -1,6 +1,7 @@
 import { getShopifyIdSubstring } from '../../../../database/utils/get-shopify-id-substring.js';
 import {
   getVariants,
+  getVariantsByProductId,
   indexedByProductId
 } from '../../../../database/variants/variants.js';
 
@@ -15,6 +16,13 @@ export async function findFDCProducts(client, fdcVariantsFromDB) {
 
 export async function getFdcVariantsFromDB() {
   const variants = await getVariants();
+  const mappedVariantsByProductId = indexedByProductId(variants);
+
+  return mappedVariantsByProductId;
+}
+
+export async function getFdcVariantsByProductIdFromDB(productId) {
+  const variants = await getVariantsByProductId(productId);
   const mappedVariantsByProductId = indexedByProductId(variants);
 
   return mappedVariantsByProductId;
@@ -70,48 +78,4 @@ export async function findProductsByIds(client, ids) {
       images: product?.images?.edges.map((edge) => edge.node)
     }))
   }));
-}
-
-export async function findProductById(client, id) {
-  const query = `
-        query findProduct($id: ID!) {
-            product: node(id: $id) {
-            ... on Product {
-                id
-                tags
-                title
-                description
-                images(first: 10) {
-                edges {
-                    node {
-                    id
-                    src
-                    }
-                }
-                }
-                variants(first: 250) {
-                edges {
-                    node {
-                    id
-                    title
-                    }
-                }
-                }
-            }
-            }
-        }
-        `;
-  const response = await client.query({
-    data: {
-      query,
-      variables: { id: `gid://shopify/Product/${id}` }
-    }
-  });
-
-  if (response.errors) {
-    console.error('Failed to load Product', JSON.stringify(response.errors));
-    throw new Error('Failed to load Product');
-  }
-
-  return response.body.data.product;
 }
