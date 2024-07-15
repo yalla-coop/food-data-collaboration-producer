@@ -42,7 +42,7 @@ export async function extractOrderAndLines(payload) {
 function createOrderLine(connector, line, lineIdMappings, shopName, orderId) {
 
     const suppliedProduct = connector.createSuppliedProduct({
-        semanticId: `/api/dfc/Enterprises/${shopName}/SuppliedProducts/${numericPortion(line.variant.id)}`
+        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${shopName}/SuppliedProducts/${numericPortion(line.variant.id)}`
     });
 
     const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${shopName}/offers/#${lineIdMappings[line.id].toString()}`
@@ -62,7 +62,7 @@ function createOrderLine(connector, line, lineIdMappings, shopName, orderId) {
     return [
         offer,
         connector.createOrderLine({
-            semanticId: `/api/dfc/Enterprises/${shopName}/Orders/${orderId}/orderLines/${lineIdMappings[line.id].toString()}`,
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${shopName}/Orders/${orderId}/orderLines/${lineIdMappings[line.id].toString()}`,
             offer: offer,
             price: price,
             quantity: line.quantity
@@ -84,7 +84,7 @@ export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineI
     const dfcOrderLinesGraph = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, shopName, orderId);
 
     const order = connector.createOrder({
-        semanticId: `/api/dfc/Enterprises/${shopName}/Orders/${orderId}`,
+        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${shopName}/Orders/${orderId}`,
         lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine)
     });
 
