@@ -6,7 +6,7 @@ import * as orders from './shopify/orders.js';
 import {persistLineIdMappings} from './lineItemMappings.js'
 
 const createOrder = async (req, res) => { 
-    const session = await getSession(shopName)
+    const session = await getSession(req.params.shopName)
     const client = new shopify.api.clients.Graphql({ session });
     const customerEmail = ''
 
@@ -16,7 +16,7 @@ const createOrder = async (req, res) => {
     const shopifyDraftOrder = await orders.createShopifyOrder(client, customerId, customerEmail, shopifyLines);
     
     const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
-    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings);
+    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings, req.params.shopName);
     res.type('application/json')
     res.send(dfcOrder);
 }

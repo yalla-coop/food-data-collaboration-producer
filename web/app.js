@@ -61,7 +61,7 @@ app.get(
 app.use('/fdc', cors(), express.json(), legacyfdcRouter, errorMiddleware);
 
 //todo: Who's enterprise is this? Is a hub posting to their own enterprise endpoint? Is it something that exists on the producer? Ask Garethe
-app.use('/api/dfc/Enterprises/tbd/Orders', cors(), express.json(), checkUserAccessPermissions, fdcOrderRoutes)
+app.use('/api/dfc/Enterprises/:shopName/Orders', cors(), express.json(), checkUserAccessPermissions, fdcOrderRoutes)
 
 app.use('/api/products', shopify.validateAuthenticatedSession(), express.json(), checkOnlineSession, ProductsModules.Controllers);
 app.use('/api/hub-users', shopify.validateAuthenticatedSession(), express.json(), checkOnlineSession, UsersModules.Controllers)

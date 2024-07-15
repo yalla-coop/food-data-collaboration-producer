@@ -7,16 +7,16 @@ import {persistLineIdMappings} from './lineItemMappings.js'
 //todo: What do we do with a draft order at the end of a sales session, "complete" it and move it to orders?
 //todo: transaction
 const updateOrder = async (req, res) => { 
-    const session = await getSession(shopName)
+    const session = await getSession(req.params.shopName)
     const client = new shopify.api.clients.Graphql({ session });
 
     const order = extractOrderAndLines(req.body)
 
-    if (order.getSemanticId() !== req.params['id']) {
+    if (order.getSemanticId() !== req.params.id) {
         return res.status(400).send('ID does not match payload');
     }
 
-    const shopifyOrder = await orders.findOrder(client, req.params['id']);
+    const shopifyOrder = await orders.findOrder(client, req.params.id);
 
     if (!shopifyOrder) {
         return res.status(404).send('Unable to find order');
@@ -25,7 +25,7 @@ const updateOrder = async (req, res) => {
     const shopifyDraftOrder = await updateShopifyOrder(client, order.getSemanticId(), await order.getLines());
     
     const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
-    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings);
+    const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings, req.params.shopName);
     res.type('application/json')
     res.send(dfcOrder);
 }

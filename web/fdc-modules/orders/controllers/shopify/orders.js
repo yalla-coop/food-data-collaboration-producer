@@ -49,10 +49,15 @@ export async function createShopifyOrder(client, customerId, customerEmail, line
                    node {
                       id
                       quantity
+                      originalUnitPriceSet {
+                        shopMoney {
+                            amount
+                            currencyCode
+                        }
+                      }
                        variant {
                            id
-                           title 
-                           price
+                           title
                        }
                    }
                  }         
@@ -103,10 +108,15 @@ export async function updateOrder(client, orderId, lines) {
                    node {
                       id
                       quantity
+                      originalUnitPriceSet {
+                        shopMoney {
+                            amount
+                            currencyCode
+                        }
+                      }
                        variant {
                            id
-                           title 
-                           price
+                           title
                        }
                    }
                  }         
