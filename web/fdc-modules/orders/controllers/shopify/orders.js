@@ -22,10 +22,53 @@ export async function findOrder(client, orderId) {
 
     if (response.errors) {
         console.error('Failed to load Order', JSON.stringify(response.errors));
-        throw new Error('Failed to load customer');
+        throw new Error('Failed to load Order');
     }
 
     return response.data.draftOrder;
+}
+
+
+async function findOrdersBatch(client, orderIds) {
+    const query = `
+    query findDraftOrders($ids: [ID!]!) {
+        draftOrders: nodes(ids: $ids) {
+          ... on DraftOrder {
+            id       
+            lineItems(first: 250) {
+                edges {
+                    node {
+                        id
+                        quantity
+                        variant {
+                            id
+                        }
+                    }
+                }
+            } 
+          }
+        }
+      }
+  `;
+    const response = await client.query({
+        data: {
+            query,
+            variables: { ids: orderIds.map((id) => `gid://shopify/DraftOrder/${id}`) }
+        }
+    });
+
+    if (response.errors) {
+        console.error('Failed to load Orders', JSON.stringify(response.errors));
+        throw new Error('Failed to load Orders');
+    }
+
+    return response.data.draftOrders;
+}
+
+
+export async function findOrders(client, orderIds) {
+    const ordersChunkedUp = await Promise.all(chunks(orderIds, 250).map(async ids => await findOrdersBatch(client, ids)));
+    return ordersChunkedUp.flat();
 }
 
 export async function createShopifyOrder(client, customerId, customerEmail, lines) {
@@ -161,7 +204,7 @@ function shopifyOutputLineToInputLine(shopifyOutputLine) {
     }
 }
 
-function numericPortion(id){
+function numericPortion(id) {
     return id.substring(id.lastIndexOf('/') + 1);
 }
 
@@ -180,3 +223,9 @@ export async function createUpdatedShopifyLines(draftOrder, dfcOrderLine) {
 
     return hasBeenReplacement ? lines : [...lines, await dfcLineToShopifyLine(dfcOrderLine)];
 }
+
+function* chunks(arr, n) {
+    for (let i = 0; i < arr.length; i += n) {
+      yield arr.slice(i, i + n);
+    }
+  }

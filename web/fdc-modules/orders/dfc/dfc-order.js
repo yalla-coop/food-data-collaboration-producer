@@ -45,7 +45,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
         semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${numericPortion(line.variant.id)}`
     });
 
-    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[line.id].toString()}`
+    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[numericPortion(line.id)].toString()}`
 
     const offer = connector.createOffer({
         semanticId: madeUpIdForTheOfferSoTheConnectorWorks,
@@ -62,7 +62,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
     return [
         offer,
         connector.createOrderLine({
-            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[line.id].toString()}`,
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[numericPortion(line.id)].toString()}`,
             offer: offer,
             price: price,
             quantity: line.quantity
@@ -76,7 +76,7 @@ function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, 
     })
 }
 
-export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
+async function createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
     const connector = await loadConnectorWithResources();
 
     const orderId = numericPortion(shopifyDraftOrderResponse.id)
@@ -88,7 +88,29 @@ export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineI
         lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine)
     });
 
-    return await connector.export([order, ...dfcOrderLinesGraph]);
+    return [order, ...dfcOrderLinesGraph];
+}
+
+export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
+    const connector = await loadConnectorWithResources();
+    const graph = await createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName);
+    return await connector.export(graph);
+}
+
+export async function createBulkDfcOrderFromShopify(shopifyDraftOrderResponses, lineIdMappingsByDraftId, enterpriseName) {
+    const connector = await loadConnectorWithResources();
+    const megaGraph = await (Promise.all(shopifyDraftOrderResponses.map(async draftOrderResponse => {
+        const lineItemIdMapping = lineIdMappingsByDraftId.find(({draftOrderId}) => draftOrderId === numericPortion(draftOrderResponse.id));
+
+        if (!lineItemIdMapping) {
+            throw Error("Weird inconsistency. No stored line litems found for draft Id " + draftOrderResponse.id);
+        }
+
+        return await createUnexportedDfcOrderFromShopify(draftOrderResponse, lineItemIdMapping.lineItems, enterpriseName)
+    })));
+
+    console.log(megaGraph)
+    return await connector.export(megaGraph.flat());
 }
 
 export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId) {
@@ -102,7 +124,7 @@ export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, 
 export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, externalLineId, lineIdMappings, enterpriseName, orderId) {
     const connector = await loadConnectorWithResources();
 
-    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => lineIdMappings[line.id] === externalLineId)?.node
+    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => lineIdMappings[numericPortion(line.id)] === externalLineId)?.node
 
     if (!line) {
         return null;
