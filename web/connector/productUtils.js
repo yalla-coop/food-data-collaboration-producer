@@ -2,7 +2,7 @@ import { throwError } from '../utils/index.js';
 import loadConnectorWithResources from './index.js';
 import loadProductTypes from './mappedProductTypes.js';
 
-const semanticIdPrefix = process.env.PRODUCER_SHOP_URL;
+const semanticIdPrefix = `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${process.env.PRODUCER_SHOP_NAME}/`;
 
 const createQuantitativeValue = (connector, value, unit) =>
   connector.createQuantity({
@@ -19,7 +19,7 @@ const createPrice = (connector, value, unit, vatRate) =>
 
 const createOffer = (connector, semanticId, price) =>
   connector.createOffer({
-    semanticId: `${semanticId}/offer`,
+    semanticId: `${semanticId}/Offer`,
     price
   });
 
@@ -32,7 +32,7 @@ const createCatalogItem = (
 ) =>
   connector.createCatalogItem({
     connector,
-    semanticId: `${semanticId}/catalogItem`,
+    semanticId: `${semanticId}/CatalogItem`,
     offers,
     sku,
     stockLimitation
@@ -45,7 +45,7 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
     const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
     const euro = connector.MEASURES.UNIT.CURRENCYUNIT.EURO;
 
-    const semanticBase = `${semanticIdPrefix}product/${variant.id}`;
+    const semanticBase = `${semanticIdPrefix}SuppliedProducts/${variant.id}`;
 
     const quantity = createQuantitativeValue(
       connector,
@@ -53,14 +53,10 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
       kilogram
     );
     const hasVat = variant.taxable ? 1.0 : 0.0; // TODO check how the vat rate can be added
-    const price = createPrice(
-      connector,
-      variant.price,
-      euro,
-      hasVat
-    );
+    const price = createPrice(connector, variant.price, euro, hasVat);
     const offer = createOffer(connector, semanticBase, price);
-    const inventoryQuantity = variant.inventory_policy === 'continue' ? -1 : variant.inventory_quantity;
+    const inventoryQuantity =
+      variant.inventory_policy === 'continue' ? -1 : variant.inventory_quantity;
     const catalogItem = createCatalogItem(
       connector,
       semanticBase,
@@ -114,8 +110,10 @@ async function createSuppliedProducts(productsFromShopify) {
       throwError('Error creating supplied products: no products found');
     }
 
-    const productsPromises = productsFromShopify.map( async (product) => {
-      return product.fdcVariants[0] ? await createVariants(product, product.fdcVariants[0]) : []
+    const productsPromises = productsFromShopify.map(async (product) => {
+      return product.fdcVariants[0]
+        ? await createVariants(product, product.fdcVariants[0])
+        : [];
     });
 
     return (await Promise.all(productsPromises)).flat();
@@ -125,26 +123,42 @@ async function createSuppliedProducts(productsFromShopify) {
 }
 
 const createVariants = async (shopifyProduct, variantMapping) => {
+  const { wholesaleVariantId, retailVariantId, noOfItemsPerPackage } =
+    variantMapping;
 
-  const { wholesaleVariantId, retailVariantId, noOfItemsPerPackage } = variantMapping;
-
-  const retailVariant = shopifyProduct.variants.find(({ id }) => id == retailVariantId);
-  const wholesaleVariant = shopifyProduct.variants.find(({ id }) => id == wholesaleVariantId);
+  const retailVariant = shopifyProduct.variants.find(
+    ({ id }) => id == retailVariantId
+  );
+  const wholesaleVariant = shopifyProduct.variants.find(
+    ({ id }) => id == wholesaleVariantId
+  );
 
   if (!retailVariant || !wholesaleVariant) {
-    console.error(`Variant mapping for Product ${shopifyProduct.id} between ${retailVariantId} and ${wholesaleVariantId} is invalid. Contains non existant variant. Skipping`);
+    console.error(
+      `Variant mapping for Product ${shopifyProduct.id} between ${retailVariantId} and ${wholesaleVariantId} is invalid. Contains non existant variant. Skipping`
+    );
     return [];
   }
 
-  const [retailSuppliedProduct, ...retailOthers] = await createVariantSuppliedProduct(shopifyProduct, retailVariant, shopifyProduct.images)
-  const [wholesaleSuppliedProduct, ...wholesaleOthers] = await createVariantSuppliedProduct(shopifyProduct, wholesaleVariant, shopifyProduct.images)
+  const [retailSuppliedProduct, ...retailOthers] =
+    await createVariantSuppliedProduct(
+      shopifyProduct,
+      retailVariant,
+      shopifyProduct.images
+    );
+  const [wholesaleSuppliedProduct, ...wholesaleOthers] =
+    await createVariantSuppliedProduct(
+      shopifyProduct,
+      wholesaleVariant,
+      shopifyProduct.images
+    );
 
   const connector = await loadConnectorWithResources();
 
-  const semanticBase = `${semanticIdPrefix}product/${retailVariant.id}`;
+  const semanticBase = `${semanticIdPrefix}SuppliedProducts/${retailVariant.id}`;
 
   const plannedConsumptionFlow = connector.createPlannedConsumptionFlow({
-    semanticId: `${semanticBase}/plannedConsumptionFlow`,
+    semanticId: `${semanticBase}/AsPlannedConsumptionFlow`,
     quantity: connector.createQuantity({
       value: noOfItemsPerPackage,
       unit: connector.MEASURES.UNIT.QUANTITYUNIT.PIECE
@@ -153,7 +167,7 @@ const createVariants = async (shopifyProduct, variantMapping) => {
   });
 
   const plannedProductionFlow = connector.createPlannedProductionFlow({
-    semanticId: `${semanticBase}/plannedProductionFlow`,
+    semanticId: `${semanticBase}AsPlannedProductionFlow`,
     quantity: connector.createQuantity({
       value: 1.0,
       unit: connector.MEASURES.UNIT.QUANTITYUNIT.PIECE
@@ -162,13 +176,21 @@ const createVariants = async (shopifyProduct, variantMapping) => {
   });
 
   const plannedTransformation = connector.createPlannedTransformation({
-    semanticId: `${semanticBase}/transformation`,
+    semanticId: `${semanticBase}/AsPlannedTransformation`,
     transformationType: connector.VOCABULARY.TRANSFORMATIONTYPE.COMBINES,
     consumptionFlows: [plannedConsumptionFlow],
     productionFlows: [plannedProductionFlow]
   });
 
-  return [retailSuppliedProduct, wholesaleSuppliedProduct, plannedConsumptionFlow, plannedProductionFlow, plannedTransformation, ...retailOthers, ...wholesaleOthers];
+  return [
+    retailSuppliedProduct,
+    wholesaleSuppliedProduct,
+    plannedConsumptionFlow,
+    plannedProductionFlow,
+    plannedTransformation,
+    ...retailOthers,
+    ...wholesaleOthers
+  ];
 };
 
 async function exportSuppliedProducts(productsFromShopify) {
@@ -200,6 +222,7 @@ async function exportSuppliedProducts(productsFromShopify) {
 }
 
 export {
-  createSuppliedProducts, createVariantSuppliedProduct, exportSuppliedProducts
+  createSuppliedProducts,
+  createVariantSuppliedProduct,
+  exportSuppliedProducts
 };
-

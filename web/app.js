@@ -74,7 +74,7 @@ app.use(
   '/api/dfc/Enterprises/:EnterpriseName/SuppliedProducts',
   cors(),
   express.json(),
-  // checkUserAccessPermissions,
+  checkUserAccessPermissions,
   fdcProductRoutes
 );
 
