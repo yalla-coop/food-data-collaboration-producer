@@ -1,8 +1,7 @@
-import {pool} from '../connect.js'
+import { pool } from '../connect.js'
 export const createLineItems = async (orderId, lineItems) => {
     const parameters = lineItems.map(line => ({ orderId, id: line.id, variantId: line.variantId }));
-    try {
-        const result = await pool.query(`
+    const result = await pool.query(`
             INSERT INTO line_items (shopify_id, order_id, variant_id)
             (SELECT *
             FROM json_to_recordset($1)
@@ -13,12 +12,9 @@ export const createLineItems = async (orderId, lineItems) => {
             RETURNING *;
         `,
 
-            [JSON.stringify(parameters)]
-        );
-        return result.rows;
-    } catch (err) {
-        throw new Error(err);
-    }
+        [JSON.stringify(parameters)]
+    );
+    return result.rows;
 };
 
 export const getLineItems = async (orderId) => {
@@ -27,5 +23,5 @@ export const getLineItems = async (orderId) => {
 
 export const getLineItemIdMappings = async (orderId) => {
     return (await getLineItems(orderId))
-        .reduce((mappings, mapping) => ({...mappings, [mapping.shopifyId]: mapping.externalId}), {})
+        .reduce((mappings, mapping) => ({ ...mappings, [mapping.shopifyId]: mapping.externalId }), {})
 }
