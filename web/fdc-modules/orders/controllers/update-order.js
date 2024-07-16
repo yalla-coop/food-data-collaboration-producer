@@ -24,7 +24,7 @@ const updateOrder = async (req, res) => {
         return res.status(404).send('Unable to find order');
     }
 
-    const shopifyDraftOrder = await updateOrder(client, order);
+    const shopifyDraftOrder = await updateShopifyDraftOrder(client, order);
     
     const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
     const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings, req.params.EnterpriseName);
@@ -32,7 +32,7 @@ const updateOrder = async (req, res) => {
     res.send(dfcOrder);
 }
 
-async function updateOrder(client, order) {
+async function updateShopifyDraftOrder(client, order) {
     const dfcLines = await order.getLines();
     const shopifyLines = dfcLines.map(shopifyOrders.dfcLineToShopifyLine);
     const shopifyDraftOrder = await shopifyOrders.updateOrder(client, order.getSemanticId(), shopifyLines)

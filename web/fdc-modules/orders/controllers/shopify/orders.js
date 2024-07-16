@@ -1,4 +1,4 @@
-import * as ids from './ids'
+import * as ids from './ids.js'
 
 export async function findOrder(client, orderId) {
     const response = await client.query({
