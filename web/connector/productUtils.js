@@ -2,7 +2,7 @@ import { throwError } from '../utils/index.js';
 import loadConnectorWithResources from './index.js';
 import loadProductTypes from './mappedProductTypes.js';
 
-const semanticIdPrefix = `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${process.env.PRODUCER_SHOP_NAME}/`;
+export const semanticIdPrefix = `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${process.env.PRODUCER_SHOP_NAME}/`;
 
 const createQuantitativeValue = (connector, value, unit) =>
   connector.createQuantity({
@@ -110,8 +110,9 @@ async function createSuppliedProducts(productsFromShopify) {
       throwError('Error creating supplied products: no products found');
     }
 
+    console.log('productsFromShopify :>> ', productsFromShopify);
     const productsPromises = productsFromShopify.map(async (product) => {
-      return product.fdcVariants[0]
+      return product.fdcVariants?.[0]
         ? await createVariants(product, product.fdcVariants[0])
         : [];
     });
