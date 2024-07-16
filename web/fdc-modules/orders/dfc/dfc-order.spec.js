@@ -1,4 +1,4 @@
-import { Offer, Order, OrderLine } from '@datafoodconsortium/connector';
+import { Offer, Order, OrderLine, SaleSession } from '@datafoodconsortium/connector';
 import loadConnectorWithResources from '../../../connector/index.js';
 import { createDfcOrderFromShopify, createDfcOrderLineFromShopify, createDfcOrderLinesFromShopify, extractOrderAndLines, extractOrderLine, createBulkDfcOrderFromShopify } from './dfc-order.js';
 describe('dfc orders', () => {
@@ -11,7 +11,7 @@ describe('dfc orders', () => {
         //Where does the product id go in the order line? Is it in the offer ID? Or does the offer have to link to a supplied product?
         //You cant create dfc objects without assigning the semantic ID, but the request payloads wont have an ID already
 
-        let connector, orderRequest, orderLine1Request, orderLine2Request;
+        let connector, orderRequest, orderLine1Request, orderLine2Request, salesSessionRequest;
 
         beforeEach(async () => {
             connector = await loadConnectorWithResources();
@@ -36,22 +36,31 @@ describe('dfc orders', () => {
                 lines: [orderLine1Request, orderLine2Request],
                 orderStatus: connector.VOCABULARY.STATES.ORDERSTATE.HELD
             });
+
+            salesSessionRequest = new SaleSession({
+                connector,
+                semanticId: 'http://test.host/api/dfc/SalesSession/#',
+                beginDate: '2024-03-14T01:00:00+01:00',
+                endDate: '2024-03-20T01:00:00+01:00',
+            });
         })
 
         it('Can extract dfc order and lines from request payload', async () => {
-            const orderPayload = await connector.export([orderRequest, orderLine1Request, orderLine2Request])
+            const orderPayload = await connector.export([orderRequest, orderLine1Request, orderLine2Request, salesSessionRequest])
+            const {order, saleSession} = await extractOrderAndLines(orderPayload)
 
-            const deserialisedOrder = await extractOrderAndLines(orderPayload)
+            expect(order.getSemanticType()).toBe('dfc-b:Order')
 
-            expect(deserialisedOrder.getSemanticType()).toBe('dfc-b:Order')
-
-            const lines = await deserialisedOrder.getLines();
+            const lines = await order.getLines();
             expect(lines).toHaveLength(2);
             expect(lines[0].getQuantity()).toBe(5);
+
+            expect(saleSession.getSemanticType()).toBe('dfc-b:SaleSession')
+            expect(saleSession.getEndDate()).toBe('2024-03-20T01:00:00+01:00')
         });
 
         it('Order extraction will fail if order is missing', async () => {
-            const orderPayload = await connector.export([orderLine1Request, orderLine2Request])
+            const orderPayload = await connector.export([orderLine1Request, orderLine2Request, salesSessionRequest])
 
             expect.assertions(1);
             return extractOrderAndLines(orderPayload).catch(error => {
@@ -60,11 +69,20 @@ describe('dfc orders', () => {
         });
 
         it('Order extraction will fail if lines are missing', async () => {
-            const orderPayload = await connector.export([orderRequest, orderLine1Request])
+            const orderPayload = await connector.export([orderRequest, orderLine1Request, salesSessionRequest])
 
             expect.assertions(1);
             return extractOrderAndLines(orderPayload).catch(error => {
                 expect(error.message).toBe('Graph is missing OrderLine')
+            })
+        });
+
+        it('Order extraction will fail if sales session is missing', async () => {
+            const orderPayload = await connector.export([orderRequest, orderLine1Request, orderLine2Request])
+
+            expect.assertions(1);
+            return extractOrderAndLines(orderPayload).catch(error => {
+                expect(error.message).toBe('Graph must contain single SalesSession')
             })
         });
 
