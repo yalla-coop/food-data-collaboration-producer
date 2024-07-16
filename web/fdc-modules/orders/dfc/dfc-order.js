@@ -1,8 +1,9 @@
 import loadConnectorWithResources from '../../../connector/index.js';
 import { OrderLine, Order } from '@datafoodconsortium/connector';
+import * as ids from '../controllers/shopify/ids.js'
 
 export async function extractOrderLine(payload) {
-   const connector = await loadConnectorWithResources();
+    const connector = await loadConnectorWithResources();
 
     const deserialised = await connector.import(payload);
 
@@ -39,60 +40,125 @@ export async function extractOrderAndLines(payload) {
     return order;
 }
 
-function createOrderLine(connector, line, lineIdMappings) {
-    const offer = connector.createOffer({
-        semanticId: line.variant.id
+function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId) {
+
+    const suppliedProduct = connector.createSuppliedProduct({
+        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${ids.extract(line.variant.id)}`
     });
+
+    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[ids.extract(line.id)].toString()}`
+
+    const offer = connector.createOffer({
+        semanticId: madeUpIdForTheOfferSoTheConnectorWorks,
+        offeredItem: suppliedProduct
+    });
+
+    const { amount, currencyCode } = line.originalUnitPriceSet.shopMoney;
 
     const price = connector.createPrice({
-        value: line.variant.price,
-        unit: connector.MEASURES.UNIT.CURRENCYUNIT.EURO //todo: Shop defaut currency
+        value: amount,
+        unit: currencyMeasureFor(connector, currencyCode)
     });
 
-    return connector.createOrderLine({
-        semanticId: lineIdMappings[line.id].toString(),
-        offer: offer,
-        price: price,
-        quantity: line.quantity
-    });
+    return [
+        offer,
+        connector.createOrderLine({
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[ids.extract(line.id)].toString()}`,
+            offer: offer,
+            price: price,
+            quantity: line.quantity
+        })];
 }
 
-function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings) {
+function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId) {
     const shopifyLineItems = shopifyDraftOrderResponse.lineItems.edges;
-    return shopifyLineItems.map(({node: line}) => {
-        return createOrderLine(connector, line, lineIdMappings);
+    return shopifyLineItems.flatMap(({ node: line }) => {
+        return createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId);
     })
 }
 
-export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings) {
+async function createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
     const connector = await loadConnectorWithResources();
 
-    const dfcOrderLines = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings);
+    const orderId = ids.extract(shopifyDraftOrderResponse.id)
+
+    const dfcOrderLinesGraph = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId);
 
     const order = connector.createOrder({
-        semanticId: shopifyDraftOrderResponse.id,
-        lines: dfcOrderLines
+        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}`,
+        lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine),
+        orderStatus: orderStatusFor(connector, shopifyDraftOrderResponse.status)
     });
 
-    return await connector.export([order, ...dfcOrderLines]);
+    return [order, ...dfcOrderLinesGraph];
 }
 
-export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, lineIdMappings) {
+export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
+    const connector = await loadConnectorWithResources();
+    const graph = await createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName);
+    return await connector.export(graph);
+}
+
+export async function createBulkDfcOrderFromShopify(shopifyDraftOrderResponses, lineIdMappingsByDraftId, enterpriseName) {
+    const connector = await loadConnectorWithResources();
+    const megaGraph = await (Promise.all(shopifyDraftOrderResponses.map(async draftOrderResponse => {
+        const lineItemIdMapping = lineIdMappingsByDraftId.find(({draftOrderId}) => draftOrderId === ids.extract(draftOrderResponse.id));
+
+        if (!lineItemIdMapping) {
+            throw Error("Weird inconsistency. No stored line litems found for draft Id " + draftOrderResponse.id);
+        }
+
+        return await createUnexportedDfcOrderFromShopify(draftOrderResponse, lineItemIdMapping.lineItems, enterpriseName)
+    })));
+
+    return await connector.export(megaGraph.flat());
+}
+
+export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId) {
     const connector = await loadConnectorWithResources();
 
-    const dfcOrderLines = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings);
+    const dfcOrderLines = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId);
 
     return await connector.export(dfcOrderLines);
 }
 
-export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, externalLineId, lineIdMappings) {
+export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, externalLineId, lineIdMappings, enterpriseName, orderId) {
     const connector = await loadConnectorWithResources();
 
-    const line = shopifyDraftOrderResponse.lineItems.edges.find(({node: line}) => lineIdMappings[line.id] === externalLineId)?.node
+    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => lineIdMappings[ids.extract(line.id)] === externalLineId)?.node
 
-    if (!line){
+    if (!line) {
         return null;
     }
 
-    return await connector.export([createOrderLine(connector, line, lineIdMappings)]);
+    return await connector.export(createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId));
+}
+
+function currencyMeasureFor(connector, currencyCode) {
+    const measure = {
+        'EUR': connector.MEASURES.UNIT.CURRENCYUNIT.EURO,
+        'GBP': connector.MEASURES.UNIT.CURRENCYUNIT.POUNDSTERLING,
+        'USD': connector.MEASURES.UNIT.CURRENCYUNIT.USDOLLAR
+    }[currencyCode];
+
+    if (!measure) {
+        throw new Error(`Unknown connector currency mapping for currenct code ${currencyCode}`);
+    }
+
+    return measure;
+}
+
+function orderStatusFor(connector, shopifyDraftOrderStatus) {
+    const status = {
+        'OPEN': connector.VOCABULARY.STATES.ORDERSTATE.HELD,
+        'INVOICE_SENT': connector.VOCABULARY.STATES.ORDERSTATE.HELD,
+        'COMPLETED': connector.VOCABULARY.STATES.ORDERSTATE.COMPLETE,
+    }[shopifyDraftOrderStatus];
+
+    if (!status) {
+        throw new Error(`Unknown connector order status mapping for ${shopifyDraftOrderStatus}`);
+    }
+
+    return status;
+
 }

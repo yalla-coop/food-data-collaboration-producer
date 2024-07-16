@@ -63,7 +63,7 @@ app.use('/fdc', cors(), express.json(), legacyfdcRouter, errorMiddleware);
 
 //todo: Who's enterprise is this? Is a hub posting to their own enterprise endpoint? Is it something that exists on the producer? Ask Garethe
 app.use(
-  '/api/dfc/Enterprises/tbd/Orders',
+  '/api/dfc/Enterprises/:EnterpriseName/Orders',
   cors(),
   express.json(),
   checkUserAccessPermissions,
