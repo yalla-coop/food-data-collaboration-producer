@@ -77,17 +77,15 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
       productType: productTypes[parentProduct.product_type] ?? null
     });
 
-    if (
-      parentProduct.image &&
-      parentProduct.image.src &&
-      parentProduct.image.product_id &&
-      parentProduct.image.product_id === parentProduct.id
-    ) {
-      suppliedProduct.addImage(parentProduct.image.src);
+    if (parentProduct.images && parentProduct.images.length > 0) {
+      // TODO check if this is correct
+      parentProduct.images.forEach((img) => {
+        suppliedProduct.addImage(img.src);
+      });
     }
 
-    if (Array.isArray(images) && images.length > 0 && variant.image_id) {
-      const variantImage = images.find((img) => img.id === variant.image_id);
+    if (Array.isArray(images) && images.length > 0 && variant.image?.id) {
+      const variantImage = images.find((img) => img.id === variant.image.id);
 
       if (variantImage && variantImage.src) {
         suppliedProduct.addImage(variantImage.src);

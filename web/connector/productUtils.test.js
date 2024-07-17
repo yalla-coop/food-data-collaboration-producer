@@ -97,7 +97,7 @@ describe('createSuppliedProducts', () => {
     );
 
     expect(result[0].getImages()).toEqual([
-      suppliedProductsWithFdcVariants[0].image.src
+      suppliedProductsWithFdcVariants[0].images[0].src
     ]);
 
     expect(result[1].getSemanticId()).toBe(semanticIdProductTwo);
