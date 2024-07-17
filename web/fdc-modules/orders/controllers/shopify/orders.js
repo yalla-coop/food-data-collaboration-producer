@@ -128,6 +128,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
                     "note": "FDC Order",
                     "email": customerEmail,
                     "reserveInventoryUntil": reservationDate.toISOString(),
+                    "tags": ['fdc'],
                     "lineItems": lines,
                 }
             },

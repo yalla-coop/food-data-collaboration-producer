@@ -34,7 +34,7 @@ const getProduct = async (req, res) => {
       fdcVariantsFromDB
     );
 
-    return res.status(200).json(dfcProducts);
+    return res.status(200).send(dfcProducts);
   } catch (error) {
     console.error('Unable to load products', error);
     throw new Error(error);
