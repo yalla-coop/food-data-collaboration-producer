@@ -11,10 +11,11 @@ const createOrder = async (req, res) => {
     const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
     const client = new shopify.api.clients.Graphql({ session });
 
-    const customerId = await findCustomer(client, req.userId);
-    const order = extractOrderAndLines(req.body)
+    const customerId = await findCustomer(client, req.user.id);
+    const {order, saleSession} = extractOrderAndLines(req.body)
     const shopifyLines = (await order.getLines()).map(orders.dfcLineToShopifyLine)
-    const shopifyDraftOrder = await orders.createShopifyOrder(client, customerId, customerEmail, shopifyLines);
+
+    const shopifyDraftOrder = await orders.createShopifyOrder(client, customerId, req.user.email, new Date(saleSession.getEndDate()), shopifyLines);
 
     await createDraftOrder(ids.extract(shopifyDraftOrder.id));
     const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)

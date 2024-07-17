@@ -63,7 +63,10 @@ async function authorise(accessToken, req, res, next) {
     const { status } = user.rows[0];
 
     if (status) {
-      req.userId = userId;
+      req.user = {
+        id: userId,
+        email: tokenSet.email
+      };
       return next();
     }
 
