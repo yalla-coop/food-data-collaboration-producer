@@ -214,6 +214,9 @@ describe('dfc orders', () => {
         });
 
         describe("Order Status", () => {
+
+            //todo: This requires refinement. We need to look at the status of the order as well as the draft order.
+            
             async function assertOrderStatus(inStatus, outStatus) {
                 const dfcOutput = await createDfcOrderFromShopify(shopifyOrder({ id: 'gid://shopify/DraftOrder/999999', status: inStatus }), idMappings, 'test-shop');
                 expect(dfcOutput).toContain(`\"dfc-b:hasOrderStatus\":{\"@id\":\"dfc-v:${outStatus}\"}`);
