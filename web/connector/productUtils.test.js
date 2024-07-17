@@ -4,17 +4,12 @@ import {
   exportSuppliedProducts,
   semanticIdPrefix
 } from './productUtils';
-import {
-  CatalogItem,
-  Offer,
-  Price,
-  QuantitativeValue,
-  SuppliedProduct
-} from './index.js';
+
 import {
   createSuppliedProductsInput,
   createVariantSuppliedProductInputs,
-  exportSuppliedProductsJSONLD
+  exportSuppliedProductsJSONLD,
+  suppliedProductsWithFdcVariants
 } from './mocks.js';
 
 describe('createVariantSuppliedProduct', () => {
@@ -85,40 +80,54 @@ describe('createVariantSuppliedProduct', () => {
 
 describe('createSuppliedProducts', () => {
   it('should create suppliedProducts from shopify Products and their Variants', async () => {
-    const shopifyProductAndVariants = createSuppliedProductsInput;
-    const product = shopifyProductAndVariants[0];
-    const firstVariant = shopifyProductAndVariants[0].variants[0];
-    const semanticBase = `${process.env.PRODUCER_SHOP_URL}product/${product.id}`;
-    const params = `?handle=${product.handle}&imageId=${product.image.id}`;
-    const fullSemanticId = semanticBase + params;
+    const semanticIdProductOne = `${semanticIdPrefix}SuppliedProducts/${suppliedProductsWithFdcVariants[0].variants[0].id}`;
+    const semanticIdProductTwo = `${semanticIdPrefix}SuppliedProducts/${suppliedProductsWithFdcVariants[0].variants[1].id}`;
 
-    const result = await createSuppliedProducts(shopifyProductAndVariants);
-    console.log('result :>> ', result);
+    const result = await createSuppliedProducts(
+      suppliedProductsWithFdcVariants
+    );
+
     expect(result).toBeInstanceOf(Array);
-    // expect(result[0]).toBeInstanceOf(SuppliedProduct);
-    // expect(result[0].getSemanticId()).toBe(fullSemanticId);
-    // expect(result[0].getName()).toBe(product.title);
-    // expect(result[0].getDescription()).toBe(product.body_html);
-    // expect(result[0].getImages()).toEqual([product.image.src]);
+    expect(result[0].getSemanticId()).toBe(semanticIdProductOne);
+    expect(result[0].getName()).toBe(
+      'Baked British Beans - Retail bottle, 40ml'
+    );
+    expect(result[0].getDescription()).toBe(
+      suppliedProductsWithFdcVariants[0].body_html
+    );
 
-    // const semanticIdVariant = `${process.env.PRODUCER_SHOP_URL}product/${product.id}/variant/${firstVariant.id}/inventory/${firstVariant.inventory_item_id}`;
-    // expect(result[1]).toBeInstanceOf(Offer);
-    // expect(result[1].getSemanticId()).toBe(semanticIdVariant + '/offer');
-    // expect(result[2]).toBeInstanceOf(CatalogItem);
-    // expect(result[2].getSemanticId()).toBe(semanticIdVariant + '/catalogItem');
-    // expect(result[3]).toBeInstanceOf(SuppliedProduct);
-    // expect(result[3].getSemanticId()).toBe(
-    //   semanticIdVariant + `?imageId=${firstVariant.image_id}`
-    // );
+    expect(result[0].getImages()).toEqual([
+      suppliedProductsWithFdcVariants[0].image.src
+    ]);
+
+    expect(result[1].getSemanticId()).toBe(semanticIdProductTwo);
+
+    expect(result[5].getSemanticId()).toBe(semanticIdProductOne + '/Offer');
+    expect(result[6].getSemanticId()).toBe(
+      semanticIdProductOne + '/CatalogItem'
+    );
+    expect(result[7].getSemanticId()).toBe(semanticIdProductTwo + '/Offer');
+    expect(result[8].getSemanticId()).toBe(
+      semanticIdProductTwo + '/CatalogItem'
+    );
+
+    expect(result[2].getSemanticId()).toBe(
+      semanticIdProductOne + '/AsPlannedConsumptionFlow'
+    );
+    expect(result[3].getSemanticId()).toBe(
+      semanticIdProductOne + '/AsPlannedProductionFlow'
+    );
+    expect(result[4].getSemanticId()).toBe(
+      semanticIdProductOne + '/AsPlannedTransformation'
+    );
   });
 });
 
-// describe('exportSuppliedProducts', () => {
-//   it('should export the created suppliedProducts, catalogItems, Offers etc. as JSON-LD', async () => {
-//     const shopifyProductAndVariants = createSuppliedProductsInput;
-
-//     const result = await exportSuppliedProducts(shopifyProductAndVariants);
-
-//     expect(result).toEqual(exportSuppliedProductsJSONLD);
-//   });
-// });
+describe('exportSuppliedProducts', () => {
+  it('should export the created suppliedProducts, catalogItems, Offers etc. as JSON-LD', async () => {
+    const result = await exportSuppliedProducts(
+      suppliedProductsWithFdcVariants
+    );
+    expect(result).toEqual(exportSuppliedProductsJSONLD);
+  });
+});

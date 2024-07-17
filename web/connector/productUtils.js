@@ -110,12 +110,11 @@ async function createSuppliedProducts(productsFromShopify) {
       throwError('Error creating supplied products: no products found');
     }
 
-    console.log('productsFromShopify :>> ', productsFromShopify);
-    const productsPromises = productsFromShopify.map(async (product) => {
-      return product.fdcVariants?.[0]
+    const productsPromises = productsFromShopify.map(async (product) =>
+      product.fdcVariants?.[0]
         ? await createVariants(product, product.fdcVariants[0])
-        : [];
-    });
+        : []
+    );
 
     return (await Promise.all(productsPromises)).flat();
   } catch (error) {
@@ -168,7 +167,7 @@ const createVariants = async (shopifyProduct, variantMapping) => {
   });
 
   const plannedProductionFlow = connector.createPlannedProductionFlow({
-    semanticId: `${semanticBase}AsPlannedProductionFlow`,
+    semanticId: `${semanticBase}/AsPlannedProductionFlow`,
     quantity: connector.createQuantity({
       value: 1.0,
       unit: connector.MEASURES.UNIT.QUANTITYUNIT.PIECE
