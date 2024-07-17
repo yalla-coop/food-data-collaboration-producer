@@ -87,12 +87,7 @@ export async function findOrders(client, orderIds) {
     return ordersChunkedUp.flat();
 }
 
-export async function createShopifyOrder(client, customerId, customerEmail, lines) {
-
-    //todo: what should the reservation date be, we dont know the sales session details on the producer
-    var reservationDate = new Date();
-    reservationDate.setDate(reservationDate.getDate() + 20);
-
+export async function createShopifyOrder(client, customerId, customerEmail, reservationDate, lines) {
     const response = await client.query({
         data: {
             "query": `mutation draftOrderCreate($input: DraftOrderInput!) {
