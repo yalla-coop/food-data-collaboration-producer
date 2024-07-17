@@ -1,5 +1,5 @@
 import loadConnectorWithResources from '../../../connector/index.js';
-import { OrderLine, Order } from '@datafoodconsortium/connector';
+import { OrderLine, Order, SaleSession } from '@datafoodconsortium/connector';
 import * as ids from '../controllers/shopify/ids.js'
 
 export async function extractOrderLine(payload) {
@@ -27,6 +27,10 @@ export async function extractOrderAndLines(payload) {
         (item) => item instanceof OrderLine
     );
 
+    const saleSessions = deserialised.filter(
+        (item) => item instanceof SaleSession
+    );
+
     if (orders.length !== 1) {
         throw Error('Order missing');
     }
@@ -37,7 +41,11 @@ export async function extractOrderAndLines(payload) {
         throw Error('Graph is missing OrderLine');
     }
 
-    return order;
+    if (saleSessions.length !== 1) {
+        throw Error('Graph must contain single SalesSession');
+    }
+
+    return {order, saleSession: saleSessions[0]};
 }
 
 function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId) {

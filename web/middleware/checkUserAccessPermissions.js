@@ -17,11 +17,12 @@ const checkUserAccessPermissions = async (req, res, next) => {
     return next();
   } else {
     const accessToken = bearerToken(req);
-    await authorise(accessToken, res, next);
+
+    await authorise(accessToken, req, res, next);
   }
 };
 
-async function authorise(accessToken, res, next) {
+async function authorise(accessToken, req, res, next) {
   const issuer = await Issuer.discover(issuerURL);
 
   const client = new issuer.Client({
@@ -62,7 +63,10 @@ async function authorise(accessToken, res, next) {
     const { status } = user.rows[0];
 
     if (status) {
-      req.userId = userId
+      req.user = {
+        id: userId,
+        email: tokenSet.email
+      };
       return next();
     }
 
