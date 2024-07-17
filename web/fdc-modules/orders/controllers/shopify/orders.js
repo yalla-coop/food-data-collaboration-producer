@@ -7,6 +7,13 @@ export async function findOrder(client, orderId) {
                 draftOrder(id: "${ids.draftOrder(orderId)}") {
                     id
                     status
+                    order {
+                        id
+                        displayFulfillmentStatus
+                        cancelledAt
+                        closed
+                        fullyPaid
+                    }
                     lineItems(first: 250) {
                         edges {
                             node {
@@ -37,31 +44,39 @@ export async function findOrder(client, orderId) {
     return response.data.draftOrder;
 }
 
-
-async function findOrdersBatch(client, orderIds) {
+export async function findOrders(client) {
     const query = `
-    query findDraftOrders($ids: [ID!]!) {
-        draftOrders: nodes(ids: $ids) {
-          ... on DraftOrder {
-            id    
-            status   
-            lineItems(first: 250) {
-                edges {
-                    node {
-                        id
-                        quantity
-                        originalUnitPriceSet {
-                            shopMoney {
-                                amount
-                                currencyCode
+    query findDraftOrders {
+        draftOrders(first: 250,  query: "tag:fdc") {
+          edges {
+            nodes {
+                id    
+                status   
+                order {
+                    id
+                    displayFulfillmentStatus
+                    cancelledAt
+                    closed
+                    fullyPaid
+                }
+                lineItems(first: 250) {
+                    edges {
+                        node {
+                            id
+                            quantity
+                            originalUnitPriceSet {
+                                shopMoney {
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            variant {
+                                id
                             }
                         }
-                        variant {
-                            id
-                        }
                     }
-                }
-            } 
+                } 
+            }
           }
         }
       }
@@ -69,7 +84,6 @@ async function findOrdersBatch(client, orderIds) {
     const response = await client.query({
         data: {
             query,
-            variables: { ids: orderIds.map(ids.draftOrder) }
         }
     });
 
@@ -79,12 +93,6 @@ async function findOrdersBatch(client, orderIds) {
     }
 
     return response.data.draftOrders;
-}
-
-
-export async function findOrders(client, orderIds) {
-    const ordersChunkedUp = await Promise.all(chunks(orderIds, 250).map(async ids => await findOrdersBatch(client, ids)));
-    return ordersChunkedUp.flat();
 }
 
 export async function createShopifyOrder(client, customerId, customerEmail, reservationDate, lines) {
@@ -99,6 +107,13 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
             draftOrder  {
                 id
                 status
+                order {
+                    id
+                    displayFulfillmentStatus
+                    cancelledAt
+                    closed
+                    fullyPaid
+                }
                 lineItems(first: 250) {
                  edges {
                    node {
@@ -160,6 +175,13 @@ export async function updateOrder(client, orderId, lines) {
             draftOrder  {
                 id
                 status
+                order {
+                    id
+                    displayFulfillmentStatus
+                    cancelledAt
+                    closed
+                    fullyPaid
+                }
                 lineItems(first: 250) {
                  edges {
                    node {
@@ -215,6 +237,13 @@ export async function completeDraftOrder(client, orderId) {
                   draftOrder {
                     id
                     status
+                    order {
+                        id
+                        displayFulfillmentStatus
+                        cancelledAt
+                        closed
+                        fullyPaid
+                    }
                     lineItems(first: 250) {
                         edges {
                         node {
@@ -232,9 +261,6 @@ export async function completeDraftOrder(client, orderId) {
                             }
                         }
                         }         
-                    }
-                    order {
-                      id
                     }
                   }
                 }
@@ -288,9 +314,3 @@ export async function createUpdatedShopifyLines(draftOrder, dfcOrderLine) {
 
     return hasBeenReplacement ? lines : [...lines, await dfcLineToShopifyLine(dfcOrderLine)];
 }
-
-function* chunks(arr, n) {
-    for (let i = 0; i < arr.length; i += n) {
-      yield arr.slice(i, i + n);
-    }
-  }

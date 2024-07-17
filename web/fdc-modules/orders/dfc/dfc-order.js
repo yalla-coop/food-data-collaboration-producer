@@ -95,7 +95,8 @@ async function createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, li
     const order = connector.createOrder({
         semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}`,
         lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine),
-        orderStatus: orderStatusFor(connector, shopifyDraftOrderResponse.status)
+        orderStatus: orderStatusFor(connector, shopifyDraftOrderResponse.status),
+        fulfilmentStatus: fulfilmentStatusFor(connector, shopifyDraftOrderResponse.order)
     });
 
     return [order, ...dfcOrderLinesGraph];
@@ -168,5 +169,28 @@ function orderStatusFor(connector, shopifyDraftOrderStatus) {
     }
 
     return status;
+}
 
+function fulfilmentStatusFor(connector, order) {
+    if (!order || !order.displayFulfillmentStatus) {
+        return null;
+    }
+
+    const status = {
+        'FULFILLED': connector.VOCABULARY.STATES.FULFILMENTSTATE.FULFILLED,
+        'IN_PROGRESS': connector.VOCABULARY.STATES.FULFILMENTSTATE.UNFULFILLED,
+        'ON_HOLD': connector.VOCABULARY.STATES.FULFILMENTSTATE.HELD,
+        'OPEN': connector.VOCABULARY.STATES.FULFILMENTSTATE.UNFULFILLED,
+        'PARTIALLY_FULFILLED': connector.VOCABULARY.STATES.FULFILMENTSTATE.UNFULFILLED,
+        'PENDING_FULFILLMENT': connector.VOCABULARY.STATES.FULFILMENTSTATE.UNFULFILLED,
+        'RESTOCKED': connector.VOCABULARY.STATES.FULFILMENTSTATE.UNFULFILLED,
+        'SCHEDULED': connector.VOCABULARY.STATES.FULFILMENTSTATE.HELD,
+        'UNFULFILLED': connector.VOCABULARY.STATES.FULFILMENTSTATE.UNFULFILLED,
+    }[order.displayFulfillmentStatus];
+
+    if (!status) {
+        throw new Error(`Unknown connector fulfilment status mapping for ${order.displayFulfillmentStatus}`);
+    }
+
+    return status;
 }

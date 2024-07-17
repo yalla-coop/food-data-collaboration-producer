@@ -10,7 +10,7 @@ const getAllOrders = async (req, res) => {
 
     const draftOrdersWithLineItemMappings = await getAllLineItems();
 
-    const shopifyOrders = await findOrders(client, draftOrdersWithLineItemMappings.map(({draftOrderId}) => draftOrderId));
+    const shopifyOrders = await findOrders(client);
 
     const allDfcOrders = await createBulkDfcOrderFromShopify(shopifyOrders, draftOrdersWithLineItemMappings, req.params.EnterpriseName);
 
