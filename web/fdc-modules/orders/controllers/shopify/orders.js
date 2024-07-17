@@ -1,46 +1,42 @@
 import * as ids from './ids.js'
 
 export async function findOrder(client, orderId) {
-    const response = await client.query({
-        data: {
-            "query": `query MyQuery($query: String) {
-                draftOrder(id: "${ids.draftOrder(orderId)}") {
-                    id
-                    status
-                    order {
+    const response = await client.request(`query MyQuery($query: String) {
+        draftOrder(id: "${ids.draftOrder(orderId)}") {
+            id
+            status
+            order {
+                id
+                displayFulfillmentStatus
+                cancelledAt
+                closed
+                fullyPaid
+            }
+            lineItems(first: 250) {
+                edges {
+                    node {
                         id
-                        displayFulfillmentStatus
-                        cancelledAt
-                        closed
-                        fullyPaid
-                    }
-                    lineItems(first: 250) {
-                        edges {
-                            node {
-                                id
-                                quantity
-                                originalUnitPriceSet {
-                                    shopMoney {
-                                        amount
-                                        currencyCode
-                                    }
-                                }
-                                variant {
-                                    id
-                                }
+                        quantity
+                        originalUnitPriceSet {
+                            shopMoney {
+                                amount
+                                currencyCode
                             }
+                        }
+                        variant {
+                            id
                         }
                     }
                 }
-              }`,
-        },
-    });
+            }
+        }
+      }`, {});
 
     if (response.errors) {
         console.error('Failed to load Order', JSON.stringify(response.errors));
         throw new Error('Failed to load Order');
     }
-
+    
     return response.data.draftOrder;
 }
 
@@ -49,7 +45,7 @@ export async function findOrders(client) {
     query findDraftOrders {
         draftOrders(first: 250,  query: "tag:fdc") {
           edges {
-            nodes {
+            node {
                 id    
                 status   
                 order {
@@ -81,73 +77,67 @@ export async function findOrders(client) {
         }
       }
   `;
-    const response = await client.query({
-        data: {
-            query,
-        }
-    });
+    const response = await client.request(query, {});
 
     if (response.errors) {
         console.error('Failed to load Orders', JSON.stringify(response.errors));
         throw new Error('Failed to load Orders');
     }
 
-    return response.data.draftOrders;
+    return response.data.draftOrders.edges.map(({ node }) => node);
 }
 
 export async function createShopifyOrder(client, customerId, customerEmail, reservationDate, lines) {
-    const response = await client.query({
-        data: {
-            "query": `mutation draftOrderCreate($input: DraftOrderInput!) {
-          draftOrderCreate(input: $input) {
-            userErrors {
-                field
-                message
-            }
-            draftOrder  {
-                id
-                status
-                order {
-                    id
-                    displayFulfillmentStatus
-                    cancelledAt
-                    closed
-                    fullyPaid
-                }
-                lineItems(first: 250) {
-                 edges {
-                   node {
-                      id
-                      quantity
-                      originalUnitPriceSet {
-                        shopMoney {
-                            amount
-                            currencyCode
-                        }
-                      }
-                       variant {
-                           id
-                           title
-                       }
-                   }
-                 }         
-               }
-            }
+    const query = `mutation draftOrderCreate($input: DraftOrderInput!) {
+        draftOrderCreate(input: $input) {
+          userErrors {
+              field
+              message
           }
-        }`,
-            "variables": {
-                "input": {
-                    "purchasingEntity": {
-                        "customerId": customerId
-                    },
-                    "note": "FDC Order",
-                    "email": customerEmail,
-                    "reserveInventoryUntil": reservationDate.toISOString(),
-                    "tags": ['fdc'],
-                    "lineItems": lines,
-                }
-            },
-        },
+          draftOrder  {
+              id
+              status
+              order {
+                  id
+                  displayFulfillmentStatus
+                  cancelledAt
+                  closed
+                  fullyPaid
+              }
+              lineItems(first: 250) {
+               edges {
+                 node {
+                    id
+                    quantity
+                    originalUnitPriceSet {
+                      shopMoney {
+                          amount
+                          currencyCode
+                      }
+                    }
+                     variant {
+                         id
+                         title
+                     }
+                 }
+               }         
+             }
+          }
+        }
+      }`;
+    const response = await client.request(query, {
+        variables: {
+            "input": {
+                "purchasingEntity": {
+                    "customerId": customerId
+                },
+                "note": "FDC Order",
+                "email": customerEmail,
+                "reserveInventoryUntil": reservationDate.toISOString(),
+                "tags": ['fdc'],
+                "lineItems": lines,
+            }
+        }
     });
 
     if (response.errors) {
@@ -164,51 +154,50 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
 }
 
 export async function updateOrder(client, orderId, lines) {
-    const response = await client.query({
-        data: {
-            "query": `mutation draftOrderUpdate($id: ID!, $input: DraftOrderInput!) {
-          draftOrderCreate(id: $id, input: $input) {
-            userErrors {
-                field
-                message
-            }
-            draftOrder  {
-                id
-                status
-                order {
-                    id
-                    displayFulfillmentStatus
-                    cancelledAt
-                    closed
-                    fullyPaid
-                }
-                lineItems(first: 250) {
-                 edges {
-                   node {
-                      id
-                      quantity
-                      originalUnitPriceSet {
-                        shopMoney {
-                            amount
-                            currencyCode
-                        }
-                      }
-                       variant {
-                           id
-                           title
-                       }
-                   }
-                 }         
-               }
-            }
+    const query = `mutation draftOrderUpdate($id: ID!, $input: DraftOrderInput!) {
+        draftOrderCreate(id: $id, input: $input) {
+          userErrors {
+              field
+              message
           }
-        }`,
-            "variables": {
-                "id": `${ids.draftOrder(orderId)}`,
-                "input": {
-                    "lineItems": lines,
-                }
-            },
+          draftOrder  {
+              id
+              status
+              order {
+                  id
+                  displayFulfillmentStatus
+                  cancelledAt
+                  closed
+                  fullyPaid
+              }
+              lineItems(first: 250) {
+               edges {
+                 node {
+                    id
+                    quantity
+                    originalUnitPriceSet {
+                      shopMoney {
+                          amount
+                          currencyCode
+                      }
+                    }
+                     variant {
+                         id
+                         title
+                     }
+                 }
+               }         
+             }
+          }
+        }
+      }`;
+
+    const response = await client.request(query, {
+        variables: {
+            "id": `${ids.draftOrder(orderId)}`,
+            "input": {
+                "lineItems": lines,
+            }
         },
     });
 
@@ -226,48 +215,48 @@ export async function updateOrder(client, orderId, lines) {
 }
 
 export async function completeDraftOrder(client, orderId) {
-    const response = await client.query({
-        data: {
-            "query": `mutation CompleteDraftOrder($id: ID!) {
-                draftOrderComplete(id: $id) {
-                  userErrors {
-                    field
-                    message
-                  }
-                  draftOrder {
+    const query = `mutation CompleteDraftOrder($id: ID!) {
+        draftOrderComplete(id: $id) {
+          userErrors {
+            field
+            message
+          }
+          draftOrder {
+            id
+            status
+            order {
+                id
+                displayFulfillmentStatus
+                cancelledAt
+                closed
+                fullyPaid
+            }
+            lineItems(first: 250) {
+                edges {
+                node {
                     id
-                    status
-                    order {
-                        id
-                        displayFulfillmentStatus
-                        cancelledAt
-                        closed
-                        fullyPaid
-                    }
-                    lineItems(first: 250) {
-                        edges {
-                        node {
-                            id
-                            quantity
-                            originalUnitPriceSet {
-                                shopMoney {
-                                    amount
-                                    currencyCode
-                                }
-                            }
-                            variant {
-                                id
-                                title
-                            }
+                    quantity
+                    originalUnitPriceSet {
+                        shopMoney {
+                            amount
+                            currencyCode
                         }
-                        }         
                     }
-                  }
+                    variant {
+                        id
+                        title
+                    }
                 }
-              }`,
-            "variables": {
-                "id": ids.draftOrder(orderId)
-            },
+                }         
+            }
+          }
+        }
+      }`;
+
+
+    const response = await client.request(query, {
+        variables: {
+            "id": ids.draftOrder(orderId)
         },
     });
 

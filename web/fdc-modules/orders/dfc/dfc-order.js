@@ -54,7 +54,14 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
         semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${ids.extract(line.variant.id)}`
     });
 
-    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[ids.extract(line.id)].toString()}`
+    const mapping = lineIdMappings[ids.extract(line.id)];
+    if (!mapping) {
+        throw new Error(`Need to do something here when the draft order contains a non dfc line.... ${line.id}`);
+    }
+    
+    const externalIdForLine = lineIdMappings[ids.extract(line.id)].toString();
+
+    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${externalIdForLine}`
 
     const offer = connector.createOffer({
         semanticId: madeUpIdForTheOfferSoTheConnectorWorks,
@@ -71,7 +78,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
     return [
         offer,
         connector.createOrderLine({
-            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[ids.extract(line.id)].toString()}`,
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${externalIdForLine}`,
             offer: offer,
             price: price,
             quantity: line.quantity
