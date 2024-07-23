@@ -25,6 +25,14 @@ const checkUserAccessPermissions = async (req, res, next) => {
 };
 
 async function authorise(accessToken, req, res, next) {
+
+  if (!accessToken) {
+    return res.status(403).json({
+      message: 'User access denied - token missing',
+      error: 'User not authorized'
+    });
+  }
+
   const issuer = await Issuer.discover(issuerURL);
 
   const client = new issuer.Client({
@@ -36,7 +44,7 @@ async function authorise(accessToken, req, res, next) {
 
   if (!tokenSet.active) {
     return res.status(403).json({
-      message: 'User access denied',
+      message: 'User access denied - token expired',
       error: 'User not authorized'
     });
   }

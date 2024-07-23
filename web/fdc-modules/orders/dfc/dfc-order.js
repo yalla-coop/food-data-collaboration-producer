@@ -14,7 +14,15 @@ export async function extractOrderLine(payload) {
     return deserialised[0];
 }
 
+export async function extractOrderAndLinesAndSalesSession(payload){
+    return await extract(payload, true);
+}
+
 export async function extractOrderAndLines(payload) {
+    return await extract(payload, false);
+}
+
+ async function extract(payload, requireSalesSession) {
     const connector = await loadConnectorWithResources();
 
     const deserialised = await connector.import(payload);
@@ -41,20 +49,27 @@ export async function extractOrderAndLines(payload) {
         throw Error('Graph is missing OrderLine');
     }
 
-    if (saleSessions.length !== 1) {
-        throw Error('Graph must contain single SalesSession');
+    if (!requireSalesSession) {
+        return order;
+    } else {
+        if (saleSessions.length !== 1) {
+            throw Error('Graph must contain single SalesSession');
+        }
+        return {order, saleSession: saleSessions[0]};
     }
-
-    return {order, saleSession: saleSessions[0]};
 }
 
 function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId) {
-
     const suppliedProduct = connector.createSuppliedProduct({
         semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${ids.extract(line.variant.id)}`
     });
 
-    const madeUpIdForTheOfferSoTheConnectorWorks = `/api/dfc/Enterprises/${enterpriseName}/offers/#${lineIdMappings[ids.extract(line.id)].toString()}`
+    const mapping = lineIdMappings[ids.extract(line.id)];
+    if (!mapping) {
+        throw new Error(`Need to do something here when the draft order contains a non dfc line.... ${line.id}`);
+    }
+
+    const madeUpIdForTheOfferSoTheConnectorWorks = `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Offers/${ids.extract(line.variant.id)}`
 
     const offer = connector.createOffer({
         semanticId: madeUpIdForTheOfferSoTheConnectorWorks,
@@ -69,9 +84,10 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
     });
 
     return [
+        suppliedProduct,
         offer,
         connector.createOrderLine({
-            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${lineIdMappings[ids.extract(line.id)].toString()}`,
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${mapping.toString()}`,
             offer: offer,
             price: price,
             quantity: line.quantity
