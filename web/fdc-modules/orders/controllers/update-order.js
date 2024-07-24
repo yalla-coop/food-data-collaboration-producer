@@ -13,9 +13,9 @@ const updateOrder = async (req, res) => {
         const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
         const client = new shopify.api.clients.Graphql({ session });
 
-        const order = extractOrderAndLines(req.body)
+        const order = await extractOrderAndLines(req.body)
 
-        if (order.getSemanticId() !== req.params.id) {
+        if (ids.extract(await order.getSemanticId()) !== req.params.id) {
             return res.status(400).send('ID does not match payload');
         }
 
@@ -39,11 +39,15 @@ const updateOrder = async (req, res) => {
 
 async function updateShopifyDraftOrder(client, order) {
     const dfcLines = await order.getLines();
-    const shopifyLines = dfcLines.map(shopifyOrders.dfcLineToShopifyLine);
-    const shopifyDraftOrder = await shopifyOrders.updateOrder(client, order.getSemanticId(), shopifyLines)
+    if (dfcLines.length < 1) {
+        throw new Error('Cannot update draft order with zero lines');
+    }
+
+    const shopifyLines = (await Promise.all(dfcLines.map(shopifyOrders.dfcLineToShopifyLine))).filter(({ quantity }) => quantity > 0);
+    const shopifyDraftOrder = await shopifyOrders.updateOrder(client, ids.extract(await order.getSemanticId()), shopifyLines)
     const connector = await loadConnectorWithResources();
-    if (order.getOrderStatus() === connector.VOCABULARY.STATES.ORDERSTATE.COMPLETE) {
-        const completedOrder = await shopifyOrders.completeDraftOrder(client, order.getSemanticId());
+    if ((await order.getOrderStatus()) === connector.VOCABULARY.STATES.ORDERSTATE.COMPLETE) {
+        const completedOrder = await shopifyOrders.completeDraftOrder(client, ids.extract(await order.getSemanticId()));
         await database.completeDraftOrder(ids.extract(completedOrder.id), ids.extract(completedOrder.order.id))
         return completedOrder;
     } else {

@@ -8,12 +8,14 @@ const issuerURL = process.env.OIDC_ISSUER;
 const API_KEY = process.env.PRODUCER_API_KEY;
 
 const checkUserAccessPermissions = async (req, res, next) => {
-  const legacySecretKeyCheckRemoveMeOnceNewApiInPlace = () => bearerToken(req) === API_KEY
-  const legacyApiRemoveMeOnceNewApiInPlace = () => req.body && req.body.accessToken
+  const legacySecretKeyCheckRemoveMeOnceNewApiInPlace = () =>
+    bearerToken(req) === API_KEY;
+  const legacyApiRemoveMeOnceNewApiInPlace = () =>
+    req.body && req.body.accessToken;
 
   if (legacyApiRemoveMeOnceNewApiInPlace()) {
-    await authorise(req.body.accessToken, res, next);
-  } else if(legacySecretKeyCheckRemoveMeOnceNewApiInPlace()) {
+    await authorise(req.body.accessToken, req, res, next);
+  } else if (legacySecretKeyCheckRemoveMeOnceNewApiInPlace()) {
     return next();
   } else {
     const accessToken = bearerToken(req);
@@ -23,6 +25,14 @@ const checkUserAccessPermissions = async (req, res, next) => {
 };
 
 async function authorise(accessToken, req, res, next) {
+
+  if (!accessToken) {
+    return res.status(403).json({
+      message: 'User access denied - token missing',
+      error: 'User not authorized'
+    });
+  }
+
   const issuer = await Issuer.discover(issuerURL);
 
   const client = new issuer.Client({
@@ -34,12 +44,12 @@ async function authorise(accessToken, req, res, next) {
 
   if (!tokenSet.active) {
     return res.status(403).json({
-      message: 'User access denied',
+      message: 'User access denied - token expired',
       error: 'User not authorized'
     });
   }
 
-  const userId = tokenSet.username
+  const userId = tokenSet.username;
   const name = tokenSet.name;
 
   try {

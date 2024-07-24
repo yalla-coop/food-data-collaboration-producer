@@ -1,8 +1,8 @@
 import * as ids from './ids.js'
 
 export async function findOrder(client, orderId) {
-    const response = await client.request(`query MyQuery($query: String) {
-        draftOrder(id: "${ids.draftOrder(orderId)}") {
+    const response = await client.request(`query MyQuery($id: ID!) {
+        draftOrder(id: $id) {
             id
             status
             order {
@@ -30,7 +30,11 @@ export async function findOrder(client, orderId) {
                 }
             }
         }
-      }`, {});
+      }`, {
+        variables: {
+            id: ids.draftOrder(orderId)
+        }
+      });
 
     if (response.errors) {
         console.error('Failed to load Order', JSON.stringify(response.errors));
@@ -88,6 +92,7 @@ export async function findOrders(client) {
 }
 
 export async function createShopifyOrder(client, customerId, customerEmail, reservationDate, lines) {
+
     const query = `mutation draftOrderCreate($input: DraftOrderInput!) {
         draftOrderCreate(input: $input) {
           userErrors {
@@ -155,7 +160,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
 
 export async function updateOrder(client, orderId, lines) {
     const query = `mutation draftOrderUpdate($id: ID!, $input: DraftOrderInput!) {
-        draftOrderCreate(id: $id, input: $input) {
+        draftOrderUpdate(id: $id, input: $input) {
           userErrors {
               field
               message
@@ -194,7 +199,7 @@ export async function updateOrder(client, orderId, lines) {
 
     const response = await client.request(query, {
         variables: {
-            "id": `${ids.draftOrder(orderId)}`,
+            "id": ids.draftOrder(orderId),
             "input": {
                 "lineItems": lines,
             }
@@ -206,12 +211,12 @@ export async function updateOrder(client, orderId, lines) {
         throw new Error('Failed to update order');
     }
 
-    if (response.data.draftOrderCreate.userErrors.length > 0) {
-        console.error('Failed to update draft order', JSON.stringify(response.data.draftOrderCreate.userErrors));
+    if (response.data.draftOrderUpdate.userErrors.length > 0) {
+        console.error('Failed to update draft order', JSON.stringify(response.data.draftOrderUpdate.userErrors));
         throw new Error('Failed to update order');
     }
 
-    return response.data.draftOrderCreate.draftOrder
+    return response.data.draftOrderUpdate.draftOrder
 }
 
 export async function completeDraftOrder(client, orderId) {
@@ -275,8 +280,9 @@ export async function completeDraftOrder(client, orderId) {
 
 export async function dfcLineToShopifyLine(dfcLine) {
     const offer = await dfcLine.getOffer();
+    const product = await offer.getOfferedItem();
     return {
-        variantId: ids.variant(offer.getSemanticId()),
+        variantId: ids.variant(ids.extract(product.getSemanticId())),
         quantity: dfcLine.getQuantity()
     }
 }
@@ -293,7 +299,10 @@ export async function createUpdatedShopifyLines(draftOrder, dfcOrderLine) {
         async (accumulator, shopifyOutputLine) => {
             const { lines, hasBeenReplacement } = await accumulator;
 
-            if (ids.extract(shopifyOutputLine.node.variant.id) === (await dfcOrderLine.getOffer()).getSemanticId()) {
+            const offer = await dfcOrderLine.getOffer();
+            const product = await offer.getOfferedItem();
+
+            if (ids.extract(shopifyOutputLine.node.variant.id) === ids.extract(await product.getSemanticId())) {
                 return { lines: [...lines, await dfcLineToShopifyLine(dfcOrderLine)], hasBeenReplacement: true };
             } else {
                 return { lines: [...lines, shopifyOutputLineToInputLine(shopifyOutputLine)], hasBeenReplacement };

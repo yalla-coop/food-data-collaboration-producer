@@ -1,16 +1,13 @@
 export async function findCustomer(client, customerEmail) {
-    const response = await client.query({
-        data: {
-            "query": `query MyQuery($query: String) {
-                customers(query: $query, first: 1) {
-                  nodes {
-                    id
-                  }
-                }
-              }`,
-            "variables": {
-                "query": `email:${customerEmail}`
-            },
+    const response = await client.request(`query MyQuery($query: String) {
+        customers(query: $query, first: 1) {
+          nodes {
+            id
+          }
+        }
+      }`, {
+        variables: {
+            "query": `email:${customerEmail}`
         },
     });
 
