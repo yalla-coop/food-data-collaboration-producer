@@ -6,6 +6,7 @@ import * as orders from './shopify/orders.js';
 import * as ids from './shopify/ids.js';
 import { persistLineIdMappings } from './lineItemMappings.js'
 import { createDraftOrder } from '../../../database/orders/orders.js'
+import { createSalesSession } from '../../../database/sales_sessions/salesSessions.js'
 
 const createOrder = async (req, res) => {
     try {
@@ -21,6 +22,7 @@ const createOrder = async (req, res) => {
         const shopifyDraftOrder = await orders.createShopifyOrder(client, customerId, req.user.email, new Date(saleSession.getEndDate()), shopifyLines);
 
         await createDraftOrder(ids.extract(shopifyDraftOrder.id));
+        await createSalesSession(ids.extract(shopifyDraftOrder.id), saleSession.getEndDate());
         const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
         const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings, req.params.EnterpriseName);
         res.type('application/json')

@@ -1,6 +1,6 @@
 import { Offer, Order, OrderLine, SaleSession } from '@datafoodconsortium/connector';
 import loadConnectorWithResources from '../../../connector/index.js';
-import { createDfcOrderFromShopify, createDfcOrderLineFromShopify, createDfcOrderLinesFromShopify, extractOrderAndLines, extractOrderLine, createBulkDfcOrderFromShopify } from './dfc-order.js';
+import { createDfcOrderFromShopify, createDfcOrderLineFromShopify, createDfcOrderLinesFromShopify, extractOrderAndLines, extractOrderAndLinesAndSalesSession, extractOrderLine, createBulkDfcOrderFromShopify } from './dfc-order.js';
 describe('dfc orders', () => {
 
     describe("Request", () => {
@@ -43,7 +43,7 @@ describe('dfc orders', () => {
 
         it('Can extract dfc order and lines from request payload', async () => {
             const orderPayload = await connector.export([orderRequest, orderLine1Request, orderLine2Request, salesSessionRequest])
-            const { order, saleSession } = await extractOrderAndLines(orderPayload)
+            const { order, saleSession } = await extractOrderAndLinesAndSalesSession(orderPayload)
 
             expect(order.getSemanticType()).toBe('dfc-b:Order')
 
@@ -59,7 +59,7 @@ describe('dfc orders', () => {
             const orderPayload = await connector.export([orderLine1Request, orderLine2Request, salesSessionRequest])
 
             expect.assertions(1);
-            return extractOrderAndLines(orderPayload).catch(error => {
+            return extractOrderAndLinesAndSalesSession(orderPayload).catch(error => {
                 expect(error.message).toBe('Order missing')
             })
         });
@@ -68,7 +68,7 @@ describe('dfc orders', () => {
             const orderPayload = await connector.export([orderRequest, orderLine1Request, salesSessionRequest])
 
             expect.assertions(1);
-            return extractOrderAndLines(orderPayload).catch(error => {
+            return extractOrderAndLinesAndSalesSession(orderPayload).catch(error => {
                 expect(error.message).toBe('Graph is missing OrderLine')
             })
         });
@@ -77,7 +77,7 @@ describe('dfc orders', () => {
             const orderPayload = await connector.export([orderRequest, orderLine1Request, orderLine2Request])
 
             expect.assertions(1);
-            return extractOrderAndLines(orderPayload).catch(error => {
+            return extractOrderAndLinesAndSalesSession(orderPayload).catch(error => {
                 expect(error.message).toBe('Graph must contain single SalesSession')
             })
         });
@@ -122,6 +122,7 @@ describe('dfc orders', () => {
                                 "currencyCode": "GBP"
                             }
                         },
+                        "custom": false,
                         "variant": {
                             "id": "gid://shopify/ProductVariant/44519466336563",
                             "title": "Small case, 6 x 100ml",
@@ -138,6 +139,7 @@ describe('dfc orders', () => {
                                 "currencyCode": "EUR"
                             }
                         },
+                        "custom": false,
                         "variant": {
                             "id": "gid://shopify/ProductVariant/44519466336566",
                             "title": "Large case, 12 x 100ml",
@@ -162,17 +164,17 @@ describe('dfc orders', () => {
 
         it('Can convert a shopify draft order to dfc order with lines', async () => {
             const dfcOutput = await createDfcOrderFromShopify(shopifyOrder(), idMappings, 'test-shop');
-            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#1\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\"}},{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"_:b1\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"_:b2\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371\",\"@type\":\"dfc-b:Order\",\"dfc-b:hasOrderStatus\":{\"@id\":\"dfc-v:Held\"},\"dfc-b:hasPart\":[{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\"}]},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#1\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b1\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b2\"},\"dfc-b:quantity\":\"5\"}]}`);
+            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"_:b1\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"_:b2\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336563\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371\",\"@type\":\"dfc-b:Order\",\"dfc-b:hasOrderStatus\":{\"@id\":\"dfc-v:Held\"},\"dfc-b:hasPart\":[{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\"}]},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336563\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b1\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b2\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\",\"@type\":\"dfc-b:SuppliedProduct\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\",\"@type\":\"dfc-b:SuppliedProduct\"}]}`);
         });
 
         it('Can convert a shopify draft order to just lines', async () => {
             const dfcOutput = await createDfcOrderLinesFromShopify(shopifyOrder(), idMappings, 'test-shop', 12345);
-            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#1\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\"}},{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"_:b3\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"_:b4\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/12345/orderLines/1\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#1\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b3\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/12345/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b4\"},\"dfc-b:quantity\":\"5\"}]}`);
+            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"_:b3\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"_:b4\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336563\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/12345/orderLines/1\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336563\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b3\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/12345/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b4\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\",\"@type\":\"dfc-b:SuppliedProduct\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\",\"@type\":\"dfc-b:SuppliedProduct\"}]}`);
         });
 
         it('Can convert a shopify draft order to a single lines', async () => {
             const dfcOutput = await createDfcOrderLineFromShopify(shopifyOrder(), 2, idMappings, 'test-shop', 12345);
-            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"_:b5\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/12345/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b5\"},\"dfc-b:quantity\":\"5\"}]}`);
+            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"_:b5\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/12345/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b5\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\",\"@type\":\"dfc-b:SuppliedProduct\"}]}`);
         });
 
         it('Single line that isnt found returns null', async () => {
@@ -201,6 +203,7 @@ describe('dfc orders', () => {
                                     "currencyCode": "GBP"
                                 }
                             },
+                            "custom": false,
                             "variant": {
                                 "id": "gid://shopify/ProductVariant/44519466336564",
                                 "title": "Small case, 6 x 100ml",
@@ -210,8 +213,34 @@ describe('dfc orders', () => {
                 ]
             });
             const dfcOutput = await createBulkDfcOrderFromShopify([shopifyOrder1, shopifyOrder2], bulkIdMappings, 'test-shop');
-            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#1\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\"}},{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#666\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336564\"}},{\"@id\":\"_:b6\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"_:b7\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"_:b8\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371\",\"@type\":\"dfc-b:Order\",\"dfc-b:hasOrderStatus\":{\"@id\":\"dfc-v:Held\"},\"dfc-b:hasPart\":[{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\"}]},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#1\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b6\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#2\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b7\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712372\",\"@type\":\"dfc-b:Order\",\"dfc-b:hasOrderStatus\":{\"@id\":\"dfc-v:Complete\"},\"dfc-b:hasPart\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712372/orderLines/666\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712372/orderLines/666\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"/api/dfc/Enterprises/test-shop/offers/#666\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b8\"},\"dfc-b:quantity\":\"5\"}]}`);
+            expect(dfcOutput).toBe(`{\"@context\":\"https://www.datafoodconsortium.org\",\"@graph\":[{\"@id\":\"_:b6\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"_:b7\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:Euro\",\"dfc-b:value\":\"200.00\"},{\"@id\":\"_:b8\",\"@type\":\"dfc-b:Price\",\"dfc-b:hasUnit\":\"dfc-m:PoundSterling\",\"dfc-b:value\":\"104.56\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336563\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336564\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336564\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\",\"@type\":\"dfc-b:Offer\",\"dfc-b:offeredItem\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371\",\"@type\":\"dfc-b:Order\",\"dfc-b:hasOrderStatus\":{\"@id\":\"dfc-v:Held\"},\"dfc-b:hasPart\":[{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\"}]},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/1\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336563\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b6\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712371/orderLines/2\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336566\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b7\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712372\",\"@type\":\"dfc-b:Order\",\"dfc-b:hasOrderStatus\":{\"@id\":\"dfc-v:Complete\"},\"dfc-b:hasPart\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712372/orderLines/666\"}},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Orders/1166522712372/orderLines/666\",\"@type\":\"dfc-b:OrderLine\",\"dfc-b:concerns\":{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/Offers/44519466336564\"},\"dfc-b:hasPrice\":{\"@id\":\"_:b8\"},\"dfc-b:quantity\":\"5\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336563\",\"@type\":\"dfc-b:SuppliedProduct\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336564\",\"@type\":\"dfc-b:SuppliedProduct\"},{\"@id\":\"http://localhost:8081/api/dfc/Enterprises/test-shop/SuppliedProducts/44519466336566\",\"@type\":\"dfc-b:SuppliedProduct\"}]}`);
         });
+
+        it('Placeholder line is not exposed to DFC', async () => {
+            const orderFromShopify = shopifyOrder({
+                lineItems: [
+                    {
+                        "node": {
+                            "id": "gid://shopify/DraftOrderLineItem/58380080054579",
+                            "quantity": 5,
+                            "originalUnitPriceSet": {
+                                "shopMoney": {
+                                    "amount": "0",
+                                    "currencyCode": "GBP"
+                                }
+                            },
+                            "custom": true,
+                            "variant": null
+                        }
+                    },
+                ]
+            });
+
+            const lines = await createDfcOrderLinesFromShopify(orderFromShopify, {}, 'test-shop', '1234');
+
+            console.log(lines);
+
+        })
 
         describe("Order Status", () => {
 

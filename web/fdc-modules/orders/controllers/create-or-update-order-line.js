@@ -19,7 +19,7 @@ const createOrUpdateOrderLine = async (req, res) => {
         }
 
         const updatedLines = await orders.createUpdatedShopifyLines(shopifyOrder, orderLine);
-        const updatedShopifyDraftOrder = await orders.updateOrder(client, req.params.id, updatedLines);
+        const updatedShopifyDraftOrder = await orders.updateOrder(client, req.params.id, null, updatedLines);
         const lineItemIdMappings = await persistLineIdMappings(updatedShopifyDraftOrder)
         const dfcOrder = await createDfcOrderLineFromShopify(updatedShopifyDraftOrder, req.params.lineId, lineItemIdMappings, req.params.EnterpriseName, req.params.id);
         res.type('application/json')

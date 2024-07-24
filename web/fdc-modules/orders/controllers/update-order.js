@@ -1,11 +1,12 @@
+import loadConnectorWithResources from '../../../connector/index.js';
+import * as database from '../../../database/orders/orders.js';
+import {loadSalesSession} from '../../../database/sales_sessions/salesSessions.js';
 import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
-import { extractOrderAndLines, createDfcOrderFromShopify } from '../dfc/dfc-order.js';
-import * as shopifyOrders from './shopify/orders.js';
+import { createDfcOrderFromShopify, extractOrderAndLines } from '../dfc/dfc-order.js';
+import { persistLineIdMappings } from './lineItemMappings.js';
 import * as ids from './shopify/ids.js';
-import { persistLineIdMappings } from './lineItemMappings.js'
-import loadConnectorWithResources from '../../../connector/index.js';
-import * as database from '../../../database/orders/orders.js'
+import * as shopifyOrders from './shopify/orders.js';
 
 //todo: transaction
 const updateOrder = async (req, res) => {
@@ -25,7 +26,13 @@ const updateOrder = async (req, res) => {
             return res.status(404).send('Unable to find order');
         }
 
-        const shopifyDraftOrder = await updateShopifyDraftOrder(client, order);
+        const salesSession = await loadSalesSession(req.params.id);
+
+        if (!salesSession) {
+            return res.status(500).send('Unable to find sales session');
+        }
+
+        const shopifyDraftOrder = await updateShopifyDraftOrder(client, order, new Date(salesSession.reservationDate));
 
         const lineItemIdMappings = await persistLineIdMappings(shopifyDraftOrder)
         const dfcOrder = await createDfcOrderFromShopify(shopifyDraftOrder, lineItemIdMappings, req.params.EnterpriseName);
@@ -37,14 +44,11 @@ const updateOrder = async (req, res) => {
     }
 }
 
-async function updateShopifyDraftOrder(client, order) {
+async function updateShopifyDraftOrder(client, order, reservationDate) {
     const dfcLines = await order.getLines();
-    if (dfcLines.length < 1) {
-        throw new Error('Cannot update draft order with zero lines');
-    }
-
+ 
     const shopifyLines = (await Promise.all(dfcLines.map(shopifyOrders.dfcLineToShopifyLine))).filter(({ quantity }) => quantity > 0);
-    const shopifyDraftOrder = await shopifyOrders.updateOrder(client, ids.extract(await order.getSemanticId()), shopifyLines)
+    const shopifyDraftOrder = await shopifyOrders.updateOrder(client, ids.extract(await order.getSemanticId()), reservationDate, shopifyLines)
     const connector = await loadConnectorWithResources();
     if ((await order.getOrderStatus()) === connector.VOCABULARY.STATES.ORDERSTATE.COMPLETE) {
         const completedOrder = await shopifyOrders.completeDraftOrder(client, ids.extract(await order.getSemanticId()));

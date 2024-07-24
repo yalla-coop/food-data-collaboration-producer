@@ -14,7 +14,7 @@ export async function extractOrderLine(payload) {
     return deserialised[0];
 }
 
-export async function extractOrderAndLinesAndSalesSession(payload){
+export async function extractOrderAndLinesAndSalesSession(payload) {
     return await extract(payload, true);
 }
 
@@ -22,7 +22,7 @@ export async function extractOrderAndLines(payload) {
     return await extract(payload, false);
 }
 
- async function extract(payload, requireSalesSession) {
+async function extract(payload, requireSalesSession) {
     const connector = await loadConnectorWithResources();
 
     const deserialised = await connector.import(payload);
@@ -55,7 +55,7 @@ export async function extractOrderAndLines(payload) {
         if (saleSessions.length !== 1) {
             throw Error('Graph must contain single SalesSession');
         }
-        return {order, saleSession: saleSessions[0]};
+        return { order, saleSession: saleSessions[0] };
     }
 }
 
@@ -96,9 +96,11 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
 
 function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId) {
     const shopifyLineItems = shopifyDraftOrderResponse.lineItems.edges;
-    return shopifyLineItems.flatMap(({ node: line }) => {
-        return createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId);
-    })
+    return shopifyLineItems
+        .filter(({node}) => !node.custom)
+        .flatMap(({ node: line }) => {
+            return createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId);
+        })
 }
 
 async function createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, lineIdMappings, enterpriseName) {
@@ -127,7 +129,7 @@ export async function createDfcOrderFromShopify(shopifyDraftOrderResponse, lineI
 export async function createBulkDfcOrderFromShopify(shopifyDraftOrderResponses, lineIdMappingsByDraftId, enterpriseName) {
     const connector = await loadConnectorWithResources();
     const megaGraph = await (Promise.all(shopifyDraftOrderResponses.map(async draftOrderResponse => {
-        const lineItemIdMapping = lineIdMappingsByDraftId.find(({draftOrderId}) => draftOrderId === ids.extract(draftOrderResponse.id));
+        const lineItemIdMapping = lineIdMappingsByDraftId.find(({ draftOrderId }) => draftOrderId === ids.extract(draftOrderResponse.id));
 
         if (!lineItemIdMapping) {
             throw Error("Weird inconsistency. No stored line litems found for draft Id " + draftOrderResponse.id);

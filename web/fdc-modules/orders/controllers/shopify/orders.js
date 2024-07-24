@@ -5,6 +5,7 @@ export async function findOrder(client, orderId) {
         draftOrder(id: $id) {
             id
             status
+            reserveInventoryUntil
             order {
                 id
                 displayFulfillmentStatus
@@ -23,6 +24,7 @@ export async function findOrder(client, orderId) {
                                 currencyCode
                             }
                         }
+                        custom
                         variant {
                             id
                         }
@@ -52,6 +54,7 @@ export async function findOrders(client) {
             node {
                 id    
                 status   
+                reserveInventoryUntil
                 order {
                     id
                     displayFulfillmentStatus
@@ -70,6 +73,7 @@ export async function findOrders(client) {
                                     currencyCode
                                 }
                             }
+                            custom
                             variant {
                                 id
                             }
@@ -102,6 +106,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
           draftOrder  {
               id
               status
+              reserveInventoryUntil
               order {
                   id
                   displayFulfillmentStatus
@@ -120,6 +125,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
                           currencyCode
                       }
                     }
+                    custom
                      variant {
                          id
                          title
@@ -158,7 +164,10 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
     return response.data.draftOrderCreate.draftOrder;
 }
 
-export async function updateOrder(client, orderId, lines) {
+export async function updateOrder(client, orderId, reservationDate, lines) {
+
+    const atLeastOneLine = lines.length === 0 ? [{ title: 'placeholder', quantity: 1, originalUnitPrice: 0 }] : lines;
+
     const query = `mutation draftOrderUpdate($id: ID!, $input: DraftOrderInput!) {
         draftOrderUpdate(id: $id, input: $input) {
           userErrors {
@@ -168,6 +177,7 @@ export async function updateOrder(client, orderId, lines) {
           draftOrder  {
               id
               status
+              reserveInventoryUntil
               order {
                   id
                   displayFulfillmentStatus
@@ -186,6 +196,7 @@ export async function updateOrder(client, orderId, lines) {
                           currencyCode
                       }
                     }
+                    custom
                      variant {
                          id
                          title
@@ -201,7 +212,8 @@ export async function updateOrder(client, orderId, lines) {
         variables: {
             "id": ids.draftOrder(orderId),
             "input": {
-                "lineItems": lines,
+                "lineItems": atLeastOneLine,
+                ...(reservationDate ? {"reserveInventoryUntil": lines.length === 0 ? null : reservationDate.toISOString()} : {})
             }
         },
     });
@@ -229,6 +241,7 @@ export async function completeDraftOrder(client, orderId) {
           draftOrder {
             id
             status
+            reserveInventoryUntil
             order {
                 id
                 displayFulfillmentStatus
@@ -247,6 +260,7 @@ export async function completeDraftOrder(client, orderId) {
                             currencyCode
                         }
                     }
+                    custom
                     variant {
                         id
                         title

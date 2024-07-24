@@ -1,6 +1,5 @@
 import { createOrUpdateLineItems, getLineItems, getLineItemIdMappings, getAllLineItems } from './lineItems'
 import { pool } from '../connect';
-import { afterAll } from 'vitest';
 
 describe('lineItems', () => {
     beforeEach(async () => {
