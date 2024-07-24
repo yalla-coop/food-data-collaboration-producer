@@ -4,18 +4,23 @@ import getSession from '../../../utils/getShopifySession.js';
 import { createBulkDfcOrderFromShopify } from '../dfc/dfc-order.js';
 import { findOrders } from './shopify/orders.js';
 
-const getAllOrders = async (req, res) => { 
-    const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
-    const client = new shopify.api.clients.Graphql({ session });
+const getAllOrders = async (req, res) => {
+    try {
+        const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
+        const client = new shopify.api.clients.Graphql({ session });
 
-    const draftOrdersWithLineItemMappings = await getAllLineItems();
+        const draftOrdersWithLineItemMappings = await getAllLineItems();
 
-    const shopifyOrders = await findOrders(client);
+        const shopifyOrders = await findOrders(client);
 
-    const allDfcOrders = await createBulkDfcOrderFromShopify(shopifyOrders, draftOrdersWithLineItemMappings, req.params.EnterpriseName);
+        const allDfcOrders = await createBulkDfcOrderFromShopify(shopifyOrders, draftOrdersWithLineItemMappings, req.params.EnterpriseName);
 
-    res.type('application/json')
-    res.send(allDfcOrders);
+        res.type('application/json')
+        res.send(allDfcOrders);
+    } catch (error) {
+        console.error(error);
+        res.status(500).end();
+    }
 }
 
 export default getAllOrders
