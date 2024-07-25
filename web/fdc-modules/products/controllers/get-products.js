@@ -12,7 +12,6 @@ const getProducts = async (req, res) => {
     if (!session) {
       return res.status(401).json({ message: 'Unauthorised' });
     }
-
     const client = new shopify.api.clients.Graphql({ session });
 
     const fdcVariantsFromDB = await getFdcVariantsFromDB();
@@ -26,6 +25,10 @@ const getProducts = async (req, res) => {
       Object.keys(fdcVariantsFromDB)
     );
 
+    if (fdcProducts.length === 0) {
+      return res.status(200).json('No products found');
+    }
+
     const dfcProducts = await createDFCProductsFromShopify(
       fdcProducts,
       fdcVariantsFromDB
@@ -34,7 +37,7 @@ const getProducts = async (req, res) => {
     return res.status(200).send(dfcProducts);
   } catch (error) {
     console.error('Unable to load products', error);
-    throw new Error(error);
+    return res.status(500).json({ message: 'Unable to load products' });
   }
 };
 

@@ -5,8 +5,51 @@ import {
   indexedByProductId
 } from '../../../../database/variants/variants.js';
 
+const query = `query findProducts($ids: [ID!]!) {
+  products: nodes(ids: $ids) {
+    ... on Product {
+      id
+      tags
+      title
+      descriptionHtml
+      productType
+      status
+      images(first: 10) {
+        edges {
+          node {
+            id
+            altText
+            src
+          }
+        }
+      }
+      variants(first: 250) {
+        edges {
+          node {
+            id
+            title
+            price
+            sku
+            position
+            inventoryPolicy
+            taxable
+            inventoryQuantity
+            weight
+            image {
+              id
+              altText
+              src
+            }
+          }
+        }
+      }
+    }
+  }
+}`;
+
 export async function findFDCProducts(client, fdcVariantsFromDB) {
   const shopifyProducts = await findProductsByIds(client, fdcVariantsFromDB);
+
   const fdcProducts = shopifyProducts.filter(({ tags }) =>
     tags.includes('fdc')
   );
@@ -28,74 +71,36 @@ export async function getFdcVariantsByProductIdFromDB(productId) {
   return mappedVariantsByProductId;
 }
 
+const toFdcProduct = (product) => ({
+  ...product,
+  id: getShopifyIdSubstring(product?.id),
+  images: product?.images?.edges?.map(({ node }) => ({
+    ...node,
+    id: getShopifyIdSubstring(node.id)
+  })),
+  variants: product.variants.edges.map(({ node: variant }) => ({
+    ...variant,
+    id: getShopifyIdSubstring(variant.id),
+    image: variant.image && {
+      ...variant.image,
+      id: getShopifyIdSubstring(variant.image.id)
+    }
+  }))
+});
+
 export async function findProductsByIds(client, ids) {
-  const query = `
-    query findProducts($ids: [ID!]!) {
-      products: nodes(ids: $ids) {
-        ... on Product {
-          id
-          tags
-          title
-          description
-          bodyHtml
-          descriptionHtml
-          hasOnlyDefaultVariant
-          vendor
-          handle
-          status
-          images(first: 10) {
-            edges {
-              node {
-                id
-                altText
-                src
-              }
-            }
-          }
-          variants(first: 250) {
-            edges {
-              node {
-                id
-                title
-                price
-                sku
-                position
-                inventoryPolicy
-                taxable
-                inventoryQuantity
-                image {
-                  id
-                  altText
-                  src
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-  const response = await client.query({
-    data: {
-      query,
-      variables: { ids: ids.map((id) => `gid://shopify/Product/${id}`) }
-    }
+  const response = await client.request(query, {
+    variables: { ids: ids.map((id) => `gid://shopify/Product/${id}`) }
   });
 
   if (response.errors) {
-    console.error('Failed to load Products', JSON.stringify(response.errors));
     throw new Error('Failed to load Products');
   }
+  const products =
+    response.data.products?.filter((product) => product !== null) || [];
 
-  return response.body.data.products.map((product) => {
-    return {
-      ...product,
-      id: getShopifyIdSubstring(product.id),
-      images: product?.images?.edges?.map((edge) => edge.node),
-      variants: product.variants.edges.map(({ node }) => ({
-        ...node,
-        id: getShopifyIdSubstring(node.id)
-      }))
-    };
-  });
+  if (products.length > 0) {
+    return products.map((product) => toFdcProduct(product));
+  }
+  return [];
 }
