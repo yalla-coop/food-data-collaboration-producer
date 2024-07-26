@@ -27,14 +27,9 @@ export const getAllLineItems = async () => {
     return lineItems.reduce((accumulator, lineItem) => {
         const [lastOrder, ...others] = accumulator
         if (lastOrder?.draftOrderId === lineItem.draftOrderId) {
-            return [{draftOrderId: lineItem.draftOrderId, lineItems: {[lineItem.shopifyId]: lineItem.externalId, ...lastOrder.lineItems}}, ...others];
+            return [{draftOrderId: lineItem.draftOrderId, lineItems: [lineItem, ...lastOrder.lineItems]}, ...others];
         } else {
-            return [{draftOrderId: lineItem.draftOrderId, lineItems: {[lineItem.shopifyId]: lineItem.externalId}}, ...accumulator]
+            return [{draftOrderId: lineItem.draftOrderId, lineItems: [lineItem]}, ...accumulator]
         }
     }, []).reverse();
-}
-
-export const getLineItemIdMappings = async (orderId) => {
-    return (await getLineItems(orderId))
-        .reduce((mappings, mapping) => ({ ...mappings, [mapping.shopifyId]: mapping.externalId }), {})
 }

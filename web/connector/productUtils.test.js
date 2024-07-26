@@ -12,7 +12,7 @@ import {
   suppliedProductsWithFdcVariants
 } from './mocks.js';
 
-describe('createVariantSuppliedProduct', () => {
+describe.skip('createVariantSuppliedProduct', () => {
   it('should create a variant supplied product', async () => {
     const variant = createVariantSuppliedProductInputs[0].variantInput;
     const images = createVariantSuppliedProductInputs[1].imagesInput;

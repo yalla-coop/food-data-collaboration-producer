@@ -1,5 +1,5 @@
 export function extract(shopifyId) {
-    return shopifyId.substring(shopifyId.lastIndexOf('/') + 1);
+    return shopifyId.toString().substring(shopifyId.toString().lastIndexOf('/') + 1);
 }
 
 export function variant(id) {

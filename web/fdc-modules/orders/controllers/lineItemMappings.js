@@ -1,8 +1,7 @@
-import { createOrUpdateLineItems, getLineItemIdMappings } from '../../../database/line_items/lineItems.js'
+import { createOrUpdateLineItems, getLineItems } from '../../../database/line_items/lineItems.js'
 import * as ids from '../controllers/shopify/ids.js'
 
 export async function persistLineIdMappings(shopifyDraftOrder) {
-
     const draftOrderId = ids.extract(shopifyDraftOrder.id);
 
     const mappings = shopifyDraftOrder.lineItems.edges
@@ -13,5 +12,5 @@ export async function persistLineIdMappings(shopifyDraftOrder) {
         }));
 
     await createOrUpdateLineItems(draftOrderId, mappings);
-    return await getLineItemIdMappings(draftOrderId);
+    return await getLineItems(draftOrderId);
 }

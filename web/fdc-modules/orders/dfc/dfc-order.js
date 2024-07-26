@@ -5,13 +5,14 @@ import * as ids from '../controllers/shopify/ids.js'
 export async function extractOrderLine(payload) {
     const connector = await loadConnectorWithResources();
 
-    const deserialised = await connector.import(payload);
 
-    if (deserialised.length !== 1 || !(deserialised[0] instanceof OrderLine)) {
+    const orderLines = (await connector.import(payload)).filter(item => item instanceof OrderLine);
+
+    if (orderLines.length !== 1) {
         throw Error('Single OrderLine not present in graph');
     }
 
-    return deserialised[0];
+    return orderLines[0];
 }
 
 export async function extractOrderAndLinesAndSalesSession(payload) {
@@ -64,7 +65,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
         semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${ids.extract(line.variant.id)}`
     });
 
-    const mapping = lineIdMappings[ids.extract(line.id)];
+    const mapping = lineIdMappings.find(({shopifyId}) => shopifyId.toString() === ids.extract(line.id));
     if (!mapping) {
         throw new Error(`Need to do something here when the draft order contains a non dfc line.... ${line.id}`);
     }
@@ -87,7 +88,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
         suppliedProduct,
         offer,
         connector.createOrderLine({
-            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${mapping.toString()}`,
+            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${mapping.externalId.toString()}`,
             offer: offer,
             price: price,
             quantity: line.quantity
@@ -132,7 +133,7 @@ export async function createBulkDfcOrderFromShopify(shopifyDraftOrderResponses, 
         const lineItemIdMapping = lineIdMappingsByDraftId.find(({ draftOrderId }) => draftOrderId === ids.extract(draftOrderResponse.id));
 
         if (!lineItemIdMapping) {
-            throw Error("Weird inconsistency. No stored line litems found for draft Id " + draftOrderResponse.id);
+            return [];
         }
 
         return await createUnexportedDfcOrderFromShopify(draftOrderResponse, lineItemIdMapping.lineItems, enterpriseName)
@@ -152,11 +153,13 @@ export async function createDfcOrderLinesFromShopify(shopifyDraftOrderResponse, 
 export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, externalLineId, lineIdMappings, enterpriseName, orderId) {
     const connector = await loadConnectorWithResources();
 
-    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => lineIdMappings[ids.extract(line.id)] === externalLineId)?.node
+    const shopifyLineId = lineIdMappings.find(({externalId}) => externalId.toString() === externalLineId.toString())?.shopifyId;
 
-    if (!line) {
+    if (!shopifyLineId) {
         return null;
     }
+
+    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => ids.extract(line.id) === shopifyLineId)?.node
 
     return await connector.export(createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId));
 }

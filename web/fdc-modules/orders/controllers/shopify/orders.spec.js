@@ -1,4 +1,4 @@
-import { Offer, OrderLine } from '@datafoodconsortium/connector';
+import { Offer, OrderLine, SuppliedProduct } from '@datafoodconsortium/connector';
 import loadConnectorWithResources from '../../../../connector/index.js';
 import {createUpdatedShopifyLines} from './orders.js'
 
@@ -44,7 +44,7 @@ describe('Orders', () => {
             connector,
             semanticId: 'http://test.host/api/dfc/Enterprises/10000/Orders/10001/orderlines/10001-01',
             quantity: 7,
-            offer: new Offer({ connector, semanticId: "999" })
+            offer: new Offer({ connector, semanticId: "999", offeredItem: new SuppliedProduct({connector, semanticId: "999"}) })
         });
 
         expect(await createUpdatedShopifyLines(draftOrder, newDfcLine)).toStrictEqual([
@@ -59,7 +59,7 @@ describe('Orders', () => {
             connector,
             semanticId: 'http://test.host/api/dfc/Enterprises/10000/Orders/10001/orderlines/10001-01',
             quantity: 7,
-            offer: new Offer({ connector, semanticId: "100" })
+            offer: new Offer({ connector, semanticId: "100", offeredItem: new SuppliedProduct({connector, semanticId: "100"}) })
         });
 
         expect(await createUpdatedShopifyLines(draftOrder, updatedDfcLine)).toStrictEqual([

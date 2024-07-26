@@ -1,4 +1,4 @@
-import { createOrUpdateLineItems, getLineItems, getLineItemIdMappings, getAllLineItems } from './lineItems'
+import { createOrUpdateLineItems, getLineItems, getAllLineItems } from './lineItems'
 import { pool } from '../connect';
 
 describe('lineItems', () => {
@@ -19,8 +19,12 @@ describe('lineItems', () => {
     it('Can be updated', async () => {
         await createOrUpdateLineItems(5, [{ id: 1, variantId: 55 }, { id: 2, variantId: 67 }]);
         await createOrUpdateLineItems(5, [{ id: 3, variantId: 55 }, { id: 4, variantId: 67 }, { id: 5, variantId: 90 }]);
-        const result = await getLineItemIdMappings(5);
-        expect(result).toStrictEqual({ "3": 1, "4": 2, "5": 5 });
+        const result = await getLineItems(5);
+        expect(result).toStrictEqual([
+            { variantId: "55", externalId: 1, shopifyId: "3" },
+             { variantId: "67", externalId: 2, shopifyId: "4" },
+              { variantId: "90", externalId: 5, shopifyId: "5" }
+        ]);
     });
 
     it('Can be loaded in bulk', async () => {
@@ -28,8 +32,11 @@ describe('lineItems', () => {
         await createOrUpdateLineItems(1002, [{ id: 9003, variantId: 56 }]);
         const result = await getAllLineItems();
         expect(result).toStrictEqual([
-            { draftOrderId: "1001", lineItems: { "9000": 1, "9001": 2 } },
-            { draftOrderId: "1002", lineItems: { "9003": 3 } }
+            { draftOrderId: "1001", lineItems: [
+                { draftOrderId: "1001", externalId: 2, shopifyId: "9001", variantId: "56" },
+                { draftOrderId: "1001", externalId: 1, shopifyId: "9000", variantId: "55" }
+            ] },
+            { draftOrderId: "1002", lineItems: [{ draftOrderId: "1002", externalId: 3, shopifyId: "9003", variantId: "56" }] }
         ])
     });
 

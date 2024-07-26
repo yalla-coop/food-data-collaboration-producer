@@ -26,7 +26,7 @@ describe('lineItemMappings', () => {
             }
         };
 
-        expect(await persistLineIdMappings(draftOrder)).toStrictEqual({"665": 1});
+        expect(await persistLineIdMappings(draftOrder)).toStrictEqual([{"externalId": 1, "shopifyId": "665", "variantId": "99"}]);
     });
 
     it('Can update the line id mappings so that the external id remains stable for a variant', async () => {
@@ -60,6 +60,11 @@ describe('lineItemMappings', () => {
             }
         };
 
-        expect(await persistLineIdMappings(updatedDraftOrder)).toStrictEqual({"1234": 1, "5678": 3});
+        expect(await persistLineIdMappings(updatedDraftOrder)).toStrictEqual(
+            [
+                { "externalId": 1, "shopifyId": "1234", "variantId": "99" },
+                { "externalId": 3, "shopifyId": "5678", "variantId": "100" }
+            ]
+        );
     });
 })

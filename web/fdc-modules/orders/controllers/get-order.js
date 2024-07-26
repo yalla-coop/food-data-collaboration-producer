@@ -2,7 +2,7 @@ import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
 import { createDfcOrderFromShopify } from '../dfc/dfc-order.js';
 import { findOrder } from './shopify/orders.js';
-import { getLineItemIdMappings } from '../../../database/line_items/lineItems.js'
+import { getLineItems } from '../../../database/line_items/lineItems.js'
 
 const getOrder = async (req, res) => {
     try {
@@ -15,7 +15,7 @@ const getOrder = async (req, res) => {
             return res.status(404).send('Unable to find order');
         }
 
-        const dfcOrder = await createDfcOrderFromShopify(shopifyOrder, await getLineItemIdMappings(shopifyOrder.id), req.params.EnterpriseName);
+        const dfcOrder = await createDfcOrderFromShopify(shopifyOrder, await getLineItems(req.params.id), req.params.EnterpriseName);
         res.type('application/json')
         res.send(dfcOrder);
     } catch (error) {
