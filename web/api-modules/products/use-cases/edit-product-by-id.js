@@ -9,14 +9,11 @@ const getProductById = async (client, productId) => {
       }
     }
   `;
-  const response = await client.query({
-    data: {
-      query,
-      variables: { id: `gid://shopify/Product/${productId}` }
-    }
+  const response = await client.request(query, {
+    variables: { id: `gid://shopify/Product/${productId}` }
   });
 
-  return response.body.data.product;
+  return response.data.product;
 };
 
 const updateProductTags = async (client, productId, tags) => {
@@ -34,27 +31,24 @@ const updateProductTags = async (client, productId, tags) => {
       }
     }
   `;
-  const response = await client.query({
-    data: {
-      query: mutation,
-      variables: {
-        input: {
-          id: `gid://shopify/Product/${productId}`,
-          tags
-        }
+  const response = await client.request(mutation, {
+    variables: {
+      input: {
+        id: `gid://shopify/Product/${productId}`,
+        tags
       }
     }
   });
 
-  if (response.body.data.productUpdate.userErrors.length > 0) {
+  if (response.data.productUpdate.userErrors.length > 0) {
     console.error(
       'Failed to update product tags',
-      JSON.stringify(response.body.data.productUpdate.userErrors)
+      JSON.stringify(response.data.productUpdate.userErrors)
     );
-    throw new Error(response.body.data.productUpdate.userErrors[0].message);
+    throw new Error(response.data.productUpdate.userErrors[0].message);
   }
 
-  return response.body.data.productUpdate.product;
+  return response.data.productUpdate.product;
 };
 
 const editProductFdcTagsByProductId = async ({ client, productId }) => {

@@ -7,6 +7,11 @@ const getProducts = async (req, res) => {
     const products = await ProductUseCases.getProducts({
       session: shopifySession
     });
+
+    if (!products.length) {
+      return res.status(200).json('No products found');
+    }
+
     return res.status(200).json({
       products,
       success: true,

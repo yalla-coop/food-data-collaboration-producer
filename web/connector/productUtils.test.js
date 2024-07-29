@@ -50,7 +50,7 @@ describe.skip('createVariantSuppliedProduct', () => {
 
     const catalogItem = catalogItems[0];
     expect(catalogItem.getSku()).toBe(variant.sku);
-    expect(catalogItem.getStockLimitation()).toBe(variant.inventory_quantity);
+    expect(catalogItem.getStockLimitation()).toBe(variant.inventoryQuantity);
 
     const offers = await catalogItem.getOfferers();
     const offer = offers[0];
@@ -62,8 +62,8 @@ describe.skip('createVariantSuppliedProduct', () => {
   it('catalogue will have stock limitation -1 when inventory policy is to continue selling, regardless of inventory quantity', async () => {
     const variantWithContinueSelling = {
       ...createVariantSuppliedProductInputs[0].variantInput,
-      inventory_quantity: 1,
-      inventory_policy: 'continue'
+      inventoryQuantity: 1,
+      inventoryPolicy: 'continue'
     };
 
     const result = await createVariantSuppliedProduct(
@@ -97,7 +97,7 @@ describe('createSuppliedProducts', () => {
     );
 
     expect(result[0].getImages()).toEqual([
-      suppliedProductsWithFdcVariants[0].image.src
+      suppliedProductsWithFdcVariants[0].images[0].src
     ]);
 
     expect(result[1].getSemanticId()).toBe(semanticIdProductTwo);

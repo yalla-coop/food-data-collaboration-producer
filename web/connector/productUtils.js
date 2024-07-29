@@ -39,7 +39,7 @@ const createCatalogItem = (
   });
 
 // creates a variant supplied product with quantity and price
-async function createVariantSuppliedProduct(parentProduct, variant, images) {
+async function createVariantSuppliedProduct(parentProduct, variant) {
   try {
     const connector = await loadConnectorWithResources();
     const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
@@ -56,7 +56,7 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
     const price = createPrice(connector, variant.price, euro, hasVat);
     const offer = createOffer(connector, semanticBase, price);
     const inventoryQuantity =
-      variant.inventory_policy === 'continue' ? -1 : variant.inventory_quantity;
+      variant.inventoryPolicy === 'continue' ? -1 : variant.inventoryQuantity;
     const catalogItem = createCatalogItem(
       connector,
       semanticBase,
@@ -71,27 +71,18 @@ async function createVariantSuppliedProduct(parentProduct, variant, images) {
       connector,
       semanticId: semanticBase,
       name: parentProduct.title + ' - ' + variant.title,
-      description: parentProduct.body_html,
+      description: parentProduct.descriptionHtml,
       quantity,
       catalogItems: [catalogItem],
-      productType: productTypes[parentProduct.product_type] ?? null
+      productType: productTypes[parentProduct.productType] ?? null
     });
 
-    if (
-      parentProduct.image &&
-      parentProduct.image.src &&
-      parentProduct.image.product_id &&
-      parentProduct.image.product_id === parentProduct.id
-    ) {
-      suppliedProduct.addImage(parentProduct.image.src);
-    }
-
-    if (Array.isArray(images) && images.length > 0 && variant.image_id) {
-      const variantImage = images.find((img) => img.id === variant.image_id);
-
-      if (variantImage && variantImage.src) {
-        suppliedProduct.addImage(variantImage.src);
-      }
+    // add variant image or first image in array of product images if no variant image is found
+    if (parentProduct.images && parentProduct.images.length > 0) {
+      suppliedProduct.addImage(
+        parentProduct.images.find((img) => img?.id === variant?.image?.id)
+          ?.src ?? parentProduct.images[0]?.src
+      );
     }
 
     return [suppliedProduct, offer, catalogItem];
@@ -129,6 +120,7 @@ const createVariants = async (shopifyProduct, variantMapping) => {
   const retailVariant = shopifyProduct.variants.find(
     ({ id }) => id == retailVariantId
   );
+
   const wholesaleVariant = shopifyProduct.variants.find(
     ({ id }) => id == wholesaleVariantId
   );
@@ -141,17 +133,9 @@ const createVariants = async (shopifyProduct, variantMapping) => {
   }
 
   const [retailSuppliedProduct, ...retailOthers] =
-    await createVariantSuppliedProduct(
-      shopifyProduct,
-      retailVariant,
-      shopifyProduct.images
-    );
+    await createVariantSuppliedProduct(shopifyProduct, retailVariant);
   const [wholesaleSuppliedProduct, ...wholesaleOthers] =
-    await createVariantSuppliedProduct(
-      shopifyProduct,
-      wholesaleVariant,
-      shopifyProduct.images
-    );
+    await createVariantSuppliedProduct(shopifyProduct, wholesaleVariant);
 
   const connector = await loadConnectorWithResources();
 

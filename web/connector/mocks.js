@@ -4,38 +4,41 @@ export const suppliedProductsWithFdcVariants = [
     tags: ['fdc'],
     title: 'Baked British Beans',
     description: 'Testing this product',
-    body_html: 'Testing this product',
-    image: {
-      id: '44001459765400',
-      product_id: '9932577997073',
-      src: 'https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031'
-    },
+    descriptionHtml: 'Testing this product',
+    handle: 'baked-british-beans',
+    status: 'ACTIVE',
+    images: [
+      {
+        id: '44001459765400',
+        altText: 'Baked British Beans',
+        src: 'https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031'
+      }
+    ],
 
     variants: [
       {
         id: '49889697366289',
         title: 'Retail bottle, 40ml',
-        images: [
-          {
-            id: '44001459765400',
-            src: 'https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031'
-          }
-        ]
+        image: {
+          id: '44001459765400',
+          altText: 'Baked British Beans',
+          src: 'https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031'
+        }
       },
       {
         id: '49889697399057',
         title: 'Case, 6 x 40ml',
-        images: []
+        image: null
       },
       {
         id: '49889697431825',
         title: 'Retail bottle, 100ml',
-        images: []
+        image: null
       },
       {
         id: '49889697464593',
         title: 'Small case, 6 x 100ml',
-        images: []
+        image: null
       }
     ],
     fdcVariants: [
@@ -63,8 +66,8 @@ export const createSuppliedProductInput = {
   handle: 'test-handle',
   image: { id: 456, src: 'test-image-src', product_id: 123 },
   title: 'Test Product',
-  body_html: 'Test description',
-  product_type: 'Cans'
+  descriptionHtml: 'Test description',
+  productType: 'Cans'
 };
 
 export const createVariantSuppliedProductInputs = [
@@ -80,8 +83,8 @@ export const createVariantSuppliedProductInputs = [
       weight: 0.5,
       weight_unit: 'kg',
       inventory_item_id: 45401870631064,
-      inventory_quantity: 224,
-      inventory_policy: 'deny',
+      inventoryQuantity: 224,
+      inventoryPolicy: 'deny',
       tracked: true
     }
   },
@@ -89,7 +92,7 @@ export const createVariantSuppliedProductInputs = [
     imagesInput: [
       {
         id: 44001459798168,
-        alt: 'Retail pack, 300g',
+        altText: 'Retail pack, 300g',
         product_id: 7898317750424,
         src: 'https://cdn.shopify.com/s/files/1/0587/9735/9256/products/37-cammalina-fron.jpg?v=1706882031',
         variant_ids: [43305180201112]
@@ -102,10 +105,10 @@ export const createSuppliedProductsInput = [
   {
     id: 7898317750424,
     title: 'Camelina Seed',
-    body_html:
+    descriptionHtml:
       '<p><strong>Camelina, also known as Gold of Pleasure, has been grown in England for thousands of years for its tasty seeds and oil. Sprinkle on salads, use in baking, add to smoothies, or use as a vegan egg replacement. </strong></p>\n<!-- split --><h3>Complete Product Details</h3><p>Sprinkle on salads, add to smoothies, use in baking.</p>\n<h5 class="product-detail-title">Cooking instructions</h5>\n<p>Soak 1 tablespoon of seeds in 3 tablespoons of warm water for 30 minutes to replace one egg in vegan baking.</p>\n<h5 class="product-detail-title">Ingredients</h5>\n<p>Camelina seeds</p>\n<h5 class="product-detail-title">Allergy information</h5>\n<p>No Allergens</p>\n<table width="100%">\n<tbody>\n<tr>\n<td><strong>Typical values</strong></td>\n<td><strong>Per 100g</strong></td>\n</tr>\n<tr>\n<td>Energy</td>\n<td>1439kJ (346kcal)</td>\n</tr>\n<tr>\n<td>Fat</td>\n<td>12.1g</td>\n</tr>\n<tr>\n<td>of which saturates</td>\n<td>1.7g</td>\n</tr>\n<tr>\n<td>Carbohydrate</td>\n<td>16.4g</td>\n</tr>\n<tr>\n<td>of which sugars</td>\n<td>1.2g</td>\n</tr>\n<tr>\n<td>Fibre</td>\n<td>35.1g</td>\n</tr>\n<tr>\n<td>Protein</td>\n<td>25.4g</td>\n</tr>\n<tr>\n<td>Salt</td>\n<td>0g</td>\n</tr>\n</tbody>\n</table><p>Camelina Seeds are high in protein, a good source of Omega 3 oils and rich in antioxidants such as vitamin E</p><h5 class="product-detail-title">More</h5>\n<p>Grown by Peter Fairs in Essex and Andy Howard in Kent.</p>',
     vendor: 'hassanstroe',
-    product_type: '',
+    productType: '',
     created_at: '2024-02-02T15:53:51+02:00',
     handle: 'camelina-seed-trade',
     updated_at: '2024-02-02T16:48:22+02:00',
@@ -123,10 +126,10 @@ export const createSuppliedProductsInput = [
         price: '2.49',
         sku: '',
         position: 1,
-        inventory_policy: 'deny',
+        inventoryPolicy: 'deny',
         compare_at_price: null,
-        fulfillment_service: 'manual',
-        inventory_management: 'shopify',
+        fulfillmentService: 'manual',
+        inventoryManagement: 'shopify',
         option1: 'Retail pack, 300g',
         option2: null,
         option3: null,
@@ -139,8 +142,8 @@ export const createSuppliedProductsInput = [
         weight: 0,
         weight_unit: 'kg',
         inventory_item_id: 45401870631064,
-        inventory_quantity: -224,
-        old_inventory_quantity: -224,
+        inventoryQuantity: -224,
+        oldInventoryQuantity: -224,
         requires_shipping: true,
         admin_graphql_api_id: 'gid://shopify/ProductVariant/43305180201112'
       }
@@ -157,7 +160,7 @@ export const createSuppliedProductsInput = [
     images: [
       {
         id: 44001459765400,
-        alt: 'Camelina Seed',
+        altText: 'Camelina Seed',
         position: 1,
         product_id: 7898317750424,
         created_at: '2024-02-02T15:53:51+02:00',
@@ -170,7 +173,7 @@ export const createSuppliedProductsInput = [
       },
       {
         id: 44001459798168,
-        alt: 'Retail pack, 300g',
+        altText: 'Retail pack, 300g',
         position: 2,
         product_id: 7898317750424,
         created_at: '2024-02-02T15:53:51+02:00',
@@ -184,7 +187,7 @@ export const createSuppliedProductsInput = [
     ],
     image: {
       id: 44001459765400,
-      alt: 'Camelina Seed',
+      altText: 'Camelina Seed',
       position: 1,
       product_id: 7898317750424,
       created_at: '2024-02-02T15:53:51+02:00',
@@ -198,4 +201,5 @@ export const createSuppliedProductsInput = [
   }
 ];
 
-export const exportSuppliedProductsJSONLD = `{"@context":"https://www.datafoodconsortium.org","@graph":[{"@id":"_:b13","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Kilogram"},{"@id":"_:b14","@type":"dfc-b:Price","dfc-b:VATrate":"0","dfc-b:hasUnit":"dfc-m:Euro"},{"@id":"_:b15","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Kilogram"},{"@id":"_:b16","@type":"dfc-b:Price","dfc-b:VATrate":"0","dfc-b:hasUnit":"dfc-m:Euro"},{"@id":"_:b17","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Piece","dfc-b:value":"6"},{"@id":"_:b18","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Piece","dfc-b:value":"1"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289","@type":"dfc-b:SuppliedProduct","dfc-b:description":"Testing this product","dfc-b:hasQuantity":"_:b13","dfc-b:image":"https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031","dfc-b:name":"Baked British Beans - Retail bottle, 40ml","dfc-b:referencedBy":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/CatalogItem"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedConsumptionFlow","@type":"dfc-b:AsPlannedConsumptionFlow","dfc-b:consumes":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289","dfc-b:hasQuantity":"_:b17"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedProductionFlow","@type":"dfc-b:AsPlannedProductionFlow","dfc-b:hasQuantity":"_:b18","dfc-b:produces":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedTransformation","@type":"dfc-b:AsPlannedTransformation","dfc-b:hasIncome":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedConsumptionFlow","dfc-b:hasOutcome":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedProductionFlow"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/CatalogItem","@type":"dfc-b:CatalogItem","dfc-b:offeredThrough":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/Offer"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/Offer","@type":"dfc-b:Offer","dfc-b:hasPrice":{"@id":"_:b14"}},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057","@type":"dfc-b:SuppliedProduct","dfc-b:description":"Testing this product","dfc-b:hasQuantity":"_:b15","dfc-b:image":"https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031","dfc-b:name":"Baked British Beans - Case, 6 x 40ml","dfc-b:referencedBy":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/CatalogItem"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/CatalogItem","@type":"dfc-b:CatalogItem","dfc-b:offeredThrough":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/Offer"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/Offer","@type":"dfc-b:Offer","dfc-b:hasPrice":{"@id":"_:b16"}}]}`;
+export const exportSuppliedProductsJSONLD =
+  '{"@context":"https://www.datafoodconsortium.org","@graph":[{"@id":"_:b13","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Kilogram"},{"@id":"_:b14","@type":"dfc-b:Price","dfc-b:VATrate":"0","dfc-b:hasUnit":"dfc-m:Euro"},{"@id":"_:b15","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Kilogram"},{"@id":"_:b16","@type":"dfc-b:Price","dfc-b:VATrate":"0","dfc-b:hasUnit":"dfc-m:Euro"},{"@id":"_:b17","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Piece","dfc-b:value":"6"},{"@id":"_:b18","@type":"dfc-b:QuantitativeValue","dfc-b:hasUnit":"dfc-m:Piece","dfc-b:value":"1"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289","@type":"dfc-b:SuppliedProduct","dfc-b:hasQuantity":"_:b13","dfc-b:image":"https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031","dfc-b:name":"Baked British Beans - Retail bottle, 40ml","dfc-b:referencedBy":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/CatalogItem"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedConsumptionFlow","@type":"dfc-b:AsPlannedConsumptionFlow","dfc-b:consumes":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289","dfc-b:hasQuantity":"_:b17"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedProductionFlow","@type":"dfc-b:AsPlannedProductionFlow","dfc-b:hasQuantity":"_:b18","dfc-b:produces":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedTransformation","@type":"dfc-b:AsPlannedTransformation","dfc-b:hasIncome":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedConsumptionFlow","dfc-b:hasOutcome":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/AsPlannedProductionFlow"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/CatalogItem","@type":"dfc-b:CatalogItem","dfc-b:offeredThrough":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/Offer"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697366289/Offer","@type":"dfc-b:Offer","dfc-b:hasPrice":{"@id":"_:b14"}},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057","@type":"dfc-b:SuppliedProduct","dfc-b:hasQuantity":"_:b15","dfc-b:image":"https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031","dfc-b:name":"Baked British Beans - Case, 6 x 40ml","dfc-b:referencedBy":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/CatalogItem"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/CatalogItem","@type":"dfc-b:CatalogItem","dfc-b:offeredThrough":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/Offer"},{"@id":"http://localhost:36329/api/dfc/Enterprises/fdc-producer/SuppliedProducts/49889697399057/Offer","@type":"dfc-b:Offer","dfc-b:hasPrice":{"@id":"_:b16"}}]}';

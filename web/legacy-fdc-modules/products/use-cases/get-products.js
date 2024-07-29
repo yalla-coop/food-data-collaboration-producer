@@ -41,11 +41,8 @@ const getProductsByIds = async (client, ids) => {
       }
     }
   `;
-  const response = await client.query({
-    data: {
-      query,
-      variables: { ids: ids.map((id) => `gid://shopify/Product/${id}`) }
-    }
+  const response = await client.request(query, {
+    variables: { ids: ids.map((id) => `gid://shopify/Product/${id}`) }
   });
 
   if (response.errors) {
@@ -53,7 +50,7 @@ const getProductsByIds = async (client, ids) => {
     throw new Error('Failed to load Products');
   }
 
-  return response.body.data.products.map((product) => ({
+  return response.data.products.map((product) => ({
     ...product,
     id: getShopifyIdSubstring(product.id),
     variants: product.variants.edges.map(({ node }) => ({
