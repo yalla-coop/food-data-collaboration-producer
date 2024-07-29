@@ -2,6 +2,10 @@ import { defineConfig } from 'vite';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import react from '@vitejs/plugin-react';
+import dotenv from 'dotenv'
+import { join } from 'path';
+
+dotenv.config({ path: join(process.cwd(), '../.env') });
 
 if (
   process.env.npm_lifecycle_event === 'build' &&
@@ -45,7 +49,8 @@ export default defineConfig({
   root: dirname(fileURLToPath(import.meta.url)),
   plugins: [react()],
   define: {
-    'process.env.SHOPIFY_API_KEY': JSON.stringify(process.env.SHOPIFY_API_KEY)
+    'process.env.SHOPIFY_API_KEY': JSON.stringify(process.env.SHOPIFY_API_KEY),
+    'process.env.VARIANT_MAPPINGS': JSON.stringify(process.env.VARIANT_MAPPINGS)
   },
   resolve: {
     preserveSymlinks: true

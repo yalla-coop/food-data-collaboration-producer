@@ -1,6 +1,7 @@
 import loadConnectorWithResources from '../../../connector/index.js';
 import { OrderLine, Order, SaleSession } from '@datafoodconsortium/connector';
 import * as ids from '../controllers/shopify/ids.js'
+import config from '../../../config.js';
 
 export async function extractOrderLine(payload) {
     const connector = await loadConnectorWithResources();
@@ -62,7 +63,7 @@ async function extract(payload, requireSalesSession) {
 
 function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId) {
     const suppliedProduct = connector.createSuppliedProduct({
-        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${ids.extract(line.variant.id)}`
+        semanticId: `${config.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${ids.extract(line.variant.id)}`
     });
 
     const mapping = lineIdMappings.find(({shopifyId}) => shopifyId.toString() === ids.extract(line.id));
@@ -70,7 +71,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
         throw new Error(`Need to do something here when the draft order contains a non dfc line.... ${line.id}`);
     }
 
-    const madeUpIdForTheOfferSoTheConnectorWorks = `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Offers/${ids.extract(line.variant.id)}`
+    const madeUpIdForTheOfferSoTheConnectorWorks = `${config.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Offers/${ids.extract(line.variant.id)}`
 
     const offer = connector.createOffer({
         semanticId: madeUpIdForTheOfferSoTheConnectorWorks,
@@ -88,7 +89,7 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
         suppliedProduct,
         offer,
         connector.createOrderLine({
-            semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${mapping.externalId.toString()}`,
+            semanticId: `${config.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}/orderLines/${mapping.externalId.toString()}`,
             offer: offer,
             price: price,
             quantity: line.quantity
@@ -112,7 +113,7 @@ async function createUnexportedDfcOrderFromShopify(shopifyDraftOrderResponse, li
     const dfcOrderLinesGraph = createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId);
 
     const order = connector.createOrder({
-        semanticId: `${process.env.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}`,
+        semanticId: `${config.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/Orders/${orderId}`,
         lines: dfcOrderLinesGraph.filter((item) => item instanceof OrderLine),
         orderStatus: orderStatusFor(connector, shopifyDraftOrderResponse.status),
         fulfilmentStatus: fulfilmentStatusFor(connector, shopifyDraftOrderResponse.order)

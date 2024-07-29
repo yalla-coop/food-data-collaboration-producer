@@ -2,42 +2,37 @@ import {
   createSuppliedProducts,
   createVariantSuppliedProduct,
   exportSuppliedProducts,
-  semanticIdPrefix
 } from './productUtils';
 
 import {
   createSuppliedProductsInput,
-  createVariantSuppliedProductInputs,
   exportSuppliedProductsJSONLD,
-  suppliedProductsWithFdcVariants
+  suppliedProductsWithMappedFdcVariants,
+  suppliedProductsWithUnmappedFdcVariants
 } from './mocks.js';
+import { SuppliedProduct } from '@datafoodconsortium/connector';
 
-describe.skip('createVariantSuppliedProduct', () => {
+describe('createVariantSuppliedProduct', () => {
   it('should create a variant supplied product', async () => {
-    const variant = createVariantSuppliedProductInputs[0].variantInput;
-    const images = createVariantSuppliedProductInputs[1].imagesInput;
-
     const result = await createVariantSuppliedProduct(
       createSuppliedProductsInput[0],
-      variant,
-      images
+      createSuppliedProductsInput[0].variants[0],
+      'producer-shop'
     );
 
     expect(result).toBeInstanceOf(Array);
     expect(result).toHaveLength(3);
     expect(result[0].getSemanticId()).toBe(
-      `${semanticIdPrefix}SuppliedProducts/43305180201112`
+      `http://localhost:3629/api/dfc/Enterprises/producer-shop/SuppliedProducts/43305180201112`
     );
     expect(result[0].getName()).toBe('Camelina Seed - Retail pack, 300g');
-    expect(result[0].getImages()).toEqual(
-      createSuppliedProductsInput[0].images.map(({ src }) => src)
-    );
+    expect(result[0].getImages()).toEqual(['https://cdn.shopify.com/s/files/1/0587/9735/9256/products/37-cammalina-fron.jpg?v=1706882031']);
 
     expect(result[1].getSemanticId()).toBe(
-      `${semanticIdPrefix}SuppliedProducts/43305180201112/Offer`
+      `http://localhost:3629/api/dfc/Enterprises/producer-shop/SuppliedProducts/43305180201112/Offer`
     );
     expect(result[2].getSemanticId()).toBe(
-      `${semanticIdPrefix}SuppliedProducts/43305180201112/CatalogItem`
+      `http://localhost:3629/api/dfc/Enterprises/producer-shop/SuppliedProducts/43305180201112/CatalogItem`
     );
 
     const [quantity, catalogItems] = await Promise.all([
@@ -45,23 +40,23 @@ describe.skip('createVariantSuppliedProduct', () => {
       result[0].getCatalogItems()
     ]);
 
-    expect(await quantity.getQuantityValue()).toBe(variant.weight);
+    expect(await quantity.getQuantityValue()).toBe(0.5);
     expect(await quantity.getQuantityUnit()).toBeDefined();
 
     const catalogItem = catalogItems[0];
-    expect(catalogItem.getSku()).toBe(variant.sku);
-    expect(catalogItem.getStockLimitation()).toBe(variant.inventoryQuantity);
+    expect(catalogItem.getSku()).toBe('12345');
+    expect(catalogItem.getStockLimitation()).toBe(-224);
 
     const offers = await catalogItem.getOfferers();
     const offer = offers[0];
     const price = await offer.getPrice();
-    expect(price.getQuantityValue()).toBe(Number(variant.price));
-    expect(price.getVatRate()).toBe(variant.taxable ? 1.0 : 0.0);
+    expect(price.getQuantityValue()).toBe(2.49);
+    expect(price.getVatRate()).toBe(1.0);
   });
 
   it('catalogue will have stock limitation -1 when inventory policy is to continue selling, regardless of inventory quantity', async () => {
     const variantWithContinueSelling = {
-      ...createVariantSuppliedProductInputs[0].variantInput,
+      ...createSuppliedProductsInput[0].variants[0],
       inventoryQuantity: 1,
       inventoryPolicy: 'continue'
     };
@@ -69,7 +64,7 @@ describe.skip('createVariantSuppliedProduct', () => {
     const result = await createVariantSuppliedProduct(
       createSuppliedProductsInput[0],
       variantWithContinueSelling,
-      createVariantSuppliedProductInputs[1].imagesInput
+      'producer-shop'
     );
     const catalogItems = await result[0].getCatalogItems();
 
@@ -79,12 +74,13 @@ describe.skip('createVariantSuppliedProduct', () => {
 });
 
 describe('createSuppliedProducts', () => {
-  it('should create suppliedProducts from shopify Products and their Variants', async () => {
-    const semanticIdProductOne = `${semanticIdPrefix}SuppliedProducts/${suppliedProductsWithFdcVariants[0].variants[0].id}`;
-    const semanticIdProductTwo = `${semanticIdPrefix}SuppliedProducts/${suppliedProductsWithFdcVariants[0].variants[1].id}`;
+  it('should create mapped suppliedProducts from shopify Products and their Variants', async () => {
+    const semanticIdProductOne = `http://localhost:3629/api/dfc/Enterprises/producer-shop/SuppliedProducts/${suppliedProductsWithMappedFdcVariants[0].variants[0].id}`;
+    const semanticIdProductTwo = `http://localhost:3629/api/dfc/Enterprises/producer-shop/SuppliedProducts/${suppliedProductsWithMappedFdcVariants[0].variants[1].id}`;
 
     const result = await createSuppliedProducts(
-      suppliedProductsWithFdcVariants
+      suppliedProductsWithMappedFdcVariants,
+      'producer-shop'
     );
 
     expect(result).toBeInstanceOf(Array);
@@ -92,12 +88,10 @@ describe('createSuppliedProducts', () => {
     expect(result[0].getName()).toBe(
       'Baked British Beans - Retail bottle, 40ml'
     );
-    expect(result[0].getDescription()).toBe(
-      suppliedProductsWithFdcVariants[0].body_html
-    );
+    expect(result[0].getDescription()).toBe('Testing this product HTML');
 
     expect(result[0].getImages()).toEqual([
-      suppliedProductsWithFdcVariants[0].images[0].src
+      'https://cdn.shopify.com/s/files/1/0587/9735/9256/products/Cameilna-Seeds-1800x1200_8c00a108-d8f7-4920-9bac-758a2c6a8b56.jpg?v=1706882031'
     ]);
 
     expect(result[1].getSemanticId()).toBe(semanticIdProductTwo);
@@ -121,12 +115,30 @@ describe('createSuppliedProducts', () => {
       semanticIdProductOne + '/AsPlannedTransformation'
     );
   });
+
+  it('should create unmapped suppliedProducts from shopify Products and their Variants', async () => {
+    const result = await createSuppliedProducts(
+      suppliedProductsWithUnmappedFdcVariants,
+      'producer-shop'
+    );
+
+    const suppliedProducts = result.filter(item => item instanceof SuppliedProduct);
+
+    expect(suppliedProducts).toHaveLength(2);
+    
+    expect(suppliedProducts[0].getSemanticId()).toBe('http://localhost:3629/api/dfc/Enterprises/producer-shop/SuppliedProducts/49889697366289');
+    expect(suppliedProducts[0].getName()).toBe('Baked British Beans - Retail bottle, 40ml');
+
+    expect(suppliedProducts[1].getSemanticId()).toBe('http://localhost:3629/api/dfc/Enterprises/producer-shop/SuppliedProducts/49889697399057');
+    expect(suppliedProducts[1].getName()).toBe('Baked British Beans - Case, 6 x 40ml');
+  });
 });
 
 describe('exportSuppliedProducts', () => {
   it('should export the created suppliedProducts, catalogItems, Offers etc. as JSON-LD', async () => {
     const result = await exportSuppliedProducts(
-      suppliedProductsWithFdcVariants
+      suppliedProductsWithMappedFdcVariants,
+      'fdc-producer'
     );
     expect(result).toEqual(exportSuppliedProductsJSONLD);
   });

@@ -38,7 +38,6 @@ export default function HomePage() {
           textAlign: 'center'
         }}
       >
-        {' '}
         Select a product to make it an FDC product.
       </p>
       <Stack spacing="12px" px="60px" py="12px">

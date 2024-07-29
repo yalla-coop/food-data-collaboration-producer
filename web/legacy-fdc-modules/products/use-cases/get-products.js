@@ -10,6 +10,7 @@ import {
   indexedByProductId
 } from '../../../database/variants/variants.js';
 import { getShopifyIdSubstring } from '../../../database/utils/get-shopify-id-substring.js';
+import config from '../../../config.js';
 
 const PAGE_SIZE = 250;
 const getProductsByIds = async (client, ids) => {
@@ -98,7 +99,8 @@ const getProducts = async ({
     const lastId = variants[variants.length - 1]?.productId;
 
     const exportedDFCProducts = await exportSuppliedProducts(
-      addVariantsToProducts(fdcProducts, mappedVariantsByProductId)
+      addVariantsToProducts(fdcProducts, mappedVariantsByProductId),
+      config.PRODUCER_SHOP_NAME
     );
 
     return {

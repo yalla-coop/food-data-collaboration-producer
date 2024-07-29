@@ -2,6 +2,7 @@ import { exportSuppliedProducts } from '../../../connector/productUtils.js';
 import shopify from '../../../shopify.js';
 import { getAndAddVariantsToProducts } from '../../../database/variants/variants.js';
 import { query } from '../../../database/connect.js';
+import config from '../../../config.js';
 
 const getProductsByIds = async (req, res) => {
   const { body } = req;
@@ -41,7 +42,7 @@ const getProductsByIds = async (req, res) => {
 
     const fdcProducts = products.filter(({ tags }) => tags.includes('fdc'));
 
-    const exportedDFCProducts = await exportSuppliedProducts((await getAndAddVariantsToProducts(fdcProducts)));
+    const exportedDFCProducts = await exportSuppliedProducts((await getAndAddVariantsToProducts(fdcProducts)), config.PRODUCER_SHOP_NAME);
 
     return res.status(200).json({
       products: exportedDFCProducts,

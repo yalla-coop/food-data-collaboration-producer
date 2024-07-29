@@ -11,8 +11,11 @@ const schema = yup.object().shape({
   SHOPIFY_ACCESS_TOKEN: yup.string(),
   OIDC_CLIENT_ID: yup.string(),
   OIDC_CLIENT_SECRET: yup.string(),
-  HOST: yup.string()
+  HOST: yup.string(),
+  PRODUCER_SHOP_URL: yup.string(),
+  PRODUCER_SHOP_NAME: yup.string()
 });
+
 
 const createConfig = () => {
   let envVars;
@@ -31,7 +34,9 @@ const createConfig = () => {
     SHOPIFY_ACCESS_TOKEN: envVars.SHOPIFY_ACCESS_TOKEN,
     HOST: envVars.HOST,
     OIDC_CLIENT_ID: envVars.OIDC_CLIENT_ID,
-    OIDC_CLIENT_SECRET: envVars.OIDC_CLIENT_SECRET
+    OIDC_CLIENT_SECRET: envVars.OIDC_CLIENT_SECRET,
+    PRODUCER_SHOP_URL: envVars.PRODUCER_SHOP_URL,
+    PRODUCER_SHOP_NAME: envVars.PRODUCER_SHOP_NAME
   };
 };
 

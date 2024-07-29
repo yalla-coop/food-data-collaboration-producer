@@ -35,3 +35,7 @@ CREATE TRIGGER set_timestamp BEFORE
 UPDATE ON "sales_sessions" FOR EACH ROW EXECUTE PROCEDURE trigger_set_timestamp();
 COMMIT;
 
+
+ALTER TABLE fdc_variants
+    ALTER COLUMN wholesale_variant_id DROP NOT NULL,
+    ALTER COLUMN no_of_items_per_package DROP NOT NULL
