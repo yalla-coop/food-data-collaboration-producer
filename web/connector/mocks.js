@@ -1,7 +1,6 @@
 export const suppliedProductsWithMappedFdcVariants = [
   {
     id: '9932577997073',
-    tags: ['fdc'],
     title: 'Baked British Beans',
     description: 'Testing this product',
     descriptionHtml: 'Testing this product HTML',
@@ -95,7 +94,6 @@ export const createSuppliedProductsInput = [
     published_at: '2024-02-02T15:53:51+02:00',
     template_suffix: null,
     published_scope: 'web',
-    tags: '',
     status: 'active',
     admin_graphql_api_id: 'gid://shopify/Product/7898317750424',
     variants: [

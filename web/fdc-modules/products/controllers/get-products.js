@@ -25,10 +25,6 @@ const getProducts = async (req, res) => {
       Object.keys(fdcVariantsFromDB)
     );
 
-    if (fdcProducts.length === 0) {
-      return res.status(200).json('No products found');
-    }
-
     const dfcProducts = await createDFCProductsFromShopify(
       fdcProducts,
       fdcVariantsFromDB

@@ -13,7 +13,8 @@ const schema = yup.object().shape({
   OIDC_CLIENT_SECRET: yup.string(),
   HOST: yup.string(),
   PRODUCER_SHOP_URL: yup.string(),
-  PRODUCER_SHOP_NAME: yup.string()
+  PRODUCER_SHOP_NAME: yup.string(),
+  NODE_ENV: yup.string(),
 });
 
 
@@ -36,7 +37,8 @@ const createConfig = () => {
     OIDC_CLIENT_ID: envVars.OIDC_CLIENT_ID,
     OIDC_CLIENT_SECRET: envVars.OIDC_CLIENT_SECRET,
     PRODUCER_SHOP_URL: envVars.PRODUCER_SHOP_URL,
-    PRODUCER_SHOP_NAME: envVars.PRODUCER_SHOP_NAME
+    PRODUCER_SHOP_NAME: envVars.PRODUCER_SHOP_NAME,
+    NODE_ENV: envVars.NODE_ENV,
   };
 };
 

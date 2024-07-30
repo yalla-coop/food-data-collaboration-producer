@@ -2,22 +2,18 @@
 /* eslint-disable no-underscore-dangle */
 import pg from 'pg';
 import fs from 'fs';
-import dotenv from 'dotenv';
 import {
   toCamelCase,
   toParentChild,
   sanitizeCSVInjection
 } from './utils/index.js';
 
-dotenv.config({
-  path: process.cwd() + '/web/.env'
-});
+import config from '../config.js';
 
 const { Pool } = pg;
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = config.DATABASE_URL;
 
-const env = process.env.NODE_ENV;
 // eslint-disable-next-line prefer-regex-literals
 const isInsertOrUpdateRegex = new RegExp(/(UPDATE(.|\n)*SET)|(INSERT INTO)/i);
 
@@ -25,18 +21,16 @@ const isInsertOrUpdateRegex = new RegExp(/(UPDATE(.|\n)*SET)|(INSERT INTO)/i);
 // ssl: { rejectUnauthorized: false }
 // to the below object
 // eslint-disable-next-line no-underscore-dangle
-let __pool;
-if (env !== 'production' || connectionString.includes('localhost')) {
-  __pool = new Pool({ max: 20, connectionString });
-} else {
-  __pool = new Pool({
-    max: 20,
-    connectionString,
-    ssl: { rejectUnauthorized: false, require: true }
-  });
+
+if (!connectionString) {
+  throw new Error("Environment variable DATABASE_URL must be set");
 }
 
-const pool = __pool;
+const pool = new Pool({
+  max: 20,
+  connectionString,
+  ssl: { rejectUnauthorized: false, require: true }
+});
 
 // Do not use pool.query if you need transactional integrity
 // check out a client from the pool to run several queries in a row in a transaction

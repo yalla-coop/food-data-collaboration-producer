@@ -16,6 +16,10 @@ async function variantCount() {
   );
 }
 
+async function toggleVariantMappingStatus(variantId) {
+  return (await query(`UPDATE fdc_variants SET enabled = NOT enabled WHERE id = $1 RETURNING *`, [variantId]))?.rows[0];
+}
+
 async function getPagedVariants(lastId, limit) {
   return (
     await query(
@@ -37,18 +41,24 @@ function indexedByProductId(variants) {
   }, {});
 }
 
-async function getAndAddVariantsToProducts(products) {
-  return addVariantsToProducts(
+async function combineFdcProductsWithTheirFdcConfiguration(products) {
+  return addFdcConfigurationToFdcProducts(
     products,
     indexedByProductId(await getVariants())
   );
 }
 
-function addVariantsToProducts(products, variantsByProductId) {
-  return products.map((product) => ({
-    ...product,
-    fdcVariants: variantsByProductId[product.id] || []
-  }));
+function addFdcConfigurationToFdcProducts(products, variantsByProductId) {
+  return products.flatMap((product) => {
+    if (variantsByProductId[product.id]) {
+      return [{
+        ...product,
+        fdcVariants: variantsByProductId[product.id] 
+      }];
+    } else {
+      return [];
+    }
+  });
 }
 
 export {
@@ -57,6 +67,7 @@ export {
   getPagedVariants,
   indexedByProductId,
   variantCount,
-  getAndAddVariantsToProducts,
-  addVariantsToProducts
+  combineFdcProductsWithTheirFdcConfiguration,
+  addFdcConfigurationToFdcProducts as addVariantsToProducts,
+  toggleVariantMappingStatus
 };
