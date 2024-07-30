@@ -9,9 +9,6 @@ import { restResources } from '@shopify/shopify-api/rest/admin/2023-01';
 import config from './config.js';
 
 dotenv.config();
-// First : change the SQLite db to PostgreSQL
-// and create a local one for development
-// and a test one for testing
 
 const DB_PATH = process.env.DATABASE_URL;
 
