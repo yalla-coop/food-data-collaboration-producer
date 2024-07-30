@@ -1,4 +1,6 @@
-import { getOfflineSessionByShopName } from '../fdc-repositories/shopify/get-offline-session-by-shop-name.js';
+
+import getShopifySessionsData from '../database/shopify_sessions/getShopifySessionsData.js';
+import shopify from '../shopify.js';
 
 const checkOfflineSession = async (req, res, next) => {
   try {
@@ -29,5 +31,18 @@ const checkOfflineSession = async (req, res, next) => {
     });
   }
 };
+
+const getOfflineSessionByShopName = async (shopName) => {
+  const id = shopify.api.session.getOfflineId(shopName);
+
+  const session = await getShopifySessionsData(id);
+
+  if (!session) {
+    return;
+  }
+
+  return session;
+};
+
 
 export default checkOfflineSession;

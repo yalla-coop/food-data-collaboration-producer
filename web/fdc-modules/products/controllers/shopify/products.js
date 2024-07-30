@@ -9,7 +9,6 @@ const query = `query findProducts($ids: [ID!]!) {
   products: nodes(ids: $ids) {
     ... on Product {
       id
-      tags
       title
       descriptionHtml
       productType
@@ -48,13 +47,7 @@ const query = `query findProducts($ids: [ID!]!) {
 }`;
 
 export async function findFDCProducts(client, fdcVariantsFromDB) {
-  const shopifyProducts = await findProductsByIds(client, fdcVariantsFromDB);
-
-  const fdcProducts = shopifyProducts.filter(({ tags }) =>
-    tags.includes('fdc')
-  );
-
-  return fdcProducts;
+  return await findProductsByIds(client, fdcVariantsFromDB);
 }
 
 export async function getFdcVariantsFromDB() {

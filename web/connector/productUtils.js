@@ -98,7 +98,7 @@ async function createSuppliedProducts(productsFromShopify, enterpriseName) {
     }
 
     const productsPromises = productsFromShopify.flatMap((product) =>
-      product.fdcVariants.map(variant => createVariants(product, variant, enterpriseName))
+      product.fdcVariants.filter(({enabled}) => enabled).map(variant => createVariants(product, variant, enterpriseName))
     );
 
     return (await Promise.all(productsPromises)).flat();

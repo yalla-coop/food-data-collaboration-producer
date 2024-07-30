@@ -6,7 +6,9 @@ import {
   MenuItem,
   Stack,
   TextField,
-  Typography
+  Typography,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import { useState } from 'react';
 import { CustomTooltip } from './CustomTooltip';
@@ -23,7 +25,8 @@ function VariantMappingComponent({
   product,
   saveVariantMapping,
   variant,
-  loadingInProgress
+  loadingInProgress,
+  toggleVariantEnableState
 }) {
   const existingRetailVariant =
     (variant &&
@@ -71,7 +74,7 @@ function VariantMappingComponent({
     >
       <Stack direction="row" spacing="20px" width="100%">
         <Stack flexGrow={1} spacing="10px">
-          <Typography>Retail variant</Typography>
+          <Typography style={{height:"42px", 'align-items': 'center', display:'flex'}}>Retail variant</Typography>
           <TextField
             fullWidth
             label="Select"
@@ -97,7 +100,30 @@ function VariantMappingComponent({
         </Stack>
 
         <Stack flexGrow={1} spacing="10px">
-          <Typography>Wholesale variant</Typography>
+          <Stack flexGrow={1} direction="row" justifyContent="space-between">
+            <Typography style={{height:"42px", 'align-items': 'center', display:'flex'}} width={"80%"}>Wholesale variant</Typography>
+            {existingRetailVariant && (
+              <FormControlLabel
+              style={{ pointerEvents: "none" }}
+              control={
+                <Checkbox
+                  style={{
+                    width: '50px',
+                    pointerEvents: 'auto'
+                  }}
+                  checked={variant.enabled}
+                  disabled={loadingInProgress}
+                  onClick={(event) => {
+                    toggleVariantEnableState(variant.id);
+                    event.stopPropagation();
+                  }}
+                />
+              }
+              label={'Enable for FDC'}
+              labelPlacement="start"
+            />
+            )}
+          </Stack>
           <TextField
             fullWidth
             label="Select"
@@ -121,6 +147,7 @@ function VariantMappingComponent({
             ))}
           </TextField>
         </Stack>
+
       </Stack>
 
       <Stack spacing="10px">

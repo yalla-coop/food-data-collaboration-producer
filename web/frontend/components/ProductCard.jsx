@@ -25,36 +25,51 @@ export function ProductCard({ product }) {
     }
   }
 
-  const { mutateAsync, isFetching: productsLoading } = useAppMutation({
+  async function toggleVariantEnableState(variantId) {
+    setDisabled(true);
+    await mutateVariantEnableState({
+      url: `/api/products/${product.id}/variant/${variantId}/toggleFdcStatus`,
+      fetchInit: {
+        method: 'POST',
+      }
+    })
+  }
+
+  const { mutateAsync: mutateVariantEnableState, isFetching: productsLoading } = useAppMutation({
     reactQueryOptions: {
       onSettled: () => {
         setDisabled(false);
       },
-      onSuccess: (updateProductData) => {
+      onSuccess: (updatedVariantMapping) => {
         queryClient.setQueryData('/api/products', (query) => {
-          const productId = updateProductData?.product?.id;
+          const { variant: updatedVariant } = updatedVariantMapping;
 
-          if (!productId) {
+          if (!updatedVariant) {
             return query;
           }
 
-          const productIndex = query?.products?.findIndex(
-            (p) => p.id === productId
-          );
-
-          if (productIndex === -1) {
-            return query;
-          }
-
-          const updatedProducts = [...query.products];
-          updatedProducts[productIndex] = {...updateProductData.product, fdcVariants: updatedProducts[productIndex].fdcVariants};
+          const updatedProducts = query?.products?.map(existingProduct => {
+            if (existingProduct.id === product.id) {
+              return {
+                ...existingProduct,
+                fdcVariants: existingProduct.fdcVariants.map(variant => {
+                  if (variant.id === updatedVariant.id) {
+                    return updatedVariant;
+                  } else {
+                    return variant;
+                  }
+                })
+              }
+            } else {
+              return existingProduct;
+            }
+          });
 
           return {
             ...query,
             products: updatedProducts
           };
         });
-        queryClient.invalidateQueries('/api/products');
       }
     }
   });
@@ -84,7 +99,7 @@ export function ProductCard({ product }) {
     });
   };
 
-  const isFdcProduct = product.tags?.includes('fdc');
+  const isFdcProduct = !!product.fdcVariants.find(({ enabled }) => enabled);
   const hasVariantMapped = !!product.fdcVariants[0];
 
   return (
@@ -101,29 +116,16 @@ export function ProductCard({ product }) {
                     width: '50px',
                     pointerEvents: 'auto'
                   }}
-                  disabled={isDisabled || product.fdcVariants.length === 0}
+                  disabled={true}
                   checked={isFdcProduct}
-                  onClick={(event) => {
-                    setDisabled(true);
-                    mutateAsync({
-                      url: `/api/products/${product.id}`,
-                      fetchInit: {
-                        method: 'PATCH',
-                        headers: {
-                          'Content-Type': 'application/json'
-                        }
-                      }
-                    });
-                    event.stopPropagation();
-                  }}
                 />
               }
               sx={{
                 '& .MuiFormControlLabel-label': {
-                  color: hasVariantMapped && isFdcProduct ? 'green' : isFdcProduct ? 'red !important' : 'gray'
+                  color: hasVariantMapped && isFdcProduct ? 'green !important' : isFdcProduct ? 'red !important' : 'gray'
                 }
               }}
-              label={isFdcProduct ? 'FDC Product' : 'Not FDC Product'}
+              label={isFdcProduct ? 'Has FDC Enabled Variants' : 'Not FDC Product'}
               labelPlacement="start"
             />
           </Stack>
@@ -134,11 +136,12 @@ export function ProductCard({ product }) {
         <Stack spacing="12px">
           <Stack spacing="12px">
             <VariantMappingComponent
-              key={product.id + '_variant' +  (product.fdcVariants.length ? '' : '_missing')}
+              key={product.id + '_variant' + (product.fdcVariants.length ? '' : '_missing')}
               saveVariantMapping={saveVariantMapping}
+              toggleVariantEnableState={toggleVariantEnableState}
               product={product}
               variant={product.fdcVariants[0]}
-              loadingInProgress={variantMappingsBeingUpdated || variantMappingUpdateStatus === 'loading' || productsLoading}
+              loadingInProgress={variantMappingsBeingUpdated || variantMappingUpdateStatus === 'loading' || productsLoading || isDisabled}
             />
           </Stack>
         </Stack>
