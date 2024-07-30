@@ -1,6 +1,6 @@
 import shopify from '../../../shopify.js';
 import { getShopifyIdSubstring } from '../../../database/utils/get-shopify-id-substring.js';
-import { getAndAddVariantsToProducts } from '../../../database/variants/variants.js';
+import { combineFdcProductsWithTheirFdcConfiguration } from '../../../database/variants/variants.js';
 
 const toProduct = (product) => ({
   ...product,
@@ -18,13 +18,36 @@ async function findProducts(client) {
           edges {
             node {
               id
-              tags
               title
+              descriptionHtml
+              productType
+              status
+              images(first: 10) {
+                edges {
+                  node {
+                    id
+                    altText
+                    src
+                  }
+                }
+              }
               variants(first: 250) {
                 edges {
                   node {
                     id
                     title
+                    price
+                    sku
+                    position
+                    inventoryPolicy
+                    taxable
+                    inventoryQuantity
+                    weight
+                    image {
+                      id
+                      altText
+                      src
+                    }
                   }
                 }
               }
@@ -52,9 +75,7 @@ const getProducts = async ({ session }) => {
     return [];
   }
 
-  const productsWithVariants = await getAndAddVariantsToProducts(products);
-
-  return productsWithVariants;
+  return await combineFdcProductsWithTheirFdcConfiguration(products);
 };
 
 export default getProducts;
