@@ -129,6 +129,9 @@ function VariantMappingComponent({
     });
   });
 
+  const enableLabel = variant.enabled ? 'Current enabled for FDC - Disable:' : 'Current disabled for FDC - Enable:'
+  const enableColour = variant.enabled ? 'green' : 'red'
+
   return (
     <Stack
       spacing="16px"
@@ -165,7 +168,7 @@ function VariantMappingComponent({
 
         <Stack flexGrow={1} spacing="10px">
           <Stack flexGrow={1} direction="row" justifyContent="space-between">
-            <Typography style={{ height: "42px", 'align-items': 'center', display: 'flex' }} width={"80%"}>Wholesale variant</Typography>
+            <Typography style={{ height: "42px", 'align-items': 'center', display: 'flex' }} >Wholesale variant</Typography>
             {existingRetailVariant && (
               <FormControlLabel
                 style={{ pointerEvents: "none" }}
@@ -180,7 +183,8 @@ function VariantMappingComponent({
                     onClick={toggleVariantEnableState}
                   />
                 }
-                label={'Enable for FDC'}
+                
+                label={<Typography fontWeight={"bold"} color={enableColour}>{enableLabel}</Typography>}
                 labelPlacement="start"
               />
             )}
