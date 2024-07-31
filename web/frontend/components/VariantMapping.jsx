@@ -23,10 +23,9 @@ const convertShopifyGraphQLIdToNumber = (id) => {
 
 function VariantMappingComponent({
   product,
-  saveVariantMapping,
   variant,
   loadingInProgress,
-  toggleVariantEnableState
+  mutateMapping
 }) {
   const existingRetailVariant =
     (variant &&
@@ -58,12 +57,77 @@ function VariantMappingComponent({
     existingNoOfItemsPerPackage
   );
 
+  const [isBusy, setBusy] = useState(false);
+
   const invalid = !retailVariant || !wholesaleVariant || !noOfItemsPerPackage;
 
   const changed =
     retailVariant !== existingRetailVariant ||
     wholesaleVariant !== existingWholesaleVariant ||
     noOfItemsPerPackage != existingNoOfItemsPerPackage;
+
+  function working(fn) {
+    return (async function foobar() {
+      try {
+        setBusy(true);
+        await fn();
+      } finally {
+        setBusy(false);
+      }
+    });
+  }
+
+  const toggleVariantEnableState = working(async () => {
+    await mutateMapping({
+      url: `/api/products/${product.id}/variant/${variant.id}/toggleFdcStatus`,
+      fetchInit: {
+        method: 'POST',
+      },
+      variantId: variant.id
+    });
+  });
+
+  const saveVariantMapping = working(async () => {
+    if (variant) {
+      await mutateMapping({
+        url: `/api/products/${product.id}/variant/${variant.id}`,
+        fetchInit: {
+          method: 'POST',
+        },
+        variantId: variant.id,
+        body: JSON.stringify({
+          retailVariantId: retailVariant?.id,
+          wholesaleVariantId: wholesaleVariant?.id,
+          noOfItemsPerPackage
+        })
+      });
+    } else {
+      await mutateMapping({
+        url: `/api/products/${product.id}/variant`,
+        fetchInit: {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            retailVariantId: retailVariant?.id,
+            wholesaleVariantId: wholesaleVariant?.id,
+            noOfItemsPerPackage
+          })
+        }
+      });
+    }
+  });
+
+  const deleteVariantMapping = working(async () => {
+    return await mutateMapping({
+      url: `/api/products/${product.id}/variant/${variant.id}`,
+      fetchInit: {
+        method: 'DELETE',
+      },
+      variantId: variant.id
+    });
+  });
 
   return (
     <Stack
@@ -74,7 +138,7 @@ function VariantMappingComponent({
     >
       <Stack direction="row" spacing="20px" width="100%">
         <Stack flexGrow={1} spacing="10px">
-          <Typography style={{height:"42px", 'align-items': 'center', display:'flex'}}>Retail variant</Typography>
+          <Typography style={{ height: "42px", 'align-items': 'center', display: 'flex' }}>Retail variant</Typography>
           <TextField
             fullWidth
             label="Select"
@@ -101,27 +165,24 @@ function VariantMappingComponent({
 
         <Stack flexGrow={1} spacing="10px">
           <Stack flexGrow={1} direction="row" justifyContent="space-between">
-            <Typography style={{height:"42px", 'align-items': 'center', display:'flex'}} width={"80%"}>Wholesale variant</Typography>
+            <Typography style={{ height: "42px", 'align-items': 'center', display: 'flex' }} width={"80%"}>Wholesale variant</Typography>
             {existingRetailVariant && (
               <FormControlLabel
-              style={{ pointerEvents: "none" }}
-              control={
-                <Checkbox
-                  style={{
-                    width: '50px',
-                    pointerEvents: 'auto'
-                  }}
-                  checked={variant.enabled}
-                  disabled={loadingInProgress}
-                  onClick={(event) => {
-                    toggleVariantEnableState(variant.id);
-                    event.stopPropagation();
-                  }}
-                />
-              }
-              label={'Enable for FDC'}
-              labelPlacement="start"
-            />
+                style={{ pointerEvents: "none" }}
+                control={
+                  <Checkbox
+                    style={{
+                      width: '50px',
+                      pointerEvents: 'auto'
+                    }}
+                    checked={variant.enabled}
+                    disabled={loadingInProgress || isBusy}
+                    onClick={toggleVariantEnableState}
+                  />
+                }
+                label={'Enable for FDC'}
+                labelPlacement="start"
+              />
             )}
           </Stack>
           <TextField
@@ -134,7 +195,7 @@ function VariantMappingComponent({
                 listStyle: 'none'
               }
             }}
-            disabled={loadingInProgress || existingWholesaleVariant}
+            disabled={loadingInProgress || existingWholesaleVariant || isBusy}
             value={wholesaleVariant || ''}
             onChange={(event) =>
               setSelectedWholesaleVariant(event.target.value)
@@ -188,8 +249,8 @@ function VariantMappingComponent({
         <Button
           variant="contained"
           type="button"
-          disabled={!variant || loadingInProgress}
-          onClick={() => saveVariantMapping(null)}
+          disabled={!variant || loadingInProgress || isBusy}
+          onClick={() => deleteVariantMapping()}
         >
           Remove variant
         </Button>
@@ -198,14 +259,8 @@ function VariantMappingComponent({
           <Button
             variant="contained"
             type="button"
-            disabled={invalid || loadingInProgress || !changed}
-            onClick={() =>
-              saveVariantMapping({
-                retailVariantId: retailVariant?.id,
-                wholesaleVariantId: wholesaleVariant?.id,
-                noOfItemsPerPackage
-              })
-            }
+            disabled={invalid || loadingInProgress || !changed || isBusy}
+            onClick={saveVariantMapping}
           >
             Save product variant updates
           </Button>

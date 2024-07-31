@@ -7,58 +7,40 @@ import {
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
-import React, { useState } from 'react';
+import React from 'react';
 import { useQueryClient } from 'react-query';
 import { useAppMutation } from '../hooks';
 import { ExpandMoreIcon } from './ExpandMoreIcon';
 import { VariantMappingComponent } from './VariantMapping';
+import { VariantComponent } from './Variant';
 
 export function ProductCard({ product }) {
   const queryClient = useQueryClient();
-  const [isDisabled, setDisabled] = useState(false);
 
-  function saveVariantMapping(update) {
-    if (!update) {
-      persistUpdatedVariantMappings([]);
+  function updateOrReplace(fdcVariants, updatedVariant, variables) {
+    const method = variables.fetchInit.method;
+    if (method === 'PUT') {
+      return [...fdcVariants, updatedVariant];
+    } else if (method === 'POST') {
+      return fdcVariants.map(variant => {
+        return variant.id === updatedVariant.id ? updatedVariant : variant;
+      })
+    } else if (method === 'DELETE') {
+      return fdcVariants.filter(variant => variant.id !== variables.variantId);
     } else {
-      persistUpdatedVariantMappings([update]);
+      throw new Error(`dont know how to handle ${method$}`);
     }
   }
 
-  async function toggleVariantEnableState(variantId) {
-    setDisabled(true);
-    await mutateVariantEnableState({
-      url: `/api/products/${product.id}/variant/${variantId}/toggleFdcStatus`,
-      fetchInit: {
-        method: 'POST',
-      }
-    })
-  }
-
-  const { mutateAsync: mutateVariantEnableState, isFetching: productsLoading } = useAppMutation({
+  const { mutateAsync: mutateMapping, isFetching: productsLoading } = useAppMutation({
     reactQueryOptions: {
-      onSettled: () => {
-        setDisabled(false);
-      },
-      onSuccess: (updatedVariantMapping) => {
+      onSuccess: (updatedVariant, variables) => {
         queryClient.setQueryData('/api/products', (query) => {
-          const { variant: updatedVariant } = updatedVariantMapping;
-
-          if (!updatedVariant) {
-            return query;
-          }
-
           const updatedProducts = query?.products?.map(existingProduct => {
             if (existingProduct.id === product.id) {
               return {
                 ...existingProduct,
-                fdcVariants: existingProduct.fdcVariants.map(variant => {
-                  if (variant.id === updatedVariant.id) {
-                    return updatedVariant;
-                  } else {
-                    return variant;
-                  }
-                })
+                fdcVariants: updateOrReplace(existingProduct.fdcVariants, updatedVariant, variables)
               }
             } else {
               return existingProduct;
@@ -85,19 +67,6 @@ export function ProductCard({ product }) {
       }
     }
   });
-
-  const persistUpdatedVariantMappings = async (variantMappings) => {
-    await updateVariantMappings({
-      url: `/api/products/${product.id}/fdcVariantMappings`,
-      fetchInit: {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(variantMappings)
-      }
-    });
-  };
 
   const isFdcProduct = !!product.fdcVariants.find(({ enabled }) => enabled);
   const hasVariantMapped = !!product.fdcVariants[0];
@@ -134,16 +103,24 @@ export function ProductCard({ product }) {
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing="12px">
-          <Stack spacing="12px">
+          {process.env.VARIANT_MAPPINGS ?
             <VariantMappingComponent
               key={product.id + '_variant' + (product.fdcVariants.length ? '' : '_missing')}
-              saveVariantMapping={saveVariantMapping}
-              toggleVariantEnableState={toggleVariantEnableState}
+              mutateMapping={mutateMapping}
               product={product}
               variant={product.fdcVariants[0]}
-              loadingInProgress={variantMappingsBeingUpdated || variantMappingUpdateStatus === 'loading' || productsLoading || isDisabled}
+              loadingInProgress={variantMappingsBeingUpdated || variantMappingUpdateStatus === 'loading' || productsLoading}
             />
-          </Stack>
+            :
+            product.variants.map((variant, i) =>
+            (<VariantComponent
+              key={`${product.id}_variant_${i}'`}
+              product={product}
+              variant={variant}
+              fdcVariants={product.fdcVariants}
+              mutateMapping={mutateMapping}
+            />))
+          }
         </Stack>
       </AccordionDetails>
     </Accordion>

@@ -50,7 +50,7 @@ export default defineConfig({
   plugins: [react()],
   define: {
     'process.env.SHOPIFY_API_KEY': JSON.stringify(process.env.SHOPIFY_API_KEY),
-    'process.env.VARIANT_MAPPINGS': JSON.stringify(process.env.VARIANT_MAPPINGS)
+    'process.env.VARIANT_MAPPINGS': process.env.VARIANT_MAPPINGS
   },
   resolve: {
     preserveSymlinks: true

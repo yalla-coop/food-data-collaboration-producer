@@ -16,8 +16,37 @@ async function variantCount() {
   );
 }
 
+async function addVariant({productId, retailVariantId, wholesaleVariantId, noOfItemsPerPackage, enabled = false}){
+  return (await query(
+    'INSERT INTO fdc_variants (product_id, wholesale_variant_id, retail_variant_id, no_of_items_per_package, enabled) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+    [
+      productId,
+      wholesaleVariantId,
+      retailVariantId,
+      noOfItemsPerPackage,
+      enabled,
+    ],
+  ))?.rows[0]
+}
+
+async function updateVariant(variantId, {retailVariantId, wholesaleVariantId, noOfItemsPerPackage}){
+  return (await query(
+    'UPDATE fdc_variants SET wholesale_variant_id = $2, retail_variant_id = $3, no_of_items_per_package = $4  WHERE id = $1 RETURNING *',
+    [
+      variantId,
+      wholesaleVariantId,
+      retailVariantId,
+      noOfItemsPerPackage,
+    ],
+  ))?.rows[0]
+}
+
 async function toggleVariantMappingStatus(variantId) {
   return (await query(`UPDATE fdc_variants SET enabled = NOT enabled WHERE id = $1 RETURNING *`, [variantId]))?.rows[0];
+}
+
+async function deleteVariant(variantId) {
+  return (await query(`DELETE from fdc_variants WHERE id = $1`, [variantId]))?.rows[0];
 }
 
 async function getPagedVariants(lastId, limit) {
@@ -49,16 +78,10 @@ async function combineFdcProductsWithTheirFdcConfiguration(products) {
 }
 
 function addFdcConfigurationToFdcProducts(products, variantsByProductId) {
-  return products.flatMap((product) => {
-    if (variantsByProductId[product.id]) {
-      return [{
-        ...product,
-        fdcVariants: variantsByProductId[product.id] 
-      }];
-    } else {
-      return [];
-    }
-  });
+  return products.map((product) => ({
+    ...product,
+    fdcVariants: variantsByProductId[product.id] || []
+  }));
 }
 
 export {
@@ -69,5 +92,8 @@ export {
   variantCount,
   combineFdcProductsWithTheirFdcConfiguration,
   addFdcConfigurationToFdcProducts as addVariantsToProducts,
-  toggleVariantMappingStatus
+  toggleVariantMappingStatus,
+  addVariant,
+  updateVariant,
+  deleteVariant
 };

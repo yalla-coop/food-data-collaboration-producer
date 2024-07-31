@@ -3,11 +3,11 @@ import { addVariantsToProducts } from '../../../database/variants/variants.js';
 import config from '../../../config.js';
 export async function createDFCProductsFromShopify(
   fdcProducts,
-  mappedVariantsByProductId
+  fdcVariantsByProductId
 ) {
   try {
     const exportedDFCProducts = await exportSuppliedProducts(
-      addVariantsToProducts(fdcProducts, mappedVariantsByProductId),
+      addVariantsToProducts(fdcProducts, fdcVariantsByProductId),
       config.PRODUCER_SHOP_NAME
     );
 
