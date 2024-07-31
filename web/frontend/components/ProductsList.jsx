@@ -1,4 +1,4 @@
-import { useNavigate } from "@shopify/app-bridge-react";
+import { useNavigate } from '@shopify/app-bridge-react';
 import {
   Card,
   Icon,
@@ -6,15 +6,15 @@ import {
   Stack,
   TextStyle,
   Thumbnail,
-  UnstyledLink,
-} from "@shopify/polaris";
-import { DiamondAlertMajor, ImageMajor } from "@shopify/polaris-icons";
+  UnstyledLink
+} from '@shopify/polaris';
+import { DiamondAlertMajor, ImageMajor } from '@shopify/polaris-icons';
 
 /* useMedia is used to support multiple screen sizes */
-import { useMedia } from "@shopify/react-hooks";
+import { useMedia } from '@shopify/react-hooks';
 
 /* dayjs is used to capture and format the date a QR code was created or modified */
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
 
 /* Markup for small screen sizes (mobile) */
 function SmallScreenCard({
@@ -24,12 +24,12 @@ function SmallScreenCard({
   discountCode,
   scans,
   createdAt,
-  navigate,
+  navigate
 }) {
   return (
     <UnstyledLink onClick={() => navigate(`/products/${id}`)}>
       <div
-        style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #E1E3E5" }}
+        style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #E1E3E5' }}
       >
         <Stack>
           <Stack.Item>
@@ -49,14 +49,14 @@ function SmallScreenCard({
                   </TextStyle>
                 </p>
                 <p>{truncate(product?.title, 35)}</p>
-                <p>{dayjs(createdAt).format("MMMM D, YYYY")}</p>
+                <p>{dayjs(createdAt).format('MMMM D, YYYY')}</p>
               </Stack.Item>
-              <div style={{ display: "flex" }}>
-                <div style={{ flex: "3" }}>
+              <div style={{ display: 'flex' }}>
+                <div style={{ flex: '3' }}>
                   <TextStyle variation="subdued">Discount</TextStyle>
-                  <p>{discountCode || "-"}</p>
+                  <p>{discountCode || '-'}</p>
                 </div>
-                <div style={{ flex: "2" }}>
+                <div style={{ flex: '2' }}>
                   <TextStyle variation="subdued">Scans</TextStyle>
                   <p>{scans}</p>
                 </div>
@@ -70,11 +70,11 @@ function SmallScreenCard({
 }
 
 export function ProductsList({ Products, loading }) {
-  console.log('ProductsList', Products)
+  console.log('ProductsList', Products);
   const navigate = useNavigate();
 
   /* Check if screen is small */
-  const isSmallScreen = useMedia("(max-width: 640px)");
+  const isSmallScreen = useMedia('(max-width: 640px)');
 
   /* Map over Products for small screen */
   const smallScreenMarkup = Products.map((Product) => (
@@ -82,15 +82,15 @@ export function ProductsList({ Products, loading }) {
   ));
 
   const resourceName = {
-    singular: "Product",
-    plural: "Products",
+    singular: 'Product',
+    plural: 'Products'
   };
 
-  console.log('ProductsList')
+  console.log('ProductsList');
 
   const rowMarkup = Products.map(
     ({ id, title, product, discountCode, scans, createdAt }, index) => {
-      const deletedProduct = product.title.includes("Deleted product");
+      const deletedProduct = product.title.includes('Deleted product');
 
       /* The form layout, created using Polaris components. Includes the QR code data set above. */
       return (
@@ -120,14 +120,14 @@ export function ProductsList({ Products, loading }) {
               {deletedProduct && (
                 <Icon source={DiamondAlertMajor} color="critical" />
               )}
-              <TextStyle variation={deletedProduct ? "negative" : null}>
+              <TextStyle variation={deletedProduct ? 'negative' : null}>
                 {truncate(product?.title, 25)}
               </TextStyle>
             </Stack>
           </IndexTable.Cell>
           <IndexTable.Cell>{discountCode}</IndexTable.Cell>
           <IndexTable.Cell>
-            {dayjs(createdAt).format("MMMM D, YYYY")}
+            {dayjs(createdAt).format('MMMM D, YYYY')}
           </IndexTable.Cell>
           <IndexTable.Cell>{scans}</IndexTable.Cell>
         </IndexTable.Row>
@@ -145,12 +145,12 @@ export function ProductsList({ Products, loading }) {
           resourceName={resourceName}
           itemCount={Products.length}
           headings={[
-            { title: "Thumbnail", hidden: true },
-            { title: "Title" },
-            { title: "Product" },
-            { title: "Discount" },
-            { title: "Date created" },
-            { title: "Scans" },
+            { title: 'Thumbnail', hidden: true },
+            { title: 'Title' },
+            { title: 'Product' },
+            { title: 'Discount' },
+            { title: 'Date created' },
+            { title: 'Scans' }
           ]}
           selectable={false}
           loading={loading}
@@ -164,5 +164,5 @@ export function ProductsList({ Products, loading }) {
 
 /* A function to truncate long strings */
 function truncate(str, n) {
-  return str.length > n ? str.substr(0, n - 1) + "…" : str;
+  return str.length > n ? str.substr(0, n - 1) + '…' : str;
 }

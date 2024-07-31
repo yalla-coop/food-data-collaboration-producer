@@ -1,6 +1,7 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable function-paren-newline */
 import {
+  Box,
   IconButton,
   Button,
   MenuItem,
@@ -8,7 +9,8 @@ import {
   TextField,
   Typography,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  CircularProgress
 } from '@mui/material';
 import { useState } from 'react';
 import { CustomTooltip } from './CustomTooltip';
@@ -20,6 +22,76 @@ const convertShopifyGraphQLIdToNumber = (id) => {
   if (typeof id === 'number') return id;
   return parseInt(id.split('/').pop(), 10);
 };
+
+const VariantMappingDetails = ({
+  existingNoOfItemsPerPackage,
+  noOfItemsPerPackage,
+  loadingInProgress,
+  setNoOfItemPerPackage
+}) => (
+  <Stack spacing="20px" alignItems="center">
+    <Box
+      style={{
+        padding: '10px 20px',
+        margin: '20px 0',
+        backgroundColor: '#f5f5f5',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        textAlign: 'center',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    >
+      <Stack direction="row" spacing="6px" alignItems="center">
+        <Typography variant="h5" style={{ color: '#333' }}>
+          Mapped Variant Ratio
+        </Typography>
+
+        <CustomTooltip
+          title={
+            <Typography variant="body1">
+              A number that indicates the multiplier to apply before ordering
+              another of the mapped variant (for example if a box/case has 6
+              bottles and you're selling individual bottles, the number would be
+              6)
+            </Typography>
+          }
+        >
+          <IconButton>
+            <InfoIcon />
+          </IconButton>
+        </CustomTooltip>
+      </Stack>
+    </Box>
+    {!existingNoOfItemsPerPackage && (
+      <Typography
+        variant="body1"
+        color="error"
+        style={{ margin: '10px 0', textAlign: 'center' }}
+      >
+        Please make sure to carefully select the correct number of items as this
+        cannot be changed later
+      </Typography>
+    )}
+    <TextField
+      type="number"
+      label="No. of items per Case/Box/Package"
+      inputProps={{ inputMode: 'numeric', min: 0, pattern: '[0-9]*' }}
+      value={noOfItemsPerPackage}
+      disabled={loadingInProgress || existingNoOfItemsPerPackage}
+      onChange={(e) => setNoOfItemPerPackage(e.target.value)}
+      style={{
+        margin: '10px 0',
+        backgroundColor: '#fff',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        width: '100%'
+      }}
+    />
+  </Stack>
+);
 
 function VariantMappingComponent({
   product,
@@ -67,21 +139,21 @@ function VariantMappingComponent({
     noOfItemsPerPackage != existingNoOfItemsPerPackage;
 
   function working(fn) {
-    return (async function foobar() {
+    return async function foobar() {
       try {
         setBusy(true);
         await fn();
       } finally {
         setBusy(false);
       }
-    });
+    };
   }
 
   const toggleVariantEnableState = working(async () => {
     await mutateMapping({
       url: `/api/products/${product.id}/variant/${variant.id}/toggleFdcStatus`,
       fetchInit: {
-        method: 'POST',
+        method: 'POST'
       },
       variantId: variant.id
     });
@@ -92,7 +164,7 @@ function VariantMappingComponent({
       await mutateMapping({
         url: `/api/products/${product.id}/variant/${variant.id}`,
         fetchInit: {
-          method: 'POST',
+          method: 'POST'
         },
         variantId: variant.id,
         body: JSON.stringify({
@@ -123,7 +195,7 @@ function VariantMappingComponent({
     return await mutateMapping({
       url: `/api/products/${product.id}/variant/${variant.id}`,
       fetchInit: {
-        method: 'DELETE',
+        method: 'DELETE'
       },
       variantId: variant.id
     });
@@ -138,7 +210,11 @@ function VariantMappingComponent({
     >
       <Stack direction="row" spacing="20px" width="100%">
         <Stack flexGrow={1} spacing="10px">
-          <Typography style={{ height: "42px", 'align-items': 'center', display: 'flex' }}>Retail variant</Typography>
+          <Typography
+            style={{ height: '42px', 'align-items': 'center', display: 'flex' }}
+          >
+            Retail variant
+          </Typography>
           <TextField
             fullWidth
             label="Select"
@@ -165,10 +241,19 @@ function VariantMappingComponent({
 
         <Stack flexGrow={1} spacing="10px">
           <Stack flexGrow={1} direction="row" justifyContent="space-between">
-            <Typography style={{ height: "42px", 'align-items': 'center', display: 'flex' }} width={"80%"}>Wholesale variant</Typography>
+            <Typography
+              style={{
+                height: '42px',
+                'align-items': 'center',
+                display: 'flex'
+              }}
+              width={'80%'}
+            >
+              Wholesale variant
+            </Typography>
             {existingRetailVariant && (
               <FormControlLabel
-                style={{ pointerEvents: "none" }}
+                style={{ pointerEvents: 'none' }}
                 control={
                   <Checkbox
                     style={{
@@ -208,49 +293,33 @@ function VariantMappingComponent({
             ))}
           </TextField>
         </Stack>
-
       </Stack>
 
-      <Stack spacing="10px">
-        <Stack direction="row" spacing="6px" alignItems="center">
-          <Typography variant="h5">Mapped Variant Ratio</Typography>
+      <VariantMappingDetails
+        existingNoOfItemsPerPackage={existingNoOfItemsPerPackage}
+        noOfItemsPerPackage={noOfItemsPerPackage}
+        loadingInProgress={loadingInProgress}
+        setNoOfItemPerPackage={setNoOfItemPerPackage}
+      />
 
-          <CustomTooltip
-            title={
-              <Typography variant="body1">
-                A number that indicates the multiplier to apply before ordering
-                another of the mapped variant (for example if a box/case has 6
-                bottles and you're selling individual bottles, the number would
-                be 6)
-              </Typography>
-            }
-          >
-            <IconButton>
-              <InfoIcon />
-            </IconButton>
-          </CustomTooltip>
-        </Stack>
-        {!existingNoOfItemsPerPackage && (
-          <Typography variant="body1" color="error">
-            Please make sure to carefully select the correct number of items as
-            this cannot be changed later
-          </Typography>
-        )}
-        <TextField
-          type="number"
-          label="No. of items per Case/Box/Package"
-          inputProps={{ inputMode: 'numeric', min: 0, pattern: '[0-9]*' }}
-          value={noOfItemsPerPackage}
-          disabled={loadingInProgress || existingNoOfItemsPerPackage}
-          onChange={(e) => setNoOfItemPerPackage(e.target.value)}
-        />
-      </Stack>
-      <Stack spacing="10px">
+      <Stack spacing="20px" alignItems="center">
         <Button
           variant="contained"
           type="button"
           disabled={!variant || loadingInProgress || isBusy}
           onClick={() => deleteVariantMapping()}
+          style={{
+            padding: '10px 20px',
+            margin: '10px 0',
+            backgroundColor: '#ff4d4d',
+            color: '#fff',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            transition: 'background-color 0.3s ease',
+            opacity: !variant || loadingInProgress || isBusy ? 0.5 : 1
+          }}
+          onMouseOver={(e) => (e.target.style.backgroundColor = '#ff1a1a')}
+          onMouseOut={(e) => (e.target.style.backgroundColor = '#ff4d4d')}
         >
           Remove variant
         </Button>
@@ -261,11 +330,25 @@ function VariantMappingComponent({
             type="button"
             disabled={invalid || loadingInProgress || !changed || isBusy}
             onClick={saveVariantMapping}
+            style={{
+              padding: '10px 20px',
+              margin: '10px 0',
+              backgroundColor: '#4caf50',
+              color: '#fff',
+              borderRadius: '8px',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+              transition: 'background-color 0.3s ease',
+              opacity:
+                invalid || loadingInProgress || !changed || isBusy ? 0.5 : 1
+            }}
+            onMouseOver={(e) => (e.target.style.backgroundColor = '#45a049')}
+            onMouseOut={(e) => (e.target.style.backgroundColor = '#4caf50')}
           >
             Save product variant updates
           </Button>
         )}
       </Stack>
+      {loadingInProgress && <CircularProgress />}
     </Stack>
   );
 }
