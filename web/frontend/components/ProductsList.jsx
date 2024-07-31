@@ -70,7 +70,6 @@ function SmallScreenCard({
 }
 
 export function ProductsList({ Products, loading }) {
-  console.log('ProductsList', Products);
   const navigate = useNavigate();
 
   /* Check if screen is small */
@@ -85,8 +84,6 @@ export function ProductsList({ Products, loading }) {
     singular: 'Product',
     plural: 'Products'
   };
-
-  console.log('ProductsList');
 
   const rowMarkup = Products.map(
     ({ id, title, product, discountCode, scans, createdAt }, index) => {
