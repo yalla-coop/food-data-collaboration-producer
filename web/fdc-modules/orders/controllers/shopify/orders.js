@@ -36,22 +36,22 @@ export async function findOrder(client, orderId) {
         variables: {
             id: ids.draftOrder(orderId)
         }
-      });
+    });
 
     if (response.errors) {
         console.error('Failed to load Order', JSON.stringify(response.errors));
         throw new Error('Failed to load Order');
     }
-    
+
     return response.data.draftOrder;
 }
 
-export async function findOrders(client) {
+export async function findOrders(client, {first, last, after, before}) {
+
     const query = `
-    query findDraftOrders {
-        draftOrders(first: 250,  query: "tag:fdc") {
-          edges {
-            node {
+    query findDraftOrders($first: Int, $last: Int, $after: String, $before: String) {
+        draftOrders(first: $first, last: $last, after: $after, before: $before, query: "tag:fdc") {
+            nodes {
                 id    
                 status   
                 reserveInventoryUntil
@@ -80,19 +80,32 @@ export async function findOrders(client) {
                         }
                     }
                 } 
-            }
+          }
+          pageInfo {
+            hasPreviousPage
+            hasNextPage
+            startCursor
+            endCursor
           }
         }
       }
   `;
-    const response = await client.request(query, {});
+
+    const firstToUse = first ? first : last ? null : 250;
+
+    const response = await client.request(query, {
+        variables: {first: firstToUse, last, after, before}
+    });
 
     if (response.errors) {
         console.error('Failed to load Orders', JSON.stringify(response.errors));
         throw new Error('Failed to load Orders');
     }
 
-    return response.data.draftOrders.edges.map(({ node }) => node);
+    return { 
+        orders: response.data.draftOrders.nodes,
+        pageInfo: response.data.draftOrders.pageInfo
+     };
 }
 
 export async function createShopifyOrder(client, customerId, customerEmail, reservationDate, lines) {
@@ -136,6 +149,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
           }
         }
       }`;
+
     const response = await client.request(query, {
         variables: {
             "input": {
@@ -213,7 +227,7 @@ export async function updateOrder(client, orderId, reservationDate, lines) {
             "id": ids.draftOrder(orderId),
             "input": {
                 "lineItems": atLeastOneLine,
-                ...(reservationDate ? {"reserveInventoryUntil": lines.length === 0 ? null : reservationDate.toISOString()} : {})
+                ...(reservationDate ? { "reserveInventoryUntil": lines.length === 0 ? null : reservationDate.toISOString() } : {})
             }
         },
     });

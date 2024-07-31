@@ -17,7 +17,7 @@ const getOrderLine = async (req, res) => {
         const line = await createDfcOrderLineFromShopify(shopifyOrder, req.params.lineId, await getLineItems(req.params.id), req.params.EnterpriseName, req.params.id);
 
         if (!line) {
-            res.status(404).send('Order ine not found');
+            res.status(404).send('Order line not found');
         }
         res.type('application/json')
         res.send(line);
