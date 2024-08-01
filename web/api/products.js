@@ -64,20 +64,6 @@ export function applyProductEndpoints(app) {
   */
   app.get('/api/products', async (req, res) => {
     console.log('/api/products GET');
-    /*
-    let session = new Session({
-      id: 'test-session',
-      isOnline: false,
-      shop: 'yalla-cooperative.myshopify.com',
-      //state: '1234',
-      accessToken: config.SHOPIFY_ACCESS_TOKEN
-    })
-
-    const client = new shopify.api.clients.Graphql({
-      session: session
-      //session: res.locals.shopify.session,
-    });
-    */
 
     const response = await shopifyClient.query({
       data: {
