@@ -29,7 +29,9 @@ const scopes = [
   'read_merchant_managed_fulfillment_orders',
   'write_merchant_managed_fulfillment_orders',
   'read_third_party_fulfillment_orders',
-  'write_third_party_fulfillment_orders'
+  'write_third_party_fulfillment_orders',
+  'read_payment_terms',
+  'write_payment_terms'
 ];
 
 const apiObject =
