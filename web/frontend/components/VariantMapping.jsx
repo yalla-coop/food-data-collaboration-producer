@@ -139,7 +139,7 @@ function VariantMappingComponent({
     noOfItemsPerPackage != existingNoOfItemsPerPackage;
 
   function working(fn) {
-    return async function foobar() {
+    return async function indicatesLoading() {
       try {
         setBusy(true);
         await fn();
@@ -201,6 +201,9 @@ function VariantMappingComponent({
     });
   });
 
+  const enableLabel = variant?.enabled ? 'Current enabled for FDC - Disable:' : 'Current disabled for FDC - Enable:'
+  const enableColour = variant?.enabled ? 'green' : 'red'
+
   return (
     <Stack
       spacing="16px"
@@ -247,7 +250,6 @@ function VariantMappingComponent({
                 'align-items': 'center',
                 display: 'flex'
               }}
-              width={'80%'}
             >
               Wholesale variant
             </Typography>
@@ -265,7 +267,8 @@ function VariantMappingComponent({
                     onClick={toggleVariantEnableState}
                   />
                 }
-                label={'Enable for FDC'}
+                
+                label={<Typography fontWeight={"bold"} color={enableColour}>{enableLabel}</Typography>}
                 labelPlacement="start"
               />
             )}
