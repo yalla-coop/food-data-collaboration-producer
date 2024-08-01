@@ -93,7 +93,7 @@ export default function HomePage() {
       ) : (
         <Stack spacing="12px" px="60px" py="12px">
           {filteredProducts?.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} variantMappingEnabled={data?.variantMappingEnabled} />
           ))}
         </Stack>
       )}
