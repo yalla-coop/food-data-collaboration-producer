@@ -1,5 +1,7 @@
 import * as ids from './ids.js'
 
+const PAY_ON_RECEIPT = "gid://shopify/PaymentTermsTemplate/1";
+
 export async function findOrder(client, orderId) {
     const response = await client.request(`query MyQuery($id: ID!) {
         draftOrder(id: $id) {
@@ -161,6 +163,9 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
                 "reserveInventoryUntil": reservationDate.toISOString(),
                 "tags": ['fdc'],
                 "lineItems": lines,
+                "paymentTerms": {
+                    paymentTermsTemplateId: PAY_ON_RECEIPT
+                }
             }
         }
     });

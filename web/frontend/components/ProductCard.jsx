@@ -14,7 +14,7 @@ import { ExpandMoreIcon } from './ExpandMoreIcon';
 import { VariantMappingComponent } from './VariantMapping';
 import { VariantComponent } from './Variant';
 
-export function ProductCard({ product }) {
+export function ProductCard({ product, variantMappingEnabled }) {
   const queryClient = useQueryClient();
 
   function updateOrReplace(fdcVariants, updatedVariant, variables) {
@@ -103,7 +103,7 @@ export function ProductCard({ product }) {
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing="12px">
-          {process.env.VARIANT_MAPPINGS ?
+          {variantMappingEnabled ?
             <VariantMappingComponent
               key={product.id + '_variant' + (product.fdcVariants.length ? '' : '_missing')}
               mutateMapping={mutateMapping}

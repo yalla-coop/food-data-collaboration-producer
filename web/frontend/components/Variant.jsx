@@ -1,21 +1,13 @@
-import {
-  Checkbox,
-  FormControlLabel,
-  Stack
-} from '@mui/material';
-import { useState } from "react";
-import { VariantCard } from "./VariantCard";
+import { Checkbox, FormControlLabel, Stack } from '@mui/material';
+import { useState } from 'react';
+import { VariantCard } from './VariantCard';
 
-function VariantComponent({
-  product,
-  variant: variantDetails,
-  mutateMapping,
-}) {
-
+function VariantComponent({ product, variant: variantDetails, mutateMapping }) {
   const [busy, setBusy] = useState(false);
 
-  const mappedVariant = product.fdcVariants.find((mapping) => mapping.retailVariantId === variantDetails.id);
-
+  const mappedVariant = product.fdcVariants.find(
+    (mapping) => mapping.retailVariantId === variantDetails.id
+  );
 
   async function addOrToggleVariant() {
     setBusy(true);
@@ -24,7 +16,7 @@ function VariantComponent({
         await mutateMapping({
           url: `/api/products/${product.id}/variant/${mappedVariant.id}/toggleFdcStatus`,
           fetchInit: {
-            method: 'POST',
+            method: 'POST'
           },
           variantId: mappedVariant.id
         });
@@ -38,9 +30,10 @@ function VariantComponent({
             },
             body: JSON.stringify({
               retailVariantId: variantDetails.id,
-              enabled: true,
+              enabled: true
             })
-          }});
+          }
+        });
       }
     } finally {
       setBusy(false);
@@ -48,12 +41,17 @@ function VariantComponent({
   }
 
   return (
-    <Stack spacing="12px" flexGrow={1} direction="row" justifyContent="space-between">
+    <Stack
+      spacing="12px"
+      flexGrow={1}
+      direction="row"
+      justifyContent="space-between"
+    >
       <div style={{ flexGrow: 1 }}>
         <VariantCard variant={variantDetails} index={0} />
       </div>
       <FormControlLabel
-        style={{ pointerEvents: "none" }}
+        style={{ pointerEvents: 'none' }}
         control={
           <Checkbox
             style={{
