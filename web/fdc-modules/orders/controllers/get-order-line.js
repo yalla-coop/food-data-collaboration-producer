@@ -8,7 +8,7 @@ const getOrderLine = async (req, res) => {
         const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
         const client = new shopify.api.clients.Graphql({ session });
 
-        const shopifyOrder = await findOrder(client, req.params.id);
+        const { order: shopifyOrder } = await findOrder(client, req.params.id, {});
 
         if (!shopifyOrder) {
             return res.status(404).send('Unable to find order');

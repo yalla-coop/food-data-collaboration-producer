@@ -20,7 +20,7 @@ const updateOrder = async (req, res) => {
             return res.status(400).send('ID does not match payload');
         }
 
-        const shopifyOrder = await shopifyOrders.findOrder(client, req.params.id);
+        const {order: shopifyOrder} = await shopifyOrders.findOrder(client, req.params.id, {});
 
         if (!shopifyOrder) {
             return res.status(404).send('Unable to find order');

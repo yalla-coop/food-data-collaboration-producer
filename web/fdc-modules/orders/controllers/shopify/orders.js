@@ -2,8 +2,9 @@ import * as ids from './ids.js'
 
 const PAY_ON_RECEIPT = "gid://shopify/PaymentTermsTemplate/1";
 
-export async function findOrder(client, orderId) {
-    const response = await client.request(`query MyQuery($id: ID!) {
+export async function findOrder(client, orderId, { first, last, after, before }) {
+    const firstToUse = first ? first : last ? null : 250;
+    const response = await client.request(`query MyQuery($id: ID!, $first: Int, $last: Int, $after: String, $before: String) {
         draftOrder(id: $id) {
             id
             status
@@ -15,28 +16,36 @@ export async function findOrder(client, orderId) {
                 closed
                 fullyPaid
             }
-            lineItems(first: 250) {
-                edges {
-                    node {
-                        id
-                        quantity
-                        originalUnitPriceSet {
-                            shopMoney {
-                                amount
-                                currencyCode
-                            }
-                        }
-                        custom
-                        variant {
-                            id
+            lineItems(first: $first, last: $last, after: $after, before: $before) {
+                nodes {
+                    id
+                    quantity
+                    originalUnitPriceSet {
+                        shopMoney {
+                            amount
+                            currencyCode
                         }
                     }
+                    custom
+                    variant {
+                        id
+                    }
+                }
+                pageInfo {
+                    hasPreviousPage
+                    hasNextPage
+                    startCursor
+                    endCursor
                 }
             }
         }
       }`, {
         variables: {
-            id: ids.draftOrder(orderId)
+            id: ids.draftOrder(orderId),
+            first: firstToUse,
+            last,
+            after,
+            before
         }
     });
 
@@ -45,10 +54,16 @@ export async function findOrder(client, orderId) {
         throw new Error('Failed to load Order');
     }
 
-    return response.data.draftOrder;
+    return {
+        order: {
+            ...response.data.draftOrder,
+            lineItems: response.data.draftOrder.lineItems.nodes
+        },
+        pageInfo: response.data.draftOrder.lineItems.pageInfo
+    };
 }
 
-export async function findOrders(client, {first, last, after, before}) {
+export async function findOrders(client, { first, last, after, before }) {
 
     const query = `
     query findDraftOrders($first: Int, $last: Int, $after: String, $before: String) {
@@ -65,20 +80,18 @@ export async function findOrders(client, {first, last, after, before}) {
                     fullyPaid
                 }
                 lineItems(first: 250) {
-                    edges {
-                        node {
+                    nodes {
+                        id
+                        quantity
+                        originalUnitPriceSet {
+                            shopMoney {
+                                amount
+                                currencyCode
+                            }
+                        }
+                        custom
+                        variant {
                             id
-                            quantity
-                            originalUnitPriceSet {
-                                shopMoney {
-                                    amount
-                                    currencyCode
-                                }
-                            }
-                            custom
-                            variant {
-                                id
-                            }
                         }
                     }
                 } 
@@ -96,7 +109,7 @@ export async function findOrders(client, {first, last, after, before}) {
     const firstToUse = first ? first : last ? null : 250;
 
     const response = await client.request(query, {
-        variables: {first: firstToUse, last, after, before}
+        variables: { first: firstToUse, last, after, before }
     });
 
     if (response.errors) {
@@ -104,10 +117,10 @@ export async function findOrders(client, {first, last, after, before}) {
         throw new Error('Failed to load Orders');
     }
 
-    return { 
-        orders: response.data.draftOrders.nodes,
+    return {
+        orders: response.data.draftOrders.nodes.map(order => ({...order, lineItems: order.lineItems.nodes})),
         pageInfo: response.data.draftOrders.pageInfo
-     };
+    };
 }
 
 export async function createShopifyOrder(client, customerId, customerEmail, reservationDate, lines) {
@@ -130,8 +143,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
                   fullyPaid
               }
               lineItems(first: 250) {
-               edges {
-                 node {
+                 nodes {
                     id
                     quantity
                     originalUnitPriceSet {
@@ -146,7 +158,6 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
                          title
                      }
                  }
-               }         
              }
           }
         }
@@ -180,7 +191,7 @@ export async function createShopifyOrder(client, customerId, customerEmail, rese
         throw new Error('Failed to create order');
     }
 
-    return response.data.draftOrderCreate.draftOrder;
+    return {...response.data.draftOrderCreate.draftOrder, lineItems: response.data.draftOrderCreate.draftOrder.lineItems.nodes};
 }
 
 export async function updateOrder(client, orderId, reservationDate, lines) {
@@ -205,8 +216,7 @@ export async function updateOrder(client, orderId, reservationDate, lines) {
                   fullyPaid
               }
               lineItems(first: 250) {
-               edges {
-                 node {
+                 nodes {
                     id
                     quantity
                     originalUnitPriceSet {
@@ -221,7 +231,6 @@ export async function updateOrder(client, orderId, reservationDate, lines) {
                          title
                      }
                  }
-               }         
              }
           }
         }
@@ -247,7 +256,7 @@ export async function updateOrder(client, orderId, reservationDate, lines) {
         throw new Error('Failed to update order');
     }
 
-    return response.data.draftOrderUpdate.draftOrder
+    return {...response.data.draftOrderUpdate.draftOrder, lineItems: response.data.draftOrderUpdate.draftOrder.lineItems.nodes};
 }
 
 export async function completeDraftOrder(client, orderId) {
@@ -269,8 +278,7 @@ export async function completeDraftOrder(client, orderId) {
                 fullyPaid
             }
             lineItems(first: 250) {
-                edges {
-                node {
+                nodes {
                     id
                     quantity
                     originalUnitPriceSet {
@@ -285,7 +293,6 @@ export async function completeDraftOrder(client, orderId) {
                         title
                     }
                 }
-                }         
             }
           }
         }
@@ -308,7 +315,7 @@ export async function completeDraftOrder(client, orderId) {
         throw new Error('Failed to complete draft order');
     }
 
-    return response.data.draftOrderComplete.draftOrder;
+    return {...response.data.draftOrderComplete.draftOrder, lineItems: response.data.draftOrderComplete.draftOrder.lineItems.nodes};
 }
 
 export async function dfcLineToShopifyLine(dfcLine) {
@@ -322,20 +329,20 @@ export async function dfcLineToShopifyLine(dfcLine) {
 
 function shopifyOutputLineToInputLine(shopifyOutputLine) {
     return {
-        variantId: shopifyOutputLine.node.variant.id,
-        quantity: shopifyOutputLine.node.quantity
+        variantId: shopifyOutputLine.variant.id,
+        quantity: shopifyOutputLine.quantity
     }
 }
 
 export async function createUpdatedShopifyLines(draftOrder, dfcOrderLine) {
-    const { lines, hasBeenReplacement } = await draftOrder.lineItems.edges.reduce(
+    const { lines, hasBeenReplacement } = await draftOrder.lineItems.reduce(
         async (accumulator, shopifyOutputLine) => {
             const { lines, hasBeenReplacement } = await accumulator;
 
             const offer = await dfcOrderLine.getOffer();
             const product = await offer.getOfferedItem();
 
-            if (ids.extract(shopifyOutputLine.node.variant.id) === ids.extract(await product.getSemanticId())) {
+            if (ids.extract(shopifyOutputLine.variant.id) === ids.extract(await product.getSemanticId())) {
                 return { lines: [...lines, await dfcLineToShopifyLine(dfcOrderLine)], hasBeenReplacement: true };
             } else {
                 return { lines: [...lines, shopifyOutputLineToInputLine(shopifyOutputLine)], hasBeenReplacement };

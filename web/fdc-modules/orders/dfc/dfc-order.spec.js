@@ -4,9 +4,6 @@ import { createDfcOrderFromShopify, createDfcOrderLineFromShopify, createDfcOrde
 describe('dfc orders', () => {
 
     describe("Request", () => {
-        //Open questions to Garethe / DFC
-        //What is the order date in our context? Can it be updated? Do we need to store it? Does it get assigned by the hub or the producer?
-
         let connector, orderRequest, orderLine1Request, orderLine2Request, salesSessionRequest;
 
         beforeEach(async () => {
@@ -113,37 +110,33 @@ describe('dfc orders', () => {
             id = 'gid://shopify/DraftOrder/1166522712371',
             lineItems = [
                 {
-                    "node": {
-                        "id": "gid://shopify/DraftOrderLineItem/58380080054579",
-                        "quantity": 5,
-                        "originalUnitPriceSet": {
-                            "shopMoney": {
-                                "amount": "104.56",
-                                "currencyCode": "GBP"
-                            }
-                        },
-                        "custom": false,
-                        "variant": {
-                            "id": "gid://shopify/ProductVariant/44519466336563",
-                            "title": "Small case, 6 x 100ml",
+                    "id": "gid://shopify/DraftOrderLineItem/58380080054579",
+                    "quantity": 5,
+                    "originalUnitPriceSet": {
+                        "shopMoney": {
+                            "amount": "104.56",
+                            "currencyCode": "GBP"
                         }
+                    },
+                    "custom": false,
+                    "variant": {
+                        "id": "gid://shopify/ProductVariant/44519466336563",
+                        "title": "Small case, 6 x 100ml",
                     }
                 },
                 {
-                    "node": {
-                        "id": "gid://shopify/DraftOrderLineItem/67543322145",
-                        "quantity": 5,
-                        "originalUnitPriceSet": {
-                            "shopMoney": {
-                                "amount": "200.00",
-                                "currencyCode": "EUR"
-                            }
-                        },
-                        "custom": false,
-                        "variant": {
-                            "id": "gid://shopify/ProductVariant/44519466336566",
-                            "title": "Large case, 12 x 100ml",
+                    "id": "gid://shopify/DraftOrderLineItem/67543322145",
+                    "quantity": 5,
+                    "originalUnitPriceSet": {
+                        "shopMoney": {
+                            "amount": "200.00",
+                            "currencyCode": "EUR"
                         }
+                    },
+                    "custom": false,
+                    "variant": {
+                        "id": "gid://shopify/ProductVariant/44519466336566",
+                        "title": "Large case, 12 x 100ml",
                     }
                 }
             ],
@@ -154,9 +147,7 @@ describe('dfc orders', () => {
                 "id": id,
                 "status": status,
                 "order": order,
-                "lineItems": {
-                    "edges": lineItems
-                }
+                lineItems
             }
         }
 
@@ -203,20 +194,18 @@ describe('dfc orders', () => {
                 status: "COMPLETED",
                 lineItems: [
                     {
-                        "node": {
-                            "id": "gid://shopify/DraftOrderLineItem/58380080054580",
-                            "quantity": 5,
-                            "originalUnitPriceSet": {
-                                "shopMoney": {
-                                    "amount": "104.56",
-                                    "currencyCode": "GBP"
-                                }
-                            },
-                            "custom": false,
-                            "variant": {
-                                "id": "gid://shopify/ProductVariant/44519466336564",
-                                "title": "Small case, 6 x 100ml",
+                        "id": "gid://shopify/DraftOrderLineItem/58380080054580",
+                        "quantity": 5,
+                        "originalUnitPriceSet": {
+                            "shopMoney": {
+                                "amount": "104.56",
+                                "currencyCode": "GBP"
                             }
+                        },
+                        "custom": false,
+                        "variant": {
+                            "id": "gid://shopify/ProductVariant/44519466336564",
+                            "title": "Small case, 6 x 100ml",
                         }
                     },
                 ]
@@ -229,18 +218,16 @@ describe('dfc orders', () => {
             const orderFromShopify = shopifyOrder({
                 lineItems: [
                     {
-                        "node": {
-                            "id": "gid://shopify/DraftOrderLineItem/58380080054579",
-                            "quantity": 5,
-                            "originalUnitPriceSet": {
-                                "shopMoney": {
-                                    "amount": "0",
-                                    "currencyCode": "GBP"
-                                }
-                            },
-                            "custom": true,
-                            "variant": null
-                        }
+                        "id": "gid://shopify/DraftOrderLineItem/58380080054579",
+                        "quantity": 5,
+                        "originalUnitPriceSet": {
+                            "shopMoney": {
+                                "amount": "0",
+                                "currencyCode": "GBP"
+                            }
+                        },
+                        "custom": true,
+                        "variant": null
                     },
                 ]
             });

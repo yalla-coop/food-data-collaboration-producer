@@ -2,15 +2,10 @@
 /* eslint-disable indent */
 import '@shopify/shopify-api/adapters/node';
 import { LATEST_API_VERSION } from '@shopify/shopify-api';
-import * as dotenv from 'dotenv';
 import { shopifyApp } from '@shopify/shopify-app-express';
 import { PostgreSQLSessionStorage } from '@shopify/shopify-app-session-storage-postgresql';
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-01';
 import config from './config.js';
-
-dotenv.config();
-
-const DB_PATH = process.env.DATABASE_URL;
 
 const scopes = [
   'write_products',
@@ -40,7 +35,6 @@ const apiObject =
         apiVersion: LATEST_API_VERSION,
         restResources,
         billing: undefined,
-        accessToken: config.SHOPIFY_ACCESS_TOKEN,
         apiSecretKey: config.SHOPIFY_API_SECRET_KEY,
         HOST: config.HOST,
         scopes
@@ -49,7 +43,6 @@ const apiObject =
         apiVersion: LATEST_API_VERSION,
         restResources,
         billing: undefined,
-        accessToken: config.SHOPIFY_ACCESS_TOKEN,
         scopes
       };
 
@@ -62,7 +55,7 @@ const shopify = shopifyApp({
   webhooks: {
     path: '/api/webhooks'
   },
-  sessionStorage: new PostgreSQLSessionStorage(DB_PATH)
+  sessionStorage: new PostgreSQLSessionStorage(config.DATABASE_URL)
 });
 
 export default shopify;

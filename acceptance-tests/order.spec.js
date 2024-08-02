@@ -91,6 +91,12 @@ describe('orders', () => {
         await assertLine({ line: orderLines[2], quantity: 1, productId: product3 });
     }, timeout);
 
+    it('Can page through an orders lines', async () => {
+        const orderLines = (await get(`Orders/${orderId}/orderLines?first=2`)).filter(item => item instanceof OrderLine);
+
+        expect(orderLines).toHaveLength(2);
+    }, timeout);
+
     it('Can GET an single line', async () => {
         const line = (await get(`Orders/${orderId}/orderLines/${producerLines[product2]}`)).filter(item => item instanceof OrderLine)[0];
         

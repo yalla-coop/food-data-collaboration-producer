@@ -21,7 +21,7 @@ const getAllOrders = async (req, res) => {
 
         const allDfcOrders = await createBulkDfcOrderFromShopify(orders, draftOrdersWithLineItemMappings, req.params.EnterpriseName);
 
-        res.type('application/json')
+        res.type('application/json');
         res.set("pageInfo", JSON.stringify(pageInfo));
         res.send(allDfcOrders);
     } catch (error) {
