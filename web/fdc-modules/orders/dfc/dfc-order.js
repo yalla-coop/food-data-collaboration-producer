@@ -97,10 +97,10 @@ function createOrderLine(connector, line, lineIdMappings, enterpriseName, orderI
 }
 
 function createOrderLines(connector, shopifyDraftOrderResponse, lineIdMappings, enterpriseName, orderId) {
-    const shopifyLineItems = shopifyDraftOrderResponse.lineItems.edges;
+    const shopifyLineItems = shopifyDraftOrderResponse.lineItems;
     return shopifyLineItems
-        .filter(({node}) => !node.custom)
-        .flatMap(({ node: line }) => {
+        .filter(({custom}) => !custom)
+        .flatMap((line) => {
             return createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId);
         })
 }
@@ -160,7 +160,7 @@ export async function createDfcOrderLineFromShopify(shopifyDraftOrderResponse, e
         return null;
     }
 
-    const line = shopifyDraftOrderResponse.lineItems.edges.find(({ node: line }) => ids.extract(line.id) === shopifyLineId)?.node
+    const line = shopifyDraftOrderResponse.lineItems.find((line) => ids.extract(line.id) === shopifyLineId)
 
     return await connector.export(createOrderLine(connector, line, lineIdMappings, enterpriseName, orderId));
 }

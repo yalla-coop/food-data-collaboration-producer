@@ -12,7 +12,7 @@ const createOrUpdateOrderLine = async (req, res) => {
 
         const orderLine = await extractOrderLine(req.body)
 
-        const shopifyOrder = await orders.findOrder(client, req.params.id);
+        const {order: shopifyOrder} = await orders.findOrder(client, req.params.id, {});
 
         if (!shopifyOrder) {
             return res.status(404).send('Unable to find order');

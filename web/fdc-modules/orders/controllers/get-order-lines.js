@@ -8,14 +8,21 @@ const getOrderLines = async (req, res) => {
         const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
         const client = new shopify.api.clients.Graphql({ session });
 
-        const shopifyOrder = await findOrder(client, req.params.id);
+        const {before, after, first, last} = req.query;
+
+        if ((before && after) || (before && first) || (after && last) && (before && !last) && (after && !first)){
+            return res.status(400).send('Incorrect combination of paging parameters. You cannot page forward and backwards symultaneously');
+        }
+
+        const {order: shopifyOrder, pageInfo} = await findOrder(client, req.params.id, {before, after, first: Number(first), last: Number(last)});
 
         if (!shopifyOrder) {
             return res.status(404).send('Unable to find order');
         }
 
         const dfcOrder = await createDfcOrderLinesFromShopify(shopifyOrder, await getLineItems(req.params.id), req.params.EnterpriseName, req.params.id);
-        res.type('application/json')
+        res.type('application/json');
+        res.set("pageInfo", JSON.stringify(pageInfo));
         res.send(dfcOrder);
     } catch (error) {
         console.error(error);

@@ -14,7 +14,7 @@ const getProducts = async (req, res) => {
 
     return res.status(200).json({
       products,
-      variantMappingEnabled: process.env.VARIANT_MAPPINGS,
+      variantMappingEnabled: String(process.env.VARIANT_MAPPINGS).toLowerCase() === 'true',
       success: true,
       message: 'Products retrieved successfully'
     });
