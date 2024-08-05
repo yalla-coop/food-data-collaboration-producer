@@ -241,7 +241,7 @@ export async function updateOrder(client, orderId, reservationDate, lines) {
             "id": ids.draftOrder(orderId),
             "input": {
                 "lineItems": atLeastOneLine,
-                ...(reservationDate ? { "reserveInventoryUntil": lines.length === 0 ? null : reservationDate.toISOString() } : {})
+                ...(reservationDate ? { "reserveInventoryUntil": lines.length === 0 || inThePast(reservationDate) ? null : reservationDate.toISOString() } : {})
             }
         },
     });
@@ -257,6 +257,11 @@ export async function updateOrder(client, orderId, reservationDate, lines) {
     }
 
     return {...response.data.draftOrderUpdate.draftOrder, lineItems: response.data.draftOrderUpdate.draftOrder.lineItems.nodes};
+}
+
+function inThePast(date){
+    const now = new Date();
+    return date < now;
 }
 
 export async function completeDraftOrder(client, orderId) {
