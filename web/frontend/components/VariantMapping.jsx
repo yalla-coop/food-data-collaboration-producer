@@ -201,7 +201,7 @@ function VariantMappingComponent({
     });
   });
 
-  const enableLabel = variant?.enabled ? 'Current enabled for FDC - Disable:' : 'Current disabled for FDC - Enable:'
+  const enableLabel = variant?.enabled ? 'Currently enabled for FDC - Disable:' : 'Currently disabled for FDC - Enable:'
   const enableColour = variant?.enabled ? 'green' : 'red'
 
   return (
