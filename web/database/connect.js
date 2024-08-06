@@ -17,13 +17,8 @@ const connectionString = config.DATABASE_URL;
 // eslint-disable-next-line prefer-regex-literals
 const isInsertOrUpdateRegex = new RegExp(/(UPDATE(.|\n)*SET)|(INSERT INTO)/i);
 
-// if you want to connect to heroku database you need to add:
-// ssl: { rejectUnauthorized: false }
-// to the below object
-// eslint-disable-next-line no-underscore-dangle
-
 if (!connectionString) {
-  throw new Error("Environment variable DATABASE_URL must be set");
+  throw new Error('Environment variable DATABASE_URL must be set');
 }
 
 const pool = new Pool({
