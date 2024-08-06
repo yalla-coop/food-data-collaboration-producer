@@ -11,7 +11,7 @@
 
 ## Running a local Version of the App
 
-1. **Read the Main Product Readme**: Familiarize yourself with the project by reading the [main Product Readme](https://github.com/yalla-coop/food-data-collaboration/blob/main/README.md).
+1. **Read the Main Product Readme**: Familiarize yourself with the project by reading the [main Product Readme](https://github.com/yalla-coop/food-data-collaboration-producer/blob/staging/README_MAIN_PRODUCT.md).
 
 2. **Clone the Repository**: Clone this repository to your local machine.
 
