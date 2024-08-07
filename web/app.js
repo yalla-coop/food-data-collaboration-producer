@@ -67,7 +67,8 @@ app.use(
   cors(),
   express.text({type: '*/json'}),
   checkUserAccessPermissions,
-  fdcOrderRoutes
+  fdcOrderRoutes,
+  errorMiddleware
 );
 
 app.use(
@@ -75,7 +76,8 @@ app.use(
   cors(),
   express.json(),
   checkUserAccessPermissions,
-  fdcProductRoutes
+  fdcProductRoutes,
+  errorMiddleware
 );
 
 app.use(
@@ -83,14 +85,16 @@ app.use(
   shopify.validateAuthenticatedSession(),
   express.json(),
   checkOnlineSession,
-  ProductsModules.Controllers
+  ProductsModules.Controllers,
+  errorMiddleware
 );
 app.use(
   '/api/hub-users',
   shopify.validateAuthenticatedSession(),
   express.json(),
   checkOnlineSession,
-  UsersModules.Controllers
+  UsersModules.Controllers,
+  errorMiddleware
 );
 
 app.use(serveStatic(STATIC_PATH, { index: false }));

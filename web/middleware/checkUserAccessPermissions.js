@@ -1,28 +1,35 @@
-import { Issuer } from 'openid-client';
+import { Issuer, custom } from 'openid-client';
 import { query } from '../database/connect.js';
 
 const clientId = process.env.OIDC_CLIENT_ID;
 const clientSecret = process.env.OIDC_CLIENT_SECRET;
 const issuerURL = process.env.OIDC_ISSUER;
 
-const API_KEY = process.env.PRODUCER_API_KEY;
+custom.setHttpOptionsDefaults({
+  timeout: 5000,
+});
 
 const checkUserAccessPermissions = async (req, res, next) => {
-  const legacySecretKeyCheckRemoveMeOnceNewApiInPlace = () =>
-    bearerToken(req) === API_KEY;
-  const legacyApiRemoveMeOnceNewApiInPlace = () =>
-    req.body && req.body.accessToken;
-
-  if (legacyApiRemoveMeOnceNewApiInPlace()) {
-    await authorise(req.body.accessToken, req, res, next);
-  } else if (legacySecretKeyCheckRemoveMeOnceNewApiInPlace()) {
-    return next();
-  } else {
     const accessToken = bearerToken(req);
 
     await authorise(accessToken, req, res, next);
-  }
 };
+
+async function getUserTokenSet(accessToken) {
+  try {
+    const issuer = await Issuer.discover(issuerURL);
+
+    const client = new issuer.Client({
+      client_id: clientId,
+      client_secret: clientSecret
+    });
+
+    return {tokenSet: await client.introspect(accessToken)};
+
+  } catch (error) {
+    return {error};
+  }
+}
 
 async function authorise(accessToken, req, res, next) {
 
@@ -33,14 +40,11 @@ async function authorise(accessToken, req, res, next) {
     });
   }
 
-  const issuer = await Issuer.discover(issuerURL);
+  const {error, tokenSet} = await getUserTokenSet(accessToken);
 
-  const client = new issuer.Client({
-    client_id: clientId,
-    client_secret: clientSecret
-  });
-
-  const tokenSet = await client.introspect(accessToken);
+  if (error){
+    return next(error);
+  }
 
   if (!tokenSet.active) {
     return res.status(403).json({
