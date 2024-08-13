@@ -12,50 +12,57 @@ const toProduct = (product) => ({
 });
 
 async function findProducts(client) {
-  const response = await client.request(
-    `{
-        products(first: 250) {
-          edges {
-            node {
-              id
-              title
-              descriptionHtml
-              productType
-              status
-              images(first: 10) {
-                edges {
-                  node {
+  const response = await client.request(`
+    {
+      products(first: 250) {
+        edges {
+          node {
+            id
+            title
+            descriptionHtml
+            productType
+            status
+            images(first: 10) {
+              edges {
+                node {
+                  id
+                  altText
+                  src
+                }
+              }
+            }
+            variants(first: 250) {
+              edges {
+                node {
+                  id
+                  title
+                  price
+                  sku
+                  position
+                  inventoryPolicy
+                  taxable
+                  inventoryQuantity
+                  inventoryItem {
+                    measurement {
+                      weight {
+                        unit
+                        value
+                      }
+                    }
+                  }
+                  image {
                     id
                     altText
                     src
                   }
                 }
               }
-              variants(first: 250) {
-                edges {
-                  node {
-                    id
-                    title
-                    price
-                    sku
-                    position
-                    inventoryPolicy
-                    taxable
-                    inventoryQuantity
-                    weight
-                    image {
-                      id
-                      altText
-                      src
-                    }
-                  }
-                }
-              }
             }
           }
         }
-      }`
-  );
+      }
+    }
+  `);
 
   if (response.errors) {
     console.error('Failed to load Products', JSON.stringify(response.errors));

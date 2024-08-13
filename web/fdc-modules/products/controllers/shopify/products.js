@@ -33,7 +33,14 @@ const query = `query findProducts($ids: [ID!]!) {
             inventoryPolicy
             taxable
             inventoryQuantity
-            weight
+            inventoryItem {
+              measurement {
+                weight {
+                  unit
+                  value
+                }
+              }
+            }
             image {
               id
               altText

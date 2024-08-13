@@ -37,7 +37,11 @@ const createCatalogItem = (
     stockLimitation
   });
 
-async function createVariantSuppliedProduct(parentProduct, variant, enterpriseName) {
+async function createVariantSuppliedProduct(
+  parentProduct,
+  variant,
+  enterpriseName
+) {
   try {
     const connector = await loadConnectorWithResources();
     const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
@@ -47,7 +51,7 @@ async function createVariantSuppliedProduct(parentProduct, variant, enterpriseNa
 
     const quantity = createQuantitativeValue(
       connector,
-      variant.weight,
+      variant?.inventoryItem?.measurement?.weight?.value || 0,
       kilogram
     );
     const hasVat = variant.taxable ? 1.0 : 0.0; // TODO check how the vat rate can be added
@@ -75,7 +79,7 @@ async function createVariantSuppliedProduct(parentProduct, variant, enterpriseNa
       productType: productTypes[parentProduct.productType] ?? null
     });
 
-    const image = variant.image?.src || parentProduct.images[0]?.src
+    const image = variant.image?.src || parentProduct.images[0]?.src;
 
     if (image) {
       suppliedProduct.addImage(image);
@@ -98,7 +102,9 @@ async function createSuppliedProducts(productsFromShopify, enterpriseName) {
     }
 
     const productsPromises = productsFromShopify.flatMap((product) =>
-      product.fdcVariants.filter(({enabled}) => enabled).map(variant => createVariants(product, variant, enterpriseName))
+      product.fdcVariants
+        .filter(({ enabled }) => enabled)
+        .map((variant) => createVariants(product, variant, enterpriseName))
     );
 
     return (await Promise.all(productsPromises)).flat();
@@ -107,7 +113,11 @@ async function createSuppliedProducts(productsFromShopify, enterpriseName) {
   }
 }
 
-const createVariants = async (shopifyProduct, variantMapping, enterpriseName) => {
+const createVariants = async (
+  shopifyProduct,
+  variantMapping,
+  enterpriseName
+) => {
   const { wholesaleVariantId, retailVariantId, noOfItemsPerPackage } =
     variantMapping;
 
@@ -126,7 +136,13 @@ const createVariants = async (shopifyProduct, variantMapping, enterpriseName) =>
     const wholesaleVariant = shopifyProduct.variants.find(
       ({ id }) => id == wholesaleVariantId
     );
-    return await createMappedVariant(shopifyProduct, retailVariant, wholesaleVariant, noOfItemsPerPackage, enterpriseName);
+    return await createMappedVariant(
+      shopifyProduct,
+      retailVariant,
+      wholesaleVariant,
+      noOfItemsPerPackage,
+      enterpriseName
+    );
   } else {
     return await createVariantSuppliedProduct(
       shopifyProduct,
@@ -136,7 +152,13 @@ const createVariants = async (shopifyProduct, variantMapping, enterpriseName) =>
   }
 };
 
-async function createMappedVariant(shopifyProduct, retailVariant, wholesaleVariant, noOfItemsPerPackage, enterpriseName) {
+async function createMappedVariant(
+  shopifyProduct,
+  retailVariant,
+  wholesaleVariant,
+  noOfItemsPerPackage,
+  enterpriseName
+) {
   const [retailSuppliedProduct, ...retailOthers] =
     await createVariantSuppliedProduct(
       shopifyProduct,
