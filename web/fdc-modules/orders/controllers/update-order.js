@@ -14,7 +14,8 @@ import * as shopifyOrders from './shopify/orders.js';
 //todo: transaction
 const updateOrder = async (req, res) => {
   try {
-    console.log('updating order with :>> ', req.body);
+    console.log('updating order with body:>> ', req.body);
+    console.log('updating order with params :>> ', req.params);
     const session = await getSession(
       `${req.params.EnterpriseName}.myshopify.com`
     );
