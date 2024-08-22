@@ -27,8 +27,12 @@ cd frontend
 yarn install
 ```
    
-5. **Build the Database:** Execute the command:
+5. **Build the Database:** 
 
+- Inside /local-db you will find an optional way of creating a postgres docker container and a connection string to be used for local development
+- There is a Readme + Dockerfile with all required steps
+- Once the DB is setup you can build the development data by executing (from root):
+  
 ```bash
 yarn build:db
 ```
