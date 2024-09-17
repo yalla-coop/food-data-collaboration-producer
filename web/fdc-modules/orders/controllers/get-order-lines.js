@@ -3,10 +3,18 @@ import getSession from '../../../utils/getShopifySession.js';
 import { createDfcOrderLinesFromShopify } from '../dfc/dfc-order.js';
 import { findOrder } from './shopify/orders.js';
 import { getLineItems } from '../../../database/line_items/lineItems.js'
+import { getOrder } from '../../../database/orders/orders.js';
+
 const getOrderLines = async (req, res) => {
     try {
         const session = await getSession(`${req.params.EnterpriseName}.myshopify.com`)
         const client = new shopify.api.clients.Graphql({ session });
+
+        const order = await getOrder(req.params.id, req.user.id);
+
+        if(!order) {
+            return res.status(403).send('You do not have permission to act on this order');
+        }
 
         const {before, after, first, last} = req.query;
 

@@ -17,7 +17,7 @@ export async function findCustomer(client, customerEmail) {
     }
 
     if (response.data.customers.nodes.length < 1) {
-        throw new Error('Unable to find customer with email', customerEmail);
+        return null;
     }
 
     return response.data.customers.nodes[0].id

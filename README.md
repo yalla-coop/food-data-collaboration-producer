@@ -52,3 +52,8 @@ yarn dev --reset
 ```bash
 yarn dev
 ```
+
+## Useful Resources
+- [Main Product Readme](https://github.com/yalla-coop/food-data-collaboration-producer/blob/staging/README_MAIN_PRODUCT.md)
+- [Database Overview](https://github.com/yalla-coop/food-data-collaboration-producer/blob/6af3fb3eeb328da489b2923fb2c0bc49cf704073/DATABASE_OVERVIEW.md)
+- [Deployment Strategy](https://github.com/yalla-coop/food-data-collaboration-producer/blob/6af3fb3eeb328da489b2923fb2c0bc49cf704073/DEPLOYMENT_STRATEGY.md)

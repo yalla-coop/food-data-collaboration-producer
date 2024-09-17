@@ -63,11 +63,11 @@ export async function findOrder(client, orderId, { first, last, after, before })
     };
 }
 
-export async function findOrders(client, { first, last, after, before }) {
+export async function findOrders(client, customerId, { first, last, after, before }) {
 
     const query = `
     query findDraftOrders($first: Int, $last: Int, $after: String, $before: String) {
-        draftOrders(first: $first, last: $last, after: $after, before: $before, query: "tag:fdc") {
+        draftOrders(first: $first, last: $last, after: $after, before: $before, query: "tag:fdc AND customer_id:${ids.extract(customerId)}") {
             nodes {
                 id    
                 status   
