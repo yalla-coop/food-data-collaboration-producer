@@ -5,17 +5,25 @@ import shopify from '../../../shopify.js';
 import getSession from '../../../utils/getShopifySession.js';
 import {
   createDfcOrderFromShopify,
-  extractOrderAndLines
+  extractOrderAndLines,
 } from '../dfc/dfc-order.js';
 import { persistLineIdMappings } from './lineItemMappings.js';
 import * as ids from './shopify/ids.js';
 import * as shopifyOrders from './shopify/orders.js';
 
-//todo: transaction
 const updateOrder = async (req, res) => {
   try {
     console.log('updating order with body:>> ', req.body);
     console.log('updating order with params :>> ', req.params);
+
+    const orderMetadata = await database.getOrder(req.params.id, req.user.id);
+
+    if (!orderMetadata) {
+      return res
+        .status(403)
+        .send('You do not have permission to act on this order');
+    }
+
     const session = await getSession(
       `${req.params.EnterpriseName}.myshopify.com`
     );

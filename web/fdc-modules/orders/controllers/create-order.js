@@ -37,7 +37,7 @@ const createOrder = async (req, res) => {
       shopifyLines
     );
 
-    await createDraftOrder(ids.extract(shopifyDraftOrder.id));
+    await createDraftOrder(ids.extract(shopifyDraftOrder.id), req.user.id);
     await createSalesSession(
       ids.extract(shopifyDraftOrder.id),
       saleSession.getEndDate()
