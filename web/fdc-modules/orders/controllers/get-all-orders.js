@@ -12,6 +12,10 @@ const getAllOrders = async (req, res) => {
 
         const customerId = await findCustomer(client, req.user.id);
 
+        if (!customerId) {
+            return respond(res, await createBulkDfcOrderFromShopify([], [], req.params.EnterpriseName), null);
+        }
+
         const {before, after, first, last} = req.query;
 
         if ((before && after) || (before && first) || (after && last) && (before && !last) && (after && !first)){
@@ -24,13 +28,19 @@ const getAllOrders = async (req, res) => {
 
         const allDfcOrders = await createBulkDfcOrderFromShopify(orders, draftOrdersWithLineItemMappings, req.params.EnterpriseName);
 
-        res.type('application/json');
-        res.set("pageInfo", JSON.stringify(pageInfo));
-        res.send(allDfcOrders);
+        return respond(res, allDfcOrders, pageInfo);
     } catch (error) {
         console.error(error);
         res.status(500).end();
     }
+}
+
+function respond(res, graph, pageInfo) {
+    res.type('application/json');
+    if (pageInfo){
+        res.set("pageInfo", JSON.stringify(pageInfo));
+    }
+    res.send(graph);
 }
 
 export default getAllOrders

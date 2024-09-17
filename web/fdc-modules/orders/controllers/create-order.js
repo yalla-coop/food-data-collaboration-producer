@@ -21,6 +21,10 @@ const createOrder = async (req, res) => {
 
     const customerId = await findCustomer(client, req.user.id);
 
+    if (!customerId) {
+      return res.status(403).send(`Customer with email matching ${req.user.id} must exist in shopify for you to create an order`);
+    }
+
     const { order, saleSession } = await extractOrderAndLinesAndSalesSession(
       req.body
     );
