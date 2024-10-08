@@ -1,17 +1,17 @@
-name: Create and publish a Docker image
+# name: Create and publish a Docker image
 
-on:
-  push:
-    branches: ["main"]
+# on:
+#   push:
+#     branches: ["main"]
 
-jobs:
-  build-and-push-image:
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
-    uses: ./.github/workflows/build-and-deploy-prod.yml
-    with:
-      jelastic_env: fdc-producer
-    secrets: inherit
+# jobs:
+#   build-and-push-image:
+#     permissions:
+#       contents: read
+#       packages: write
+#       attestations: write
+#       id-token: write
+#     uses: ./.github/workflows/build-and-deploy-prod.yml
+#     with:
+#       jelastic_env: fdc-producer
+#     secrets: inherit
