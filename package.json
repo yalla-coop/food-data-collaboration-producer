@@ -11,6 +11,7 @@
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",
     "test": "jest --runInBand --detectOpenHandles --forceExit web/${0}",
+    "acceptance-test": "jest --runInBand --detectOpenHandles --forceExit acceptance-tests/",
     "build:db": "node ./web/database/build.js"
   },
   "dependencies": {

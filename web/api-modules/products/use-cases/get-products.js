@@ -14,7 +14,7 @@ const toProduct = (product) => ({
 async function findProducts(client) {
   const response = await client.request(`
     {
-      products(first: 250) {
+      products(first: 250, sortKey: TITLE) {
         edges {
           node {
             id

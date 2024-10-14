@@ -6,6 +6,9 @@ import {
 } from '../../../../database/variants/variants.js';
 
 const query = `query findProducts($ids: [ID!]!) {
+  shop {
+    currencyCode
+  }
   products: nodes(ids: $ids) {
     ... on Product {
       id
@@ -71,7 +74,7 @@ export async function getFdcVariantsByProductIdFromDB(productId) {
   return mappedVariantsByProductId;
 }
 
-const toFdcProduct = (product) => ({
+const toFdcProduct = (product, currencyCode) => ({
   ...product,
   id: getShopifyIdSubstring(product?.id),
   images: product?.images?.edges?.map(({ node }) => ({
@@ -81,6 +84,7 @@ const toFdcProduct = (product) => ({
   variants: product.variants.edges.map(({ node: variant }) => ({
     ...variant,
     id: getShopifyIdSubstring(variant.id),
+    currencyCode,
     image: variant.image && {
       ...variant.image,
       id: getShopifyIdSubstring(variant.image.id)
@@ -92,15 +96,15 @@ export async function findProductsByIds(client, ids) {
   const response = await client.request(query, {
     variables: { ids: ids.map((id) => `gid://shopify/Product/${id}`) }
   });
-
   if (response.errors) {
     throw new Error('Failed to load Products');
   }
   const products =
     response.data.products?.filter((product) => product !== null) || [];
+  const currencyCode = response.data?.shop?.currencyCode || 'GBP';
 
   if (products.length > 0) {
-    return products.map((product) => toFdcProduct(product));
+    return products.map((product) => toFdcProduct(product, currencyCode));
   }
   return [];
 }

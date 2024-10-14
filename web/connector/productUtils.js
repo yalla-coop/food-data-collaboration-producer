@@ -2,6 +2,7 @@ import { throwError } from '../utils/index.js';
 import loadConnectorWithResources from './index.js';
 import loadProductTypes from './mappedProductTypes.js';
 import config from '../config.js';
+import currencyMeasureFor from '../utils/currencyMeasureFor.js';
 
 const createQuantitativeValue = (connector, value, unit) =>
   connector.createQuantity({
@@ -45,7 +46,6 @@ async function createVariantSuppliedProduct(
   try {
     const connector = await loadConnectorWithResources();
     const kilogram = connector.MEASURES.UNIT.QUANTITYUNIT.KILOGRAM;
-    const euro = connector.MEASURES.UNIT.CURRENCYUNIT.EURO;
 
     const semanticBase = `${config.PRODUCER_SHOP_URL}api/dfc/Enterprises/${enterpriseName}/SuppliedProducts/${variant.id}`;
 
@@ -55,7 +55,12 @@ async function createVariantSuppliedProduct(
       kilogram
     );
     const hasVat = variant.taxable ? 1.0 : 0.0; // TODO check how the vat rate can be added
-    const price = createPrice(connector, variant.price, euro, hasVat);
+    const price = createPrice(
+      connector,
+      variant.price,
+      currencyMeasureFor(connector, variant.currencyCode),
+      hasVat
+    );
     const offer = createOffer(connector, semanticBase, price);
     const inventoryQuantity =
       variant.inventoryPolicy === 'CONTINUE' ? -1 : variant.inventoryQuantity;
